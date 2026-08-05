@@ -66,6 +66,29 @@ export interface TestimonialItem {
   created_at?: string;
 }
 
+export interface AttendanceUser {
+  id: number;
+  name: string;
+  nim?: string;
+  nidn?: string | null;
+  role: string;
+  prodi?: string;
+  avatar_url?: string;
+}
+
+export interface AttendanceRecord {
+  id: number;
+  user: AttendanceUser;
+  tanggal: string;
+  created_at: string;
+}
+
+export interface AttendanceTodayResponse {
+  tanggal: string;
+  total_hadir: number;
+  daftar_hadir: AttendanceRecord[];
+}
+
 export interface SiteSettings {
   id?: number;
   app_name?: string;
@@ -190,33 +213,45 @@ export const usePustakaApi = () => {
     return { success: false, data: {} as SiteSettings, message: 'Gagal mengambil data pengaturan' };
   };
 
-  const submitAttendance = async (memberId: string): Promise<{ success: boolean; message: string; user?: any }> => {
+  const getAttendanceToday = async (): Promise<{ success: boolean; data: AttendanceTodayResponse; message?: string }> => {
+    return await $fetch(`${baseUrl}/attendances/today`, {
+      headers: defaultHeaders
+    });
+  };
+
+  const getAttendances = async (params?: Record<string, any>): Promise<{ success: boolean; data: AttendanceRecord[]; meta?: any; message?: string }> => {
+    return await $fetch(`${baseUrl}/attendances`, {
+      headers: defaultHeaders,
+      params
+    });
+  };
+
+  const getUsers = async (params?: Record<string, any>): Promise<{ success: boolean; data: any[]; meta?: any; message?: string }> => {
+    return await $fetch(`${baseUrl}/users`, {
+      headers: defaultHeaders,
+      params
+    });
+  };
+
+  const submitAttendance = async (qrTokenOrNim: string): Promise<{ success: boolean; message: string; data?: AttendanceRecord }> => {
     try {
       const res = await $fetch<{ success: boolean; message: string; data?: any }>(`${baseUrl}/attendances`, {
         method: 'POST',
-        headers: defaultHeaders,
-        body: { member_id: memberId, nim: memberId }
+        headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
+        body: { qr_token: qrTokenOrNim }
       });
-      if (res?.success) {
-        return {
-          success: true,
-          message: res.message || 'Presensi kedatangan berhasil dicatat.',
-          user: res.data
-        };
-      }
-    } catch (e) {
-      // Fallback response for attendance checkin
+      return {
+        success: res?.success ?? false,
+        message: res?.message || 'Presensi kedatangan berhasil dicatat.',
+        data: res?.data
+      };
+    } catch (e: any) {
+      const errorMsg = e?.data?.message || e?.message || 'Gagal mencatat presensi. QR Token/NIM tidak ditemukan.';
+      return {
+        success: false,
+        message: errorMsg
+      };
     }
-
-    return {
-      success: true,
-      message: `Presensi kedatangan berhasil dicatat! Selamat datang di Perpustakaan STAH DNJ (ID: ${memberId}).`,
-      user: {
-        id: memberId,
-        name: `Pemustaka ${memberId}`,
-        nim: memberId
-      }
-    };
   };
 
   return {
@@ -232,6 +267,9 @@ export const usePustakaApi = () => {
     getAnnouncements,
     getTestimonials,
     getSettings,
+    getAttendanceToday,
+    getAttendances,
+    getUsers,
     submitAttendance
   };
 };

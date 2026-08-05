@@ -36,6 +36,10 @@
             <div>
               <h4 class="font-bold text-lg">{{ alertSuccess ? 'Presensi Berhasil' : 'Presensi Gagal' }}</h4>
               <p class="text-sm opacity-95">{{ alertMessage }}</p>
+              <!-- Show last checked-in user info -->
+              <p v-if="alertSuccess && lastCheckedUser" class="text-xs mt-1 opacity-80">
+                {{ lastCheckedUser.name }} — {{ lastCheckedUser.nim || lastCheckedUser.role }}
+              </p>
             </div>
           </div>
           <button @click="alertMessage = ''" class="hover:bg-white/20 p-2 rounded-full transition-colors">
@@ -44,17 +48,18 @@
         </div>
       </div>
 
-      <!-- Left Column: Scanner -->
-      <section class="col-span-12 lg:col-span-5 flex flex-col gap-unit">
-        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col items-center justify-between h-full min-h-[500px] border border-outline-variant">
+      <!-- Left Column: Scanner + Keypad -->
+      <section class="col-span-12 lg:col-span-5 flex flex-col gap-gutter">
+        <!-- Scanner Card -->
+        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col items-center border border-outline-variant">
           <div class="text-center">
             <h2 class="font-headline-md text-headline-md text-primary font-bold mb-2">Scan Kartu Anggota</h2>
             <p class="font-body-md text-body-md text-on-surface-variant">Arahkan QR Code atau Barcode ke sensor kamera</p>
           </div>
 
-          <div class="relative w-72 h-72 border-4 border-dashed border-outline-variant rounded-2xl flex items-center justify-center overflow-hidden bg-surface-container-low my-6">
+          <div class="relative w-64 h-64 border-4 border-dashed border-outline-variant rounded-2xl flex items-center justify-center overflow-hidden bg-surface-container-low my-6">
             <div class="absolute inset-0 flex items-center justify-center opacity-10">
-              <span class="material-symbols-outlined text-[160px]">qr_code_scanner</span>
+              <span class="material-symbols-outlined text-[140px]">qr_code_scanner</span>
             </div>
 
             <!-- Scanner Animation Line -->
@@ -67,15 +72,52 @@
             <div class="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-secondary rounded-br-sm"></div>
 
             <div 
-              class="w-64 h-64 bg-cover bg-center rounded-lg opacity-80" 
+              class="w-56 h-56 bg-cover bg-center rounded-lg opacity-80" 
               style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDEWFAJHfXWrShr6KikZRRh1EeRBsjE_Quqr01mYxhTG94UIuBiKlLd13jwYLPa7tXOslnOM0dOiRkoMhvw7mtwtgjYuNn2Pp3xrfqApcKsaNumSMKqrsQf6rjANHBsC7HAS2AZ2po1epCpB6grisXEsicPtSIT4hnbJSxALaLYf0-7Adtg_zDva185rlQ4JhG07YXZ78NW7h3x1o04C81Whxc2bBTUPLGOF6JDd3kljhpeTRXR0tyBZg')"
             ></div>
           </div>
+        </div>
 
+        <!-- Manual Entry Card -->
+        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col border border-outline-variant">
+          <div class="mb-4">
+            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-1">Input QR Token Manual</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant text-sm">Masukkan kode QR Token jika kartu tidak terbaca</p>
+          </div>
+
+          <!-- Display Screen -->
+          <div class="bg-surface-container-high rounded-xl p-5 mb-6 flex items-center justify-center border-2 border-outline-variant min-h-[80px]">
+            <span class="text-3xl md:text-[48px] font-bold tracking-[0.15em] text-primary font-mono">
+              {{ currentID || '— — — — —' }}
+            </span>
+          </div>
+
+          <!-- Keypad Grid -->
+          <div class="grid grid-cols-3 gap-3">
+            <button v-for="num in ['1','2','3','4','5','6','7','8','9']" :key="num" 
+                    @click="pressKey(num)" 
+                    class="keypad-button h-16 md:h-20 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-2xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
+              {{ num }}
+            </button>
+            
+            <button @click="clearID" class="keypad-button h-16 md:h-20 bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-sm font-bold transition-colors uppercase active:scale-95 cursor-pointer">
+              CLEAR
+            </button>
+            
+            <button @click="pressKey('0')" class="keypad-button h-16 md:h-20 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-2xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
+              0
+            </button>
+            
+            <button @click="backspaceID" class="keypad-button h-16 md:h-20 bg-surface-container-high hover:bg-outline-variant border border-outline-variant rounded-xl text-primary font-bold transition-colors active:scale-95 flex items-center justify-center cursor-pointer">
+              <span class="material-symbols-outlined text-2xl">backspace</span>
+            </button>
+          </div>
+
+          <!-- Check-In Button -->
           <button 
-            :disabled="submitting"
+            :disabled="submitting || !currentID"
             @click="handleCheckIn"
-            class="w-full py-5 bg-secondary hover:bg-on-secondary-container text-white font-bold text-headline-md rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer"
+            class="w-full mt-6 py-4 bg-secondary hover:bg-on-secondary-container text-white font-bold text-lg rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
           >
             <span class="material-symbols-outlined text-2xl">login</span>
             <span>{{ submitting ? 'Memproses...' : 'Check-In Masuk' }}</span>
@@ -83,65 +125,113 @@
         </div>
       </section>
 
-      <!-- Right Column: Manual Entry & Numeric Keypad -->
+      <!-- Right Column: Today's Attendance List -->
       <section class="col-span-12 lg:col-span-7 flex flex-col gap-gutter">
-        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col h-full min-h-[500px] border border-outline-variant">
-          <div class="mb-6">
-            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-2">Input ID Manual</h2>
-            <p class="font-body-md text-body-md text-on-surface-variant">Gunakan keypad di bawah jika QR Code kartu tidak terbaca</p>
-          </div>
-
-          <!-- Display Screen -->
-          <div class="bg-surface-container-high rounded-xl p-6 mb-8 flex items-center justify-center border-2 border-outline-variant min-h-[90px]">
-            <span class="text-4xl md:text-[56px] font-bold tracking-[0.2em] text-primary font-mono">
-              {{ currentID || '000-0' }}
-            </span>
-          </div>
-
-          <!-- Keypad Grid -->
-          <div class="grid grid-cols-3 gap-4 flex-grow">
-            <button v-for="num in ['1','2','3','4','5','6','7','8','9']" :key="num" 
-                    @click="pressKey(num)" 
-                    class="keypad-button h-20 md:h-24 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-3xl font-bold text-primary transition-colors active:scale-95">
-              {{ num }}
-            </button>
-            
-            <button @click="clearID" class="keypad-button h-20 md:h-24 bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-lg font-bold transition-colors uppercase active:scale-95">
-              CLEAR
-            </button>
-            
-            <button @click="pressKey('0')" class="keypad-button h-20 md:h-24 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-3xl font-bold text-primary transition-colors active:scale-95">
-              0
-            </button>
-            
-            <button @click="backspaceID" class="keypad-button h-20 md:h-24 bg-surface-container-high hover:bg-outline-variant border border-outline-variant rounded-xl text-primary font-bold transition-colors active:scale-95 flex items-center justify-center">
-              <span class="material-symbols-outlined text-3xl">backspace</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Information Cards (Bottom Row) -->
-      <section class="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-gutter mt-4">
         <!-- Live Occupancy Card -->
         <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col gap-4 border border-outline-variant">
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-3">
               <span class="material-symbols-outlined text-secondary text-3xl">groups</span>
-              <h3 class="font-headline-md text-headline-md text-primary font-bold">Live Occupancy</h3>
+              <h3 class="font-headline-md text-headline-md text-primary font-bold">Pengunjung Hari Ini</h3>
             </div>
-            <span class="font-label-md text-xs bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-bold uppercase">Real-time</span>
+            <div class="flex items-center gap-2">
+              <span v-if="loadingToday" class="material-symbols-outlined text-on-surface-variant animate-spin text-sm">progress_activity</span>
+              <span class="font-label-md text-xs bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-bold uppercase">
+                {{ todayDate }}
+              </span>
+            </div>
           </div>
 
           <div class="flex justify-between items-end mb-1">
-            <span class="font-body-lg text-on-surface-variant">Kapasitas Pengunjung</span>
-            <span class="font-headline-md font-bold text-primary text-xl">{{ currentOccupancy }}/100</span>
+            <span class="font-body-lg text-on-surface-variant">Total Kehadiran</span>
+            <span class="font-headline-md font-bold text-primary text-2xl">{{ todayTotal }}</span>
           </div>
 
           <div class="w-full bg-surface-container-high rounded-full h-4 overflow-hidden">
-            <div class="bg-secondary h-full rounded-full transition-all duration-1000" :style="{ width: `${currentOccupancy}%` }"></div>
+            <div class="bg-secondary h-full rounded-full transition-all duration-1000" :style="{ width: `${occupancyPercent}%` }"></div>
           </div>
-          <p class="font-caption text-caption text-on-surface-variant italic">Data presensi diperbarui secara otomatis.</p>
+          <p class="font-caption text-caption text-on-surface-variant italic">
+            Kapasitas ruang baca: {{ todayTotal }}/100 — Data diperbarui otomatis setiap 30 detik.
+          </p>
+        </div>
+
+        <!-- Attendance Table Card -->
+        <div class="bg-white rounded-2xl card-shadow border border-outline-variant flex flex-col overflow-hidden flex-grow">
+          <div class="p-6 pb-3 border-b border-outline-variant flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary text-2xl">list_alt</span>
+              <h3 class="font-headline-md text-lg text-primary font-bold">Daftar Hadir Hari Ini</h3>
+            </div>
+            <button @click="refreshAttendanceData" :disabled="loadingToday" class="flex items-center gap-1 text-sm text-secondary hover:text-on-secondary-container transition-colors cursor-pointer disabled:opacity-50">
+              <span class="material-symbols-outlined text-lg" :class="{ 'animate-spin': loadingToday }">refresh</span>
+              <span class="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="!loadingToday && todayAttendees.length === 0" class="flex-grow flex flex-col items-center justify-center p-12 text-center">
+            <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">event_busy</span>
+            <h4 class="text-lg font-bold text-on-surface-variant mb-1">Belum Ada Pengunjung</h4>
+            <p class="text-sm text-on-surface-variant/70">Belum ada presensi yang tercatat untuk hari ini.</p>
+          </div>
+
+          <!-- Loading state -->
+          <div v-else-if="loadingToday && todayAttendees.length === 0" class="flex-grow flex items-center justify-center p-12">
+            <div class="flex flex-col items-center gap-3">
+              <span class="material-symbols-outlined text-4xl text-secondary animate-spin">progress_activity</span>
+              <p class="text-sm text-on-surface-variant">Memuat data kehadiran...</p>
+            </div>
+          </div>
+
+          <!-- Attendance List -->
+          <div v-else class="overflow-y-auto max-h-[480px] scrollbar-thin">
+            <table class="w-full text-left">
+              <thead class="bg-surface-container-low sticky top-0 z-10">
+                <tr class="text-xs uppercase text-on-surface-variant tracking-wider">
+                  <th class="px-6 py-3 font-semibold">No</th>
+                  <th class="px-6 py-3 font-semibold">Pemustaka</th>
+                  <th class="px-6 py-3 font-semibold hidden md:table-cell">NIM/ID</th>
+                  <th class="px-6 py-3 font-semibold hidden lg:table-cell">Prodi</th>
+                  <th class="px-6 py-3 font-semibold text-right">Waktu Masuk</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  v-for="(item, idx) in todayAttendees" 
+                  :key="item.id" 
+                  class="border-b border-outline-variant/50 hover:bg-surface-container-low/50 transition-colors"
+                  :class="{ 'bg-secondary-fixed/20 animate-pulse-once': item.id === lastCheckedRecordId }"
+                >
+                  <td class="px-6 py-4 font-mono text-sm text-on-surface-variant">{{ idx + 1 }}</td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <img 
+                        :src="item.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.user?.name || 'U')}&color=4f46e5&background=e0e7ff`" 
+                        :alt="item.user?.name" 
+                        class="w-9 h-9 rounded-full ring-2 ring-outline-variant/30 object-cover"
+                      />
+                      <div>
+                        <p class="font-semibold text-sm text-on-surface">{{ item.user?.name || '-' }}</p>
+                        <p class="text-xs text-on-surface-variant capitalize md:hidden">{{ item.user?.role || '-' }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 hidden md:table-cell">
+                    <span class="font-mono text-sm text-on-surface-variant">{{ item.user?.nim || item.user?.nidn || '-' }}</span>
+                  </td>
+                  <td class="px-6 py-4 hidden lg:table-cell">
+                    <span class="text-sm text-on-surface-variant">{{ item.user?.prodi || '-' }}</span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <span class="inline-flex items-center gap-1 bg-primary-fixed/40 text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-semibold font-mono">
+                      <span class="material-symbols-outlined text-sm">schedule</span>
+                      {{ formatTime(item.created_at) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Visitor Information Card -->
@@ -168,7 +258,7 @@
           <p>Academic Library Management Kiosk System v2.4.0</p>
         </div>
         <div class="flex gap-6">
-          <span class="text-secondary font-bold">Kapasitas: {{ currentOccupancy }}/100</span>
+          <span class="text-secondary font-bold">Pengunjung: {{ todayTotal }}</span>
           <NuxtLink to="/layanan" class="hover:text-secondary transition-colors">Tata Tertib</NuxtLink>
           <NuxtLink to="/tentang" class="hover:text-secondary transition-colors">Meja Bantuan</NuxtLink>
         </div>
@@ -178,38 +268,67 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { usePustakaApi, type SiteSettings } from '../composables/usePustakaApi';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { usePustakaApi, type SiteSettings, type AttendanceRecord, type AttendanceTodayResponse } from '../composables/usePustakaApi';
 
-const { getSettings, submitAttendance } = usePustakaApi();
+const { getSettings, getAttendanceToday, submitAttendance } = usePustakaApi();
 
 const siteSettings = ref<SiteSettings | null>(null);
 const currentID = ref('');
 const currentTime = ref('');
 const currentDate = ref('');
-const currentOccupancy = ref(45);
 const submitting = ref(false);
 const alertMessage = ref('');
 const alertSuccess = ref(true);
+const loadingToday = ref(false);
+
+// Real API data
+const todayData = ref<AttendanceTodayResponse | null>(null);
+const todayAttendees = ref<AttendanceRecord[]>([]);
+const todayTotal = ref(0);
+const todayDate = ref('');
+const lastCheckedUser = ref<{ name: string; nim?: string; role?: string } | null>(null);
+const lastCheckedRecordId = ref<number | null>(null);
+
+const occupancyPercent = computed(() => {
+  return Math.min(todayTotal.value, 100);
+});
 
 let clockTimer: any = null;
+let refreshTimer: any = null;
 
 const updateClock = () => {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
-  currentTime.value = `${hours}:${minutes}`;
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  currentTime.value = `${hours}:${minutes}:${seconds}`;
 
   currentDate.value = now.toLocaleDateString('id-ID', {
-    weekday: 'short',
+    weekday: 'long',
     day: 'numeric',
-    month: 'short',
+    month: 'long',
     year: 'numeric'
   });
 };
 
+const formatTime = (isoString: string) => {
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Jakarta'
+    });
+  } catch {
+    return '-';
+  }
+};
+
 const pressKey = (val: string) => {
-  if (currentID.value.length < 12) {
+  if (currentID.value.length < 16) {
     currentID.value += val;
   }
 };
@@ -222,23 +341,55 @@ const backspaceID = () => {
   currentID.value = currentID.value.slice(0, -1);
 };
 
+const refreshAttendanceData = async () => {
+  loadingToday.value = true;
+  try {
+    const res = await getAttendanceToday();
+    if (res?.success && res.data) {
+      todayData.value = res.data;
+      todayAttendees.value = res.data.daftar_hadir || [];
+      todayTotal.value = res.data.total_hadir || 0;
+      todayDate.value = res.data.tanggal || new Date().toISOString().split('T')[0];
+    }
+  } catch (e) {
+    console.error('Error fetching today attendance:', e);
+  } finally {
+    loadingToday.value = false;
+  }
+};
+
 const handleCheckIn = async () => {
-  const targetId = currentID.value.trim() || '2026001';
+  const targetToken = currentID.value.trim();
+  if (!targetToken) return;
+
   submitting.value = true;
   alertMessage.value = '';
+  lastCheckedUser.value = null;
+  lastCheckedRecordId.value = null;
 
   try {
-    const res = await submitAttendance(targetId);
+    const res = await submitAttendance(targetToken);
     if (res?.success) {
       alertSuccess.value = true;
-      alertMessage.value = res.message || `Presensi berhasil tercatat untuk ID: ${targetId}`;
-      if (currentOccupancy.value < 100) {
-        currentOccupancy.value += 1;
+      alertMessage.value = res.message || `Presensi berhasil tercatat!`;
+      
+      // Extract user info from the response
+      if (res.data?.user) {
+        lastCheckedUser.value = {
+          name: res.data.user.name,
+          nim: res.data.user.nim || undefined,
+          role: res.data.user.role
+        };
+        lastCheckedRecordId.value = res.data.id;
       }
+      
       currentID.value = '';
+      
+      // Refresh attendance list to show new entry
+      await refreshAttendanceData();
     } else {
       alertSuccess.value = false;
-      alertMessage.value = res.message || 'Presensi gagal. Silakan coba lagi.';
+      alertMessage.value = res.message || 'Presensi gagal. QR Token tidak valid.';
     }
   } catch (err: any) {
     alertSuccess.value = false;
@@ -248,7 +399,8 @@ const handleCheckIn = async () => {
 
     setTimeout(() => {
       alertMessage.value = '';
-    }, 4000);
+      lastCheckedUser.value = null;
+    }, 5000);
   }
 };
 
@@ -256,6 +408,7 @@ onMounted(async () => {
   updateClock();
   clockTimer = setInterval(updateClock, 1000);
 
+  // Load settings
   try {
     const res = await getSettings();
     if (res?.success && res.data) {
@@ -264,10 +417,17 @@ onMounted(async () => {
   } catch (e) {
     console.error('Error fetching settings for attendance kiosk:', e);
   }
+
+  // Load today's attendance data
+  await refreshAttendanceData();
+
+  // Auto-refresh every 30 seconds
+  refreshTimer = setInterval(refreshAttendanceData, 30000);
 });
 
 onUnmounted(() => {
   if (clockTimer) clearInterval(clockTimer);
+  if (refreshTimer) clearInterval(refreshTimer);
 });
 </script>
 
@@ -282,5 +442,27 @@ onUnmounted(() => {
   0% { top: 0%; }
   50% { top: 100%; }
   100% { top: 0%; }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.animate-pulse-once {
+  animation: highlight-fade 2s ease-out;
+}
+@keyframes highlight-fade {
+  0% { background-color: rgba(252, 202, 102, 0.4); }
+  100% { background-color: transparent; }
 }
 </style>
