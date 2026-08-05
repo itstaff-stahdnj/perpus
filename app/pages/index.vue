@@ -532,7 +532,7 @@ const loadData = async () => {
     if (resNews?.success) newsList.value = resNews.data || [];
     if (resAnnouncements?.success) announcementsList.value = resAnnouncements.data || [];
     if (resLoans?.success) loansList.value = resLoans.data || [];
-    if (resProfile?.success && resProfile.data?.user) userProfile.value = resProfile.data.user;
+    if (resProfile?.success && resProfile.data) userProfile.value = resProfile.data.user || resProfile.data;
     if (resTestimonials?.success && resTestimonials.data) testimonialsList.value = resTestimonials.data || [];
     if (resSettings?.success && resSettings.data) siteSettings.value = resSettings.data;
   } catch (err) {

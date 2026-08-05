@@ -57,21 +57,35 @@
     </nav>
 
     <div class="flex items-center gap-4">
-      <button class="relative p-2 hover:bg-surface-container-high rounded-full transition-colors" title="Notifikasi">
-        <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
-        <span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full border-2 border-surface"></span>
-      </button>
+      <NuxtLink to="/absensi" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high hover:bg-secondary/10 text-primary hover:text-secondary rounded-full text-xs font-bold transition-colors">
+        <span class="material-symbols-outlined text-base">tv</span>
+        <span>Kiosk Absensi</span>
+      </NuxtLink>
 
-      <!-- Dynamic User Profile -->
-      <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
-        <div class="text-right hidden sm:block">
-          <p class="font-label-md text-label-md text-primary font-bold line-clamp-1">{{ profile?.name || 'Administrator' }}</p>
-          <p class="font-caption text-caption text-on-surface-variant capitalize">{{ profile?.role || 'Anggota' }} STAH</p>
-        </div>
-        <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden border border-secondary/30">
-          <img v-if="profile?.avatar_url" class="w-full h-full object-cover" :src="profile.avatar_url" :alt="profile.name" />
-          <span v-else class="text-sm">{{ (profile?.name || 'A').charAt(0) }}</span>
-        </div>
+      <!-- If Logged In: Profile & Dashboard Button -->
+      <div v-if="tokenCookie && profile" class="flex items-center gap-3 pl-3 border-l border-outline-variant">
+        <NuxtLink :to="userDashboardRoute" class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" title="Buka Dashboard">
+          <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden border border-secondary/30 shrink-0">
+            <img v-if="profile?.avatar_url" class="w-full h-full object-cover" :src="profile.avatar_url" :alt="profile.name" />
+            <span v-else class="text-xs">{{ (profile?.name || 'U').charAt(0) }}</span>
+          </div>
+          <div class="text-left hidden sm:block pr-2">
+            <p class="font-label-md text-xs text-primary font-bold line-clamp-1 leading-tight">{{ profile?.name || 'User' }}</p>
+            <p class="font-caption text-[10px] text-secondary font-bold uppercase leading-none mt-0.5">{{ userRoleLabel }}</p>
+          </div>
+        </NuxtLink>
+
+        <button @click="handleLogout" class="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer" title="Keluar (Logout)">
+          <span class="material-symbols-outlined text-xl">logout</span>
+        </button>
+      </div>
+
+      <!-- If Logged Out: Show Login Button -->
+      <div v-else class="flex items-center gap-2 pl-3 border-l border-outline-variant">
+        <NuxtLink to="/login" class="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95">
+          <span class="material-symbols-outlined text-base">login</span>
+          <span>Masuk</span>
+        </NuxtLink>
       </div>
     </div>
 
@@ -123,20 +137,37 @@
               <span class="material-symbols-outlined">badge</span> Presensi Kiosk
             </NuxtLink>
             <NuxtLink 
-              to="/berita" 
+              to="/tata-tertib" 
               @click="mobileMenuOpen = false"
               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/berita') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
+              :class="route.path.startsWith('/tata-tertib') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
             >
-              <span class="material-symbols-outlined">newspaper</span> Berita
+              <span class="material-symbols-outlined">gavel</span> Tata Tertib
             </NuxtLink>
             <NuxtLink 
-              to="/tentang" 
+              to="/bantuan" 
               @click="mobileMenuOpen = false"
               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/tentang') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
+              :class="route.path.startsWith('/bantuan') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
             >
-              <span class="material-symbols-outlined">info</span> Tentang Kami
+              <span class="material-symbols-outlined">support_agent</span> Meja Bantuan
+            </NuxtLink>
+
+            <NuxtLink 
+              v-if="tokenCookie"
+              :to="userDashboardRoute" 
+              @click="mobileMenuOpen = false"
+              class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
+            >
+              <span class="material-symbols-outlined">dashboard</span> Buka Dashboard
+            </NuxtLink>
+            <NuxtLink 
+              v-else
+              to="/login" 
+              @click="mobileMenuOpen = false"
+              class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
+            >
+              <span class="material-symbols-outlined">login</span> Masuk Ke Pustaka
             </NuxtLink>
           </nav>
         </div>
@@ -150,26 +181,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { usePustakaApi, type UserProfile, type SiteSettings } from '../composables/usePustakaApi';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { usePustakaApi, type UserProfile } from '../composables/usePustakaApi';
 
 const route = useRoute();
-const { getProfile, getSettings } = usePustakaApi();
+const router = useRouter();
+const { getProfile, getSettings, logout, tokenCookie } = usePustakaApi();
 const profile = ref<UserProfile | null>(null);
 const siteName = ref('Perpustakaan STAH DNJ');
 const logoUrl = ref<string | undefined>(undefined);
 const mobileMenuOpen = ref(false);
 
+const adminRoles = ['admin', 'kepala_pustaka', 'kepala_perpustakaan', 'pustakawan', 'staf', 'petugas', 'operator'];
+
+const userDashboardRoute = computed(() => {
+  const roleStr = (profile.value?.role || '').toLowerCase();
+  const isAdmin = adminRoles.some(r => roleStr.includes(r));
+  return isAdmin ? '/admin' : '/dashboard';
+});
+
+const userRoleLabel = computed(() => {
+  return profile.value?.role || 'Pemustaka';
+});
+
+const handleLogout = async () => {
+  await logout();
+  profile.value = null;
+  router.push('/login');
+};
+
 onMounted(async () => {
   try {
     const [resProfile, resSettings] = await Promise.all([
-      getProfile().catch(() => null),
+      tokenCookie.value ? getProfile().catch(() => null) : null,
       getSettings().catch(() => null)
     ]);
     
     if (resProfile?.success) {
-      profile.value = resProfile.data?.user || null;
+      profile.value = ((resProfile as any)?.data?.user || (resProfile as any)?.data || (resProfile as any)?.user) as UserProfile;
     }
     if (resSettings?.success && resSettings.data) {
       siteName.value = resSettings.data.app_name || 'Perpustakaan STAH DNJ';
