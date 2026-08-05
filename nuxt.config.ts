@@ -136,8 +136,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     pustakaApiKey: process.env.PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b',
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://portal-perpus.stahdnj.ac.id/api',
-      pustakaApiKey: process.env.NUXT_PUBLIC_PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b'
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '/api/pustaka'
     }
   },
 
