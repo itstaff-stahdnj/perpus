@@ -147,14 +147,21 @@
               <span class="material-symbols-outlined">support_agent</span> Meja Bantuan
             </NuxtLink>
 
-            <a 
-              v-if="tokenCookie"
-              href="https://portal-perpus.stahdnj.ac.id" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
-            >
-              <span class="material-symbols-outlined">dashboard</span> Buka Portal Dashboard
-            </a>
+            <template v-if="tokenCookie">
+              <a 
+                href="https://portal-perpus.stahdnj.ac.id" 
+                @click="mobileMenuOpen = false"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
+              >
+                <span class="material-symbols-outlined">dashboard</span> Buka Portal Dashboard
+              </a>
+              <button 
+                @click="handleLogoutMobile" 
+                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-rose-600 bg-rose-50 hover:bg-rose-100 mt-2 w-full text-left transition-colors cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-rose-600">logout</span> Keluar (Logout)
+              </button>
+            </template>
             <a 
               v-else
               href="https://portal-perpus.stahdnj.ac.id/login" 
@@ -203,6 +210,11 @@ const handleLogout = async () => {
   await logout();
   profile.value = null;
   router.push('/login');
+};
+
+const handleLogoutMobile = async () => {
+  mobileMenuOpen.value = false;
+  await handleLogout();
 };
 
 onMounted(async () => {
