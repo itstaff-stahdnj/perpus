@@ -34,13 +34,6 @@
         Layanan
       </NuxtLink>
       <NuxtLink 
-        to="/absensi" 
-        class="font-label-md text-label-md hover:bg-surface-container-high transition-colors px-3 py-2 rounded-lg"
-        :class="route.path.startsWith('/absensi') ? 'text-secondary font-bold' : 'text-on-surface-variant'"
-      >
-        Absensi
-      </NuxtLink>
-      <NuxtLink 
         to="/berita" 
         class="font-label-md text-label-md hover:bg-surface-container-high transition-colors px-3 py-2 rounded-lg"
         :class="route.path.startsWith('/berita') ? 'text-secondary font-bold' : 'text-on-surface-variant'"
@@ -57,11 +50,6 @@
     </nav>
 
     <div class="flex items-center gap-4">
-      <NuxtLink to="/absensi" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high hover:bg-secondary/10 text-primary hover:text-secondary rounded-full text-xs font-bold transition-colors">
-        <span class="material-symbols-outlined text-base">tv</span>
-        <span>Kiosk Absensi</span>
-      </NuxtLink>
-
       <!-- If Logged In: Profile & Dashboard Button -->
       <div v-if="tokenCookie && profile" class="flex items-center gap-3 pl-3 border-l border-outline-variant">
         <NuxtLink :to="userDashboardRoute" class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" title="Buka Dashboard">
@@ -127,14 +115,6 @@
               :class="route.path.startsWith('/layanan') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
             >
               <span class="material-symbols-outlined">room_service</span> Layanan
-            </NuxtLink>
-            <NuxtLink 
-              to="/absensi" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/absensi') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">badge</span> Presensi Kiosk
             </NuxtLink>
             <NuxtLink 
               to="/tata-tertib" 
