@@ -107,41 +107,49 @@
         </div>
       </section>
 
-      <!-- Kolom 2 (Tengah): Input NIM / NIDN Manual -->
+      <!-- Kolom 2 (Tengah): Input NIM / NIDN / ID Token Manual -->
       <section class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
         <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col border border-outline-variant h-full">
           <div class="mb-3">
             <h2 class="font-headline-md text-headline-md text-primary font-bold mb-1">Input Manual</h2>
-            <p class="font-body-md text-on-surface-variant text-xs">Pilih kategori dan masukkan nomor identitas</p>
+            <p class="font-body-md text-on-surface-variant text-xs">Pilih jenis identitas (NIM, NIDN, atau ID Token) lalu masukkan nomornya</p>
           </div>
 
-          <!-- Mode Selector Tabs: NIM vs NIDN -->
-          <div class="grid grid-cols-2 p-1 bg-surface-container-high rounded-xl mb-3 border border-outline-variant/60">
+          <!-- Mode Selector Tabs: NIM vs NIDN vs ID/QR Token -->
+          <div class="grid grid-cols-3 p-1 bg-surface-container-high rounded-xl mb-3 border border-outline-variant/60">
             <button 
               @click="setInputType('NIM')" 
-              class="py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              class="py-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
               :class="inputType === 'NIM' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-primary'"
             >
-              <span class="material-symbols-outlined text-base">school</span>
-              <span>NIM (Mahasiswa)</span>
+              <span class="material-symbols-outlined text-sm">school</span>
+              <span>NIM</span>
             </button>
             <button 
               @click="setInputType('NIDN')" 
-              class="py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              class="py-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
               :class="inputType === 'NIDN' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-primary'"
             >
-              <span class="material-symbols-outlined text-base">badge</span>
-              <span>NIDN (Dosen/Staff)</span>
+              <span class="material-symbols-outlined text-sm">badge</span>
+              <span>NIDN</span>
+            </button>
+            <button 
+              @click="setInputType('QR')" 
+              class="py-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
+              :class="inputType === 'QR' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-primary'"
+            >
+              <span class="material-symbols-outlined text-sm">qr_code_2</span>
+              <span>ID / QR Token</span>
             </button>
           </div>
 
           <!-- Display Screen -->
           <div class="bg-surface-container-high rounded-xl p-3.5 mb-3 flex flex-col items-center justify-center border-2 border-outline-variant min-h-[72px]">
             <span class="text-[11px] font-bold text-secondary uppercase tracking-wider mb-0.5">
-              Nomor {{ inputType }}
+              {{ inputType === 'QR' ? 'ID / QR Token Kartu' : `Nomor ${inputType}` }}
             </span>
             <span class="text-xl md:text-2xl font-bold tracking-[0.1em] text-primary font-mono break-all text-center">
-              {{ currentID || (inputType === 'NIM' ? 'e.g. 2209.00.1929' : 'e.g. 0312048501') }}
+              {{ currentID || (inputType === 'NIM' ? 'e.g. 2209.00.1929' : inputType === 'NIDN' ? 'e.g. 0312048501' : 'e.g. QR-8F3E9A1B') }}
             </span>
           </div>
 
@@ -180,7 +188,7 @@
               class="flex-grow py-3 bg-secondary hover:bg-on-secondary-container text-white font-bold text-sm rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
             >
               <span class="material-symbols-outlined text-lg">login</span>
-              <span>{{ submitting ? 'Memproses...' : `Check-In (${inputType})` }}</span>
+              <span>{{ submitting ? 'Memproses...' : `Check-In (${inputType === 'QR' ? 'ID Token' : inputType})` }}</span>
             </button>
           </div>
         </div>
@@ -357,9 +365,9 @@ const formatTime = (isoString: string) => {
   }
 };
 
-const inputType = ref<'NIM' | 'NIDN'>('NIM');
+const inputType = ref<'NIM' | 'NIDN' | 'QR'>('NIM');
 
-const setInputType = (type: 'NIM' | 'NIDN') => {
+const setInputType = (type: 'NIM' | 'NIDN' | 'QR') => {
   inputType.value = type;
   currentID.value = '';
 };
