@@ -107,50 +107,82 @@
         </div>
       </section>
 
-      <!-- Kolom 2 (Tengah): Masukkan QR Token Manual -->
+      <!-- Kolom 2 (Tengah): Input NIM / NIDN Manual -->
       <section class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
         <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col border border-outline-variant h-full">
-          <div class="mb-4">
-            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-1">Input QR Token Manual</h2>
-            <p class="font-body-md text-on-surface-variant text-xs">Masukkan kode QR Token/NIM jika kartu tidak terbaca</p>
+          <div class="mb-3">
+            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-1">Input Manual</h2>
+            <p class="font-body-md text-on-surface-variant text-xs">Pilih kategori dan masukkan nomor identitas</p>
+          </div>
+
+          <!-- Mode Selector Tabs: NIM vs NIDN -->
+          <div class="grid grid-cols-2 p-1 bg-surface-container-high rounded-xl mb-3 border border-outline-variant/60">
+            <button 
+              @click="setInputType('NIM')" 
+              class="py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              :class="inputType === 'NIM' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-primary'"
+            >
+              <span class="material-symbols-outlined text-base">school</span>
+              <span>NIM (Mahasiswa)</span>
+            </button>
+            <button 
+              @click="setInputType('NIDN')" 
+              class="py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              :class="inputType === 'NIDN' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-primary'"
+            >
+              <span class="material-symbols-outlined text-base">badge</span>
+              <span>NIDN (Dosen/Staff)</span>
+            </button>
           </div>
 
           <!-- Display Screen -->
-          <div class="bg-surface-container-high rounded-xl p-4 mb-4 flex items-center justify-center border-2 border-outline-variant min-h-[70px]">
-            <span class="text-2xl md:text-3xl font-bold tracking-[0.15em] text-primary font-mono">
-              {{ currentID || '— — — — —' }}
+          <div class="bg-surface-container-high rounded-xl p-3.5 mb-3 flex flex-col items-center justify-center border-2 border-outline-variant min-h-[72px]">
+            <span class="text-[11px] font-bold text-secondary uppercase tracking-wider mb-0.5">
+              Nomor {{ inputType }}
+            </span>
+            <span class="text-xl md:text-2xl font-bold tracking-[0.1em] text-primary font-mono break-all text-center">
+              {{ currentID || (inputType === 'NIM' ? 'e.g. 2209.00.1929' : 'e.g. 0312048501') }}
             </span>
           </div>
 
-          <!-- Keypad Grid -->
-          <div class="grid grid-cols-3 gap-2.5 flex-grow">
+          <!-- Keypad Grid (with Dot button) -->
+          <div class="grid grid-cols-3 gap-2 flex-grow">
             <button v-for="num in ['1','2','3','4','5','6','7','8','9']" :key="num" 
                     @click="pressKey(num)" 
-                    class="keypad-button h-14 md:h-16 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
+                    class="keypad-button h-12 md:h-14 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
               {{ num }}
             </button>
-            
-            <button @click="clearID" class="keypad-button h-14 md:h-16 bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-xs font-bold transition-colors uppercase active:scale-95 cursor-pointer">
-              CLEAR
+
+            <!-- Dot (.) Button for NIM separator -->
+            <button @click="pressKey('.')" 
+                    class="keypad-button h-12 md:h-14 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-2xl font-extrabold text-primary transition-colors active:scale-95 cursor-pointer"
+                    title="Titik separator NIM">
+              .
             </button>
             
-            <button @click="pressKey('0')" class="keypad-button h-14 md:h-16 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
+            <button @click="pressKey('0')" class="keypad-button h-12 md:h-14 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
               0
             </button>
-            
-            <button @click="backspaceID" class="keypad-button h-14 md:h-16 bg-surface-container-high hover:bg-outline-variant border border-outline-variant rounded-xl text-primary font-bold transition-colors active:scale-95 flex items-center justify-center cursor-pointer">
+
+            <button @click="backspaceID" class="keypad-button h-12 md:h-14 bg-surface-container-high hover:bg-outline-variant border border-outline-variant rounded-xl text-primary font-bold transition-colors active:scale-95 flex items-center justify-center cursor-pointer" title="Hapus">
               <span class="material-symbols-outlined text-xl">backspace</span>
             </button>
           </div>
 
-          <button 
-            :disabled="submitting || !currentID"
-            @click="handleCheckIn"
-            class="w-full mt-4 py-3.5 bg-secondary hover:bg-on-secondary-container text-white font-bold text-base rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-          >
-            <span class="material-symbols-outlined text-xl">login</span>
-            <span>{{ submitting ? 'Memproses...' : 'Check-In Masuk' }}</span>
-          </button>
+          <!-- Actions Row: CLEAR & Submit -->
+          <div class="flex gap-2 mt-3">
+            <button @click="clearID" class="px-4 py-3 bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-xs font-bold transition-colors uppercase active:scale-95 cursor-pointer">
+              CLEAR
+            </button>
+            <button 
+              :disabled="submitting || !currentID"
+              @click="handleCheckIn"
+              class="flex-grow py-3 bg-secondary hover:bg-on-secondary-container text-white font-bold text-sm rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            >
+              <span class="material-symbols-outlined text-lg">login</span>
+              <span>{{ submitting ? 'Memproses...' : `Check-In (${inputType})` }}</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -325,8 +357,15 @@ const formatTime = (isoString: string) => {
   }
 };
 
+const inputType = ref<'NIM' | 'NIDN'>('NIM');
+
+const setInputType = (type: 'NIM' | 'NIDN') => {
+  inputType.value = type;
+  currentID.value = '';
+};
+
 const pressKey = (val: string) => {
-  if (currentID.value.length < 16) {
+  if (currentID.value.length < 25) {
     currentID.value += val;
   }
 };
