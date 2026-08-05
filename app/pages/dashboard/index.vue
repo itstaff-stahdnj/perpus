@@ -66,78 +66,82 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
       <!-- Top Header Bar -->
-      <header class="flex justify-between items-center px-6 lg:px-10 sticky top-0 z-40 bg-surface-container-lowest shadow-xs w-full h-16 border-b border-outline-variant">
-        <div class="flex items-center gap-6 flex-1">
-          <h1 class="font-headline-md text-lg font-black text-primary hidden lg:block">Library Member Dashboard</h1>
+      <header class="flex justify-between items-center px-4 lg:px-10 sticky top-0 z-40 bg-surface-container-lowest shadow-xs w-full h-16 border-b border-outline-variant">
+        <div class="flex items-center gap-3 lg:gap-6 flex-1">
+          <NuxtLink to="/" class="flex items-center gap-1.5 text-primary hover:text-secondary font-bold text-xs shrink-0" title="Kembali ke Beranda Utama">
+            <span class="material-symbols-outlined text-lg">arrow_back</span>
+            <span class="hidden sm:inline">Beranda</span>
+          </NuxtLink>
+          <h1 class="font-headline-md text-sm lg:text-lg font-black text-primary hidden lg:block">Library Member Dashboard</h1>
           <div class="relative max-w-md w-full">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-base">search</span>
             <input 
               v-model="catalogSearch" 
               type="text" 
-              placeholder="Search catalog, articles, or reserves..." 
-              class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-full font-body-md text-xs text-on-surface focus:outline-none focus:border-primary transition-colors"
+              placeholder="Cari buku / peminjaman..." 
+              class="w-full pl-9 pr-3 py-1.5 sm:py-2 bg-surface border border-outline-variant rounded-full font-body-md text-xs text-on-surface focus:outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
 
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-3 border-l border-outline-variant pl-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 border-l border-outline-variant pl-3">
             <div class="text-right hidden sm:block">
               <p class="font-bold text-xs text-primary">{{ userProfile?.name || 'Mahasiswa / Pemustaka' }}</p>
               <p class="text-[11px] text-on-surface-variant uppercase">{{ userProfile?.role || 'Anggota Perpustakaan' }}</p>
             </div>
-            <div class="w-9 h-9 rounded-full bg-primary-container text-white flex items-center justify-center font-bold overflow-hidden border border-outline-variant">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary-container text-white flex items-center justify-center font-bold overflow-hidden border border-outline-variant shrink-0">
               <img v-if="userProfile?.avatar_url" :src="userProfile.avatar_url" alt="Avatar" class="w-full h-full object-cover"/>
-              <span v-else class="material-symbols-outlined text-xl">account_circle</span>
+              <span v-else class="material-symbols-outlined text-lg sm:text-xl">account_circle</span>
             </div>
           </div>
         </div>
       </header>
 
       <!-- Main Scrollable Area -->
-      <div class="flex-1 overflow-y-auto p-6 lg:p-10 pb-24 bg-surface">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 pb-24 bg-surface">
         <div class="max-w-container-max mx-auto space-y-8">
           
           <!-- Welcome Section -->
           <section>
-            <h2 class="font-headline-lg text-2xl font-bold text-primary mb-1">
+            <h2 class="font-headline-lg text-xl sm:text-2xl font-bold text-primary mb-1">
               Selamat Datang, {{ userProfile?.name || 'Pemustaka STAH DNJ' }}
             </h2>
             <p class="font-body-lg text-xs text-on-surface-variant">Pantau aktivitas peminjaman buku dan layanan pustaka Anda.</p>
           </section>
 
           <!-- Stat Cards Grid -->
-          <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
+          <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div class="bg-surface-container-lowest rounded-xl p-5 sm:p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
               <div class="flex justify-between items-start">
                 <span class="font-label-md text-xs text-on-surface-variant uppercase font-bold tracking-wider">Buku Dipinjam</span>
                 <span class="material-symbols-outlined text-primary-container text-2xl">book</span>
               </div>
-              <div class="font-display-lg text-3xl font-extrabold text-primary">{{ activeLoans.length }}</div>
+              <div class="font-display-lg text-2xl sm:text-3xl font-extrabold text-primary">{{ activeLoans.length }}</div>
             </div>
 
-            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
+            <div class="bg-surface-container-lowest rounded-xl p-5 sm:p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
               <div class="flex justify-between items-start">
                 <span class="font-label-md text-xs text-on-surface-variant uppercase font-bold tracking-wider">Katalog Tersedia</span>
                 <span class="material-symbols-outlined text-secondary text-2xl">library_add_check</span>
               </div>
-              <div class="font-display-lg text-3xl font-extrabold text-primary">{{ totalBooksAvailable }}</div>
+              <div class="font-display-lg text-2xl sm:text-3xl font-extrabold text-primary">{{ totalBooksAvailable }}</div>
             </div>
 
-            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
+            <div class="bg-surface-container-lowest rounded-xl p-5 sm:p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
               <div class="flex justify-between items-start">
                 <span class="font-label-md text-xs text-on-surface-variant uppercase font-bold tracking-wider">Denda Tertunda</span>
                 <span class="material-symbols-outlined text-rose-600 text-2xl">report</span>
               </div>
-              <div class="font-display-lg text-3xl font-extrabold text-rose-700">Rp 0</div>
+              <div class="font-display-lg text-2xl sm:text-3xl font-extrabold text-rose-700">Rp 0</div>
             </div>
 
-            <div class="bg-surface-container-lowest rounded-xl p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
+            <div class="bg-surface-container-lowest rounded-xl p-5 sm:p-6 shadow-xs border border-surface-variant flex flex-col justify-between h-32">
               <div class="flex justify-between items-start">
                 <span class="font-label-md text-xs text-on-surface-variant uppercase font-bold tracking-wider">Status Keanggotaan</span>
                 <span class="material-symbols-outlined text-amber-700 text-2xl">verified</span>
               </div>
-              <div class="font-display-lg text-sm font-bold text-emerald-700 uppercase">
+              <div class="font-display-lg text-xs sm:text-sm font-bold text-emerald-700 uppercase">
                 {{ userProfile?.status_keanggotaan || 'Aktif' }}
               </div>
             </div>
@@ -149,14 +153,14 @@
             <!-- Left Column: Active Loans Table -->
             <section class="lg:col-span-2 space-y-6">
               <div class="bg-surface-container-lowest rounded-xl shadow-xs border border-surface-variant overflow-hidden">
-                <div class="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-bright">
-                  <h3 class="font-headline-md text-base font-bold text-primary">Pinjaman Aktif (Active Loans)</h3>
+                <div class="p-4 sm:p-6 border-b border-surface-variant flex justify-between items-center bg-surface-bright">
+                  <h3 class="font-headline-md text-sm sm:text-base font-bold text-primary">Pinjaman Aktif (Active Loans)</h3>
                   <NuxtLink to="/buku" class="font-label-md text-xs font-bold text-primary-container hover:text-primary transition-colors">
                     Cari Buku Lain
                   </NuxtLink>
                 </div>
 
-                <div class="p-0">
+                <div class="overflow-x-auto">
                   <table class="w-full text-left border-collapse">
                     <thead>
                       <tr class="border-b border-surface-variant bg-surface text-xs">

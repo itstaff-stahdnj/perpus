@@ -1,31 +1,31 @@
 <template>
   <div class="min-h-screen flex flex-col bg-surface text-on-surface font-sans">
     <!-- Kiosk Top Header -->
-    <header class="bg-primary dark:bg-primary-container text-white shadow-md fixed top-0 left-0 w-full z-50 h-20 flex justify-between items-center px-margin-mobile md:px-margin-desktop">
-      <div class="flex flex-col">
+    <header class="bg-primary dark:bg-primary-container text-white shadow-md fixed top-0 left-0 w-full z-50 h-20 flex justify-between items-center px-4 md:px-margin-desktop">
+      <div class="flex flex-col max-w-[55%] sm:max-w-none">
         <NuxtLink to="/" class="flex items-center gap-2">
-          <span class="text-headline-md font-headline-md font-bold text-secondary-fixed">
+          <span class="text-sm sm:text-headline-md font-bold text-secondary-fixed truncate leading-tight">
             {{ siteSettings?.app_name || 'Perpustakaan STAH Dharma Nusantara' }}
           </span>
         </NuxtLink>
-        <span class="text-label-md font-label-md opacity-80 uppercase tracking-wider text-xs">System Presensi Kedatangan Akademik</span>
+        <span class="text-[10px] sm:text-xs opacity-80 uppercase tracking-wider truncate">Presensi Kedatangan Akademik</span>
       </div>
 
-      <div class="flex items-center gap-4 md:gap-6">
+      <div class="flex items-center gap-2 sm:gap-4 md:gap-6">
         <div class="flex flex-col items-end">
-          <span class="text-headline-lg text-xl md:text-2xl font-bold font-mono tracking-wider">{{ currentTime }}</span>
-          <span class="text-xs md:text-label-md opacity-90">{{ currentDate }}</span>
+          <span class="text-sm sm:text-xl md:text-2xl font-bold font-mono tracking-wider">{{ currentTime }}</span>
+          <span class="text-[10px] sm:text-xs opacity-90 hidden sm:block">{{ currentDate }}</span>
         </div>
-        <div class="h-10 w-[1px] bg-white/20 hidden sm:block"></div>
+        <div class="h-8 w-[1px] bg-white/20 hidden sm:block"></div>
         <button 
           @click="toggleFullscreen" 
-          class="flex items-center gap-2 bg-secondary text-white hover:bg-on-secondary-container px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+          class="flex items-center gap-1.5 bg-secondary text-white hover:bg-on-secondary-container px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
           :title="isFullscreen ? 'Keluar Layar Penuh' : 'Aktifkan Mode Display Kiosk'"
         >
-          <span class="material-symbols-outlined text-lg">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
-          <span class="hidden sm:inline">{{ isFullscreen ? 'Keluar Display' : 'Mode Display TV / Kiosk' }}</span>
+          <span class="material-symbols-outlined text-base sm:text-lg">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+          <span class="hidden md:inline">{{ isFullscreen ? 'Keluar Display' : 'Mode Kiosk' }}</span>
         </button>
-        <NuxtLink to="/" class="material-symbols-outlined text-3xl text-secondary-fixed hover:scale-110 transition-transform" title="Beranda">
+        <NuxtLink to="/" class="material-symbols-outlined text-2xl sm:text-3xl text-secondary-fixed hover:scale-110 transition-transform" title="Beranda">
           account_balance
         </NuxtLink>
       </div>

@@ -170,6 +170,41 @@
           </div>
         </header>
 
+        <!-- Mobile Filter Quick Chips & Modal Trigger (Visible on md:hidden) -->
+        <div class="md:hidden mb-6 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-label-md text-xs font-bold text-primary">Kategori Pustaka</span>
+            <button 
+              @click="showMobileFilterModal = true" 
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-outline-variant rounded-full text-xs font-bold text-primary shadow-xs active:scale-95 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-sm">tune</span>
+              <span>Filter & Status</span>
+              <span v-if="selectedCategory !== 'all' || statusFilter !== 'all'" class="w-2 h-2 bg-secondary rounded-full"></span>
+            </button>
+          </div>
+
+          <!-- Horizontal Scrollable Category Pills -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <button 
+              class="px-3.5 py-1.5 rounded-full text-xs font-label-md transition-all whitespace-nowrap shrink-0 cursor-pointer"
+              :class="selectedCategory === 'all' ? 'bg-primary text-white font-bold' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'"
+              @click="selectedCategory = 'all'"
+            >
+              Semua ({{ books.length }})
+            </button>
+            <button 
+              v-for="cat in categories" 
+              :key="cat.id" 
+              class="px-3.5 py-1.5 rounded-full text-xs font-label-md transition-all whitespace-nowrap shrink-0 cursor-pointer"
+              :class="selectedCategory === cat.nama_kategori ? 'bg-primary text-white font-bold' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'"
+              @click="selectedCategory = cat.nama_kategori"
+            >
+              {{ cat.nama_kategori }} ({{ cat.books_count ?? 0 }})
+            </button>
+          </div>
+        </div>
+
         <!-- Loading State -->
         <div v-if="loading" class="py-20 text-center">
           <div class="inline-block w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
@@ -316,12 +351,87 @@
           </p>
           <button 
             v-if="displayedCount < filteredBooks.length"
-            class="bg-white border-2 border-primary text-primary px-8 py-3 rounded-full font-label-md text-label-md hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 shadow-sm"
+            class="bg-white border-2 border-primary text-primary px-8 py-3 rounded-full font-label-md text-label-md hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 shadow-sm cursor-pointer"
             @click="loadMore"
           >
             <span class="material-symbols-outlined">expand_more</span>
             <span>Muat Lebih Banyak</span>
           </button>
+        </div>
+
+        <!-- Mobile Filter Sheet / Modal -->
+        <div v-if="showMobileFilterModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 md:hidden" @click.self="showMobileFilterModal = false">
+          <div class="bg-white rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-outline-variant">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">tune</span>
+                <h3 class="font-bold text-base text-primary">Filter Katalog Buku</h3>
+              </div>
+              <button @click="showMobileFilterModal = false" class="p-1 text-on-surface-variant hover:text-primary">
+                <span class="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <!-- Filter options inside modal -->
+            <div class="space-y-6 text-xs">
+              <!-- Categories -->
+              <div>
+                <p class="font-bold text-primary mb-2 uppercase text-[11px] tracking-wider text-outline">Kategori Pustaka</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <button 
+                    class="p-2.5 rounded-xl text-left border text-xs transition-all flex justify-between items-center"
+                    :class="selectedCategory === 'all' ? 'bg-primary text-white border-primary font-bold' : 'border-outline-variant text-on-surface hover:bg-surface-container-low'"
+                    @click="selectedCategory = 'all'"
+                  >
+                    <span>Semua Buku</span>
+                    <span class="text-[10px] opacity-80">{{ books.length }}</span>
+                  </button>
+                  <button 
+                    v-for="cat in categories" 
+                    :key="cat.id" 
+                    class="p-2.5 rounded-xl text-left border text-xs transition-all flex justify-between items-center truncate"
+                    :class="selectedCategory === cat.nama_kategori ? 'bg-primary text-white border-primary font-bold' : 'border-outline-variant text-on-surface hover:bg-surface-container-low'"
+                    @click="selectedCategory = cat.nama_kategori"
+                  >
+                    <span class="truncate pr-1">{{ cat.nama_kategori }}</span>
+                    <span class="text-[10px] opacity-80 shrink-0">{{ cat.books_count ?? 0 }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Status Availability -->
+              <div>
+                <p class="font-bold text-primary mb-2 uppercase text-[11px] tracking-wider text-outline">Status Ketersediaan</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <button 
+                    class="p-2.5 rounded-xl text-left border text-xs transition-all flex items-center gap-2"
+                    :class="statusFilter === 'all' ? 'bg-primary-fixed text-primary border-primary font-bold' : 'border-outline-variant text-on-surface hover:bg-surface-container-low'"
+                    @click="statusFilter = 'all'"
+                  >
+                    <span class="material-symbols-outlined text-base">apps</span>
+                    <span>Semua Status</span>
+                  </button>
+                  <button 
+                    class="p-2.5 rounded-xl text-left border text-xs transition-all flex items-center gap-2"
+                    :class="statusFilter === 'available' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' : 'border-outline-variant text-on-surface hover:bg-surface-container-low'"
+                    @click="statusFilter = 'available'"
+                  >
+                    <span class="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                    <span>Tersedia</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center gap-3 pt-6 mt-6 border-t border-outline-variant">
+              <button @click="resetFilters" class="px-4 py-2.5 border border-outline-variant text-on-surface-variant rounded-xl font-bold hover:bg-surface-container transition-colors">
+                Reset
+              </button>
+              <button @click="showMobileFilterModal = false" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary-container transition-colors">
+                Terapkan Filter
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
@@ -343,6 +453,7 @@ const searchQuery = ref('');
 const selectedCategory = ref('all');
 const statusFilter = ref('all');
 const viewMode = ref<'grid' | 'list'>('grid');
+const showMobileFilterModal = ref(false);
 
 const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);

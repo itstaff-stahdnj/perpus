@@ -17,9 +17,9 @@
           </p>
 
           <!-- Search Source Toggle -->
-          <div class="flex justify-center items-center gap-2 mb-3">
+          <div class="flex flex-wrap justify-center items-center gap-2 mb-3">
             <button 
-              class="px-4 py-1.5 rounded-full text-xs font-label-md transition-all flex items-center gap-1.5"
+              class="px-4 py-2 rounded-full text-xs font-label-md transition-all flex items-center gap-1.5 active:scale-95"
               :class="searchSource === 'katalog' ? 'bg-secondary text-white font-bold shadow-md' : 'bg-white/20 text-white hover:bg-white/30'"
               @click="searchSource = 'katalog'"
             >
@@ -27,7 +27,7 @@
               <span>Katalog Perpustakaan</span>
             </button>
             <button 
-              class="px-4 py-1.5 rounded-full text-xs font-label-md transition-all flex items-center gap-1.5"
+              class="px-4 py-2 rounded-full text-xs font-label-md transition-all flex items-center gap-1.5 active:scale-95"
               :class="searchSource === 'repository' ? 'bg-secondary text-white font-bold shadow-md' : 'bg-white/20 text-white hover:bg-white/30'"
               @click="searchSource = 'repository'"
             >
@@ -37,25 +37,25 @@
           </div>
 
           <!-- Search Box Input -->
-          <div class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl flex items-center gap-2 max-w-3xl mx-auto border border-white/20 transition-all focus-within:ring-2 focus-within:ring-secondary">
-            <div class="flex-1 flex items-center gap-3 px-4">
-              <span class="material-symbols-outlined text-outline">
+          <div class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center gap-2 max-w-3xl mx-auto border border-white/20 transition-all focus-within:ring-2 focus-within:ring-secondary">
+            <div class="flex-1 flex items-center gap-3 px-4 w-full">
+              <span class="material-symbols-outlined text-outline shrink-0">
                 {{ searchSource === 'repository' ? 'travel_explore' : 'search' }}
               </span>
               <input 
                 v-model="searchQuery" 
                 type="text" 
-                class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-3 outline-none" 
-                :placeholder="searchSource === 'repository' ? 'Cari skripsi, jurnal, karya ilmiah di repository.stahdnj.ac.id...' : 'Cari judul buku, pengarang, atau nomor ISBN...'" 
+                class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-2.5 sm:py-3 text-xs sm:text-body-md outline-none" 
+                :placeholder="searchSource === 'repository' ? 'Cari karya ilmiah di repository.stahdnj.ac.id...' : 'Cari judul buku, pengarang, atau ISBN...'" 
                 @keyup.enter="handleSearch"
               />
             </div>
             <button 
-              class="bg-secondary text-on-primary font-label-md text-label-md px-4 sm:px-8 py-3 rounded-xl hover:bg-on-secondary-container transition-all active:scale-95 flex items-center gap-2 shrink-0 font-bold shadow-sm"
+              class="bg-secondary text-on-primary font-label-md text-label-md px-6 py-2.5 sm:py-3 rounded-xl hover:bg-on-secondary-container transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto shrink-0 font-bold shadow-sm"
               @click="handleSearch"
             >
               <span class="material-symbols-outlined text-lg">{{ searchSource === 'repository' ? 'open_in_new' : 'search' }}</span>
-              <span class="hidden sm:inline">{{ searchSource === 'repository' ? 'Cari di Repository' : 'Cari Koleksi' }}</span>
+              <span>{{ searchSource === 'repository' ? 'Cari di Repository' : 'Cari Koleksi' }}</span>
             </button>
           </div>
         </div>

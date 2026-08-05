@@ -4,9 +4,9 @@
       <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-1 text-secondary hover:bg-surface-container-high rounded-lg transition-colors" title="Menu">
         <span class="material-symbols-outlined text-2xl">menu</span>
       </button>
-      <NuxtLink to="/" class="flex items-center gap-2">
-        <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-8 w-auto object-contain" />
-        <h1 class="font-headline-md text-headline-md font-bold text-primary text-base sm:text-lg md:text-xl">{{ siteName }}</h1>
+      <NuxtLink to="/" class="flex items-center gap-2 max-w-[200px] sm:max-w-none">
+        <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-8 w-auto object-contain shrink-0" />
+        <h1 class="font-headline-md text-headline-md font-bold text-primary text-xs sm:text-lg md:text-xl truncate leading-tight">{{ siteName }}</h1>
       </NuxtLink>
     </div>
 
@@ -34,6 +34,13 @@
         Layanan
       </NuxtLink>
       <NuxtLink 
+        to="/absensi" 
+        class="font-label-md text-label-md hover:bg-surface-container-high transition-colors px-3 py-2 rounded-lg"
+        :class="route.path.startsWith('/absensi') ? 'text-secondary font-bold' : 'text-on-surface-variant'"
+      >
+        Presensi
+      </NuxtLink>
+      <NuxtLink 
         to="/berita" 
         class="font-label-md text-label-md hover:bg-surface-container-high transition-colors px-3 py-2 rounded-lg"
         :class="route.path.startsWith('/berita') ? 'text-secondary font-bold' : 'text-on-surface-variant'"
@@ -49,16 +56,16 @@
       </NuxtLink>
     </nav>
 
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
       <!-- If Logged In: Show Dashboard Button & Profile -->
-      <div v-if="tokenCookie" class="flex items-center gap-3 pl-3 border-l border-outline-variant">
+      <div v-if="tokenCookie" class="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-outline-variant">
         <a 
           href="https://portal-perpus.stahdnj.ac.id" 
-          class="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
+          class="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
           title="Buka Portal Dashboard"
         >
           <span class="material-symbols-outlined text-base">dashboard</span>
-          <span>Dashboard</span>
+          <span class="hidden sm:inline">Dashboard</span>
         </a>
 
         <!-- User Avatar & Profile Tag -->
@@ -77,14 +84,14 @@
           </div>
         </a>
 
-        <button @click="handleLogout" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer" title="Keluar (Logout)">
+        <button @click="handleLogout" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer shrink-0" title="Keluar (Logout)">
           <span class="material-symbols-outlined text-lg">logout</span>
         </button>
       </div>
 
       <!-- If Logged Out: Show External Login Button -->
-      <div v-else class="flex items-center gap-2 pl-3 border-l border-outline-variant">
-        <a href="https://portal-perpus.stahdnj.ac.id/login" class="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95">
+      <div v-else class="flex items-center gap-2 pl-2 sm:pl-3 border-l border-outline-variant">
+        <a href="https://portal-perpus.stahdnj.ac.id/login" class="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95">
           <span class="material-symbols-outlined text-base">login</span>
           <span>Masuk</span>
         </a>
@@ -93,19 +100,19 @@
 
     <!-- Mobile Navigation Drawer -->
     <div v-if="mobileMenuOpen" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden" @click.self="mobileMenuOpen = false">
-      <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-left duration-200">
+      <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-left duration-200 overflow-y-auto">
         <div>
           <div class="flex items-center justify-between pb-4 mb-6 border-b border-outline-variant">
             <div class="flex items-center gap-2">
               <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-7 w-auto" />
-              <span class="font-bold text-primary text-sm">{{ siteName }}</span>
+              <span class="font-bold text-primary text-xs truncate max-w-[170px]">{{ siteName }}</span>
             </div>
-            <button @click="mobileMenuOpen = false" class="p-1 hover:bg-surface-container-high rounded-full">
+            <button @click="mobileMenuOpen = false" class="p-1.5 hover:bg-surface-container-high rounded-full transition-colors">
               <span class="material-symbols-outlined text-xl">close</span>
             </button>
           </div>
 
-          <nav class="flex flex-col gap-2">
+          <nav class="flex flex-col gap-1.5">
             <NuxtLink 
               to="/" 
               @click="mobileMenuOpen = false"
@@ -129,6 +136,22 @@
               :class="route.path.startsWith('/layanan') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
             >
               <span class="material-symbols-outlined">room_service</span> Layanan
+            </NuxtLink>
+            <NuxtLink 
+              to="/absensi" 
+              @click="mobileMenuOpen = false"
+              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
+              :class="route.path.startsWith('/absensi') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
+            >
+              <span class="material-symbols-outlined">badge</span> Presensi Kiosk
+            </NuxtLink>
+            <NuxtLink 
+              to="/berita" 
+              @click="mobileMenuOpen = false"
+              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
+              :class="route.path.startsWith('/berita') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
+            >
+              <span class="material-symbols-outlined">newspaper</span> Berita & Pengumuman
             </NuxtLink>
             <NuxtLink 
               to="/tata-tertib" 

@@ -1,9 +1,20 @@
 <template>
   <div class="bg-surface text-on-surface font-body-md h-screen overflow-hidden flex">
+    <!-- Mobile Overlay Backdrop -->
+    <div v-if="showMobileSidebar" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden" @click="showMobileSidebar = false"></div>
+
     <!-- SideNavBar -->
-    <aside class="fixed left-0 top-0 h-screen w-72 bg-surface-container-lowest shadow-md border-r border-outline-variant flex flex-col py-6 z-50">
+    <aside 
+      class="fixed left-0 top-0 h-screen w-72 bg-surface-container-lowest shadow-md border-r border-outline-variant flex flex-col py-6 z-50 transition-transform duration-300"
+      :class="showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+    >
       <div class="px-6 mb-8 flex flex-col gap-1">
-        <h1 class="font-headline-md text-xl font-bold text-primary">STAH Dharma Nusantara</h1>
+        <div class="flex justify-between items-center">
+          <h1 class="font-headline-md text-xl font-bold text-primary">STAH Dharma Nusantara</h1>
+          <button @click="showMobileSidebar = false" class="md:hidden p-1 text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
         <div class="flex items-center gap-2">
           <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
             {{ userProfile?.role || 'Admin Panel' }}
@@ -13,7 +24,7 @@
 
       <nav class="flex-1 overflow-y-auto px-2 space-y-1">
         <button 
-          @click="activeTab = 'statistics'"
+          @click="activeTab = 'statistics'; showMobileSidebar = false"
           class="w-full flex items-center gap-3 rounded-xl px-4 py-3 mx-2 text-left transition-all cursor-pointer"
           :class="activeTab === 'statistics' ? 'bg-secondary-container text-on-secondary-container font-semibold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-highest'"
         >
@@ -22,7 +33,7 @@
         </button>
 
         <button 
-          @click="activeTab = 'books'"
+          @click="activeTab = 'books'; showMobileSidebar = false"
           class="w-full flex items-center gap-3 rounded-xl px-4 py-3 mx-2 text-left transition-all cursor-pointer"
           :class="activeTab === 'books' ? 'bg-secondary-container text-on-secondary-container font-semibold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-highest'"
         >
@@ -31,7 +42,7 @@
         </button>
 
         <button 
-          @click="activeTab = 'members'"
+          @click="activeTab = 'members'; showMobileSidebar = false"
           class="w-full flex items-center gap-3 rounded-xl px-4 py-3 mx-2 text-left transition-all cursor-pointer"
           :class="activeTab === 'members' ? 'bg-secondary-container text-on-secondary-container font-semibold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-highest'"
         >
@@ -40,7 +51,7 @@
         </button>
 
         <button 
-          @click="activeTab = 'reports'"
+          @click="activeTab = 'reports'; showMobileSidebar = false"
           class="w-full flex items-center gap-3 rounded-xl px-4 py-3 mx-2 text-left transition-all cursor-pointer"
           :class="activeTab === 'reports' ? 'bg-secondary-container text-on-secondary-container font-semibold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-highest'"
         >
@@ -51,7 +62,7 @@
 
       <div class="px-6 mt-4">
         <button 
-          @click="openAddBookModal" 
+          @click="openAddBookModal(); showMobileSidebar = false" 
           class="w-full bg-[#C89B3C] hover:bg-secondary text-white font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
         >
           <span class="material-symbols-outlined text-lg">add</span>
@@ -73,37 +84,46 @@
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div class="flex-1 ml-72 flex flex-col h-screen overflow-hidden">
+    <div class="flex-1 ml-0 md:ml-72 flex flex-col h-screen overflow-hidden">
       <!-- TopNavBar -->
-      <header class="sticky top-0 z-40 w-full bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-8">
-        <div class="flex items-center">
+      <header class="sticky top-0 z-40 w-full bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-4 md:px-8">
+        <div class="flex items-center gap-2 sm:gap-4">
+          <button @click="showMobileSidebar = !showMobileSidebar" class="p-2 text-primary md:hidden cursor-pointer rounded-lg hover:bg-surface-container-high" title="Buka Menu Admin">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+          </button>
+
+          <NuxtLink to="/" class="flex items-center gap-1.5 text-primary hover:text-secondary font-bold text-xs shrink-0" title="Ke Beranda Utama">
+            <span class="material-symbols-outlined text-lg">arrow_back</span>
+            <span class="hidden sm:inline">Beranda</span>
+          </NuxtLink>
+
           <div class="relative flex items-center">
-            <span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-lg">search</span>
+            <span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-base">search</span>
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Search books, authors, or members..." 
-              class="pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full text-xs font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-72 transition-shadow"
+              placeholder="Cari buku, penulis, anggota..." 
+              class="pl-9 pr-3 py-1.5 sm:py-2 bg-surface-container-lowest border border-outline-variant rounded-full text-xs font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-40 sm:w-64 md:w-72 transition-shadow"
             />
           </div>
         </div>
 
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3 sm:gap-6">
           <div class="flex items-center gap-3">
-            <NuxtLink to="/absensi" target="_blank" class="p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 text-xs font-bold bg-surface-container-high px-3 rounded-full" title="Buka Display Kiosk">
+            <NuxtLink to="/absensi" target="_blank" class="p-1.5 sm:p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 text-xs font-bold bg-surface-container-high px-2.5 sm:px-3 rounded-full" title="Buka Display Kiosk">
               <span class="material-symbols-outlined text-base">tv</span>
-              <span>Kiosk Absensi</span>
+              <span class="hidden sm:inline">Kiosk Absensi</span>
             </NuxtLink>
           </div>
 
-          <div class="flex items-center gap-3 border-l border-outline-variant pl-6">
+          <div class="flex items-center gap-3 border-l border-outline-variant pl-3 sm:pl-6">
             <div class="text-right hidden sm:block">
               <p class="font-label-md text-xs font-bold text-primary">{{ userProfile?.name || 'Administrator' }}</p>
               <p class="text-[11px] text-on-surface-variant uppercase">{{ userProfile?.role || 'Admin Panel' }}</p>
             </div>
-            <div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant bg-primary-container text-white flex items-center justify-center font-bold">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-outline-variant bg-primary-container text-white flex items-center justify-center font-bold shrink-0">
               <img v-if="userProfile?.avatar_url" :src="userProfile.avatar_url" alt="Avatar" class="w-full h-full object-cover"/>
-              <span v-else class="material-symbols-outlined">person</span>
+              <span v-else class="material-symbols-outlined text-lg sm:text-xl">person</span>
             </div>
           </div>
         </div>
@@ -298,6 +318,7 @@ const router = useRouter();
 
 const activeTab = ref('statistics');
 const searchQuery = ref('');
+const showMobileSidebar = ref(false);
 const userProfile = ref(null);
 
 const booksList = ref([]);
