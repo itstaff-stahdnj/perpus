@@ -137,19 +137,36 @@ export const usePustakaApi = () => {
 
   const login = async (emailOrNim: string, password: string): Promise<{ success: boolean; message: string; data?: any; token?: string }> => {
     try {
+      const cleanInput = emailOrNim.trim();
+      const isEmail = cleanInput.includes('@');
+
+      // Prepare payload to fit common Laravel auth validators
+      const bodyPayload: Record<string, any> = {
+        password: password
+      };
+
+      if (isEmail) {
+        bodyPayload.email = cleanInput;
+      } else {
+        bodyPayload.nim = cleanInput;
+        bodyPayload.email = cleanInput;
+        bodyPayload.username = cleanInput;
+        bodyPayload.identity = cleanInput;
+      }
+
       let res: any = null;
       try {
         res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/login`, {
           method: 'POST',
           headers: getHeaders({ 'Content-Type': 'application/json' }),
-          body: { email: emailOrNim, nim: emailOrNim, password }
+          body: bodyPayload
         });
       } catch (err: any) {
         if (err?.status === 404 || err?.statusCode === 404) {
           res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/auth/login`, {
             method: 'POST',
             headers: getHeaders({ 'Content-Type': 'application/json' }),
-            body: { email: emailOrNim, nim: emailOrNim, password }
+            body: bodyPayload
           });
         } else {
           throw err;
@@ -170,7 +187,20 @@ export const usePustakaApi = () => {
       }
       return { success: false, message: res?.message || 'Login gagal. Periksa kembali NIM/Email dan password Anda.' };
     } catch (e: any) {
-      const errorMsg = e?.data?.message || e?.message || 'Gagal melakukan otentikasi. Silakan periksa kredensial Anda.';
+      let errorMsg = 'Gagal melakukan otentikasi. Silakan periksa kredensial Anda.';
+
+      // Handle Laravel HTTP 422 Validation Errors
+      if (e?.data?.errors && typeof e.data.errors === 'object') {
+        const fieldErrors = Object.values(e.data.errors).flat().filter(Boolean);
+        if (fieldErrors.length > 0) {
+          errorMsg = fieldErrors.join(' ');
+        }
+      } else if (e?.data?.message) {
+        errorMsg = e.data.message;
+      } else if (e?.message) {
+        errorMsg = e.message;
+      }
+
       return { success: false, message: errorMsg };
     }
   };
