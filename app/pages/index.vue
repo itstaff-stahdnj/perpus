@@ -16,24 +16,46 @@
             {{ siteSettings?.hero_subtitle || 'Akses koleksi fisik dan digital terlengkap untuk mendukung riset dan pembelajaran di lingkungan STAH Dharma Nusantara Jakarta.' }}
           </p>
 
+          <!-- Search Source Toggle -->
+          <div class="flex justify-center items-center gap-2 mb-3">
+            <button 
+              class="px-4 py-1.5 rounded-full text-xs font-label-md transition-all flex items-center gap-1.5"
+              :class="searchSource === 'katalog' ? 'bg-secondary text-white font-bold shadow-md' : 'bg-white/20 text-white hover:bg-white/30'"
+              @click="searchSource = 'katalog'"
+            >
+              <span class="material-symbols-outlined text-sm">menu_book</span>
+              <span>Katalog Perpustakaan</span>
+            </button>
+            <button 
+              class="px-4 py-1.5 rounded-full text-xs font-label-md transition-all flex items-center gap-1.5"
+              :class="searchSource === 'repository' ? 'bg-secondary text-white font-bold shadow-md' : 'bg-white/20 text-white hover:bg-white/30'"
+              @click="searchSource = 'repository'"
+            >
+              <span class="material-symbols-outlined text-sm">database</span>
+              <span>Repository STAH DNJ</span>
+            </button>
+          </div>
+
           <!-- Search Box Input -->
           <div class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl flex items-center gap-2 max-w-3xl mx-auto border border-white/20 transition-all focus-within:ring-2 focus-within:ring-secondary">
             <div class="flex-1 flex items-center gap-3 px-4">
-              <span class="material-symbols-outlined text-outline">search</span>
+              <span class="material-symbols-outlined text-outline">
+                {{ searchSource === 'repository' ? 'travel_explore' : 'search' }}
+              </span>
               <input 
                 v-model="searchQuery" 
                 type="text" 
                 class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-3 outline-none" 
-                placeholder="Cari judul buku, pengarang, atau nomor ISBN..." 
-                @keyup.enter="scrollToKoleksi"
+                :placeholder="searchSource === 'repository' ? 'Cari skripsi, jurnal, karya ilmiah di repository.stahdnj.ac.id...' : 'Cari judul buku, pengarang, atau nomor ISBN...'" 
+                @keyup.enter="handleSearch"
               />
             </div>
             <button 
-              class="bg-secondary text-on-primary font-label-md text-label-md px-4 sm:px-8 py-3 rounded-xl hover:bg-on-secondary-container transition-all active:scale-95 flex items-center gap-2 shrink-0"
-              @click="scrollToKoleksi"
+              class="bg-secondary text-on-primary font-label-md text-label-md px-4 sm:px-8 py-3 rounded-xl hover:bg-on-secondary-container transition-all active:scale-95 flex items-center gap-2 shrink-0 font-bold shadow-sm"
+              @click="handleSearch"
             >
-              <span class="material-symbols-outlined sm:hidden text-lg">search</span>
-              <span class="hidden sm:inline">Cari Koleksi</span>
+              <span class="material-symbols-outlined text-lg">{{ searchSource === 'repository' ? 'open_in_new' : 'search' }}</span>
+              <span class="hidden sm:inline">{{ searchSource === 'repository' ? 'Cari di Repository' : 'Cari Koleksi' }}</span>
             </button>
           </div>
         </div>
@@ -348,6 +370,18 @@ const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile
 
 const loading = ref(true);
 const searchQuery = ref('');
+const searchSource = ref<'katalog' | 'repository'>('katalog');
+
+const handleSearch = () => {
+  if (searchSource.value === 'repository') {
+    const targetUrl = `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(searchQuery.value)}`;
+    if (process.client) {
+      window.open(targetUrl, '_blank');
+    }
+  } else {
+    scrollToKoleksi();
+  }
+};
 
 const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);

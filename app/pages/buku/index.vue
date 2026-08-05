@@ -73,6 +73,22 @@
           </div>
         </div>
 
+        <!-- External E-Repository Link -->
+        <div class="mt-4 pt-4 border-t border-outline-variant">
+          <p class="font-caption text-[11px] uppercase tracking-wider text-outline font-bold mb-2">Repository STAH DNJ</p>
+          <a 
+            :href="repositorySearchUrl" 
+            target="_blank" 
+            class="w-full flex items-center justify-between p-2.5 rounded-lg text-xs font-label-md bg-secondary-container/60 hover:bg-secondary-container text-on-secondary-container font-semibold transition-all group"
+          >
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">database</span>
+              <span>Cari di Repository STAH</span>
+            </div>
+            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+          </a>
+        </div>
+
         <button class="mt-auto bg-primary text-on-primary py-2.5 px-4 rounded-lg font-label-md text-xs hover:bg-primary-container transition-all active:scale-95" @click="resetFilters">
           Reset Filter
         </button>
@@ -81,6 +97,24 @@
       <!-- Main Content Canvas -->
       <main class="flex-1 p-4 md:p-margin-desktop overflow-y-auto">
         <header class="mb-8">
+          <!-- E-Repository Info Alert -->
+          <div class="mb-6 p-4 rounded-xl bg-primary-container text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm border border-primary-fixed-dim/30">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-secondary-fixed text-2xl shrink-0">database</span>
+              <div>
+                <p class="font-label-md text-xs sm:text-sm font-bold text-white">Mencari Skripsi, Tugas Akhir, atau Jurnal Digital?</p>
+                <p class="text-caption text-[11px] sm:text-caption opacity-80">Akses langsung koleksi repositori akademik digital kampus di repository.stahdnj.ac.id</p>
+              </div>
+            </div>
+            <a 
+              :href="repositorySearchUrl" 
+              target="_blank" 
+              class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-xs hover:bg-on-secondary-container transition-all flex items-center gap-1.5 shrink-0 font-bold"
+            >
+              <span>Cari di Repository STAH DNJ</span>
+              <span class="material-symbols-outlined text-sm">open_in_new</span>
+            </a>
+          </div>
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             <div>
               <h1 class="font-headline-lg text-headline-lg text-primary mb-2">Katalog Buku Koleksi</h1>
@@ -329,6 +363,13 @@ const getBookUrl = (b: Book) => {
   const slug = b.slug || b.judul.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   return `/buku/${slug}-${b.id}`;
 };
+
+const repositorySearchUrl = computed(() => {
+  if (searchQuery.value.trim()) {
+    return `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(searchQuery.value)}`;
+  }
+  return 'https://repository.stahdnj.ac.id/xmlui/';
+});
 
 const filteredBooks = computed(() => {
   let list = books.value;
