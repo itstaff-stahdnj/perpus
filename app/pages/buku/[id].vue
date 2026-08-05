@@ -109,7 +109,7 @@
               </span>
             </div>
 
-            <h1 class="font-display-lg text-display-lg text-primary leading-tight font-extrabold">
+            <h1 class="font-display-lg text-2xl sm:text-headline-lg md:text-display-lg text-primary leading-tight font-extrabold">
               {{ book.judul }}
             </h1>
 

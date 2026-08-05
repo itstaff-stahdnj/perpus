@@ -3,7 +3,7 @@
     <!-- Main Content -->
     <main class="pt-16 flex-1">
       <!-- Hero Section -->
-      <section id="beranda" class="relative h-[600px] w-full flex items-center justify-center overflow-hidden">
+      <section id="beranda" class="relative h-[420px] sm:h-[500px] md:h-[600px] w-full flex items-center justify-center overflow-hidden">
         <div class="absolute inset-0 bg-primary/40 z-10"></div>
         <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] hover:scale-105" 
              :style="{ backgroundImage: `url('${siteSettings?.hero_bg_image || heroDefaultBg}')` }"></div>
@@ -29,10 +29,11 @@
               />
             </div>
             <button 
-              class="bg-secondary text-on-primary font-label-md text-label-md px-8 py-3 rounded-xl hover:bg-on-secondary-container transition-all active:scale-95 flex items-center gap-2"
+              class="bg-secondary text-on-primary font-label-md text-label-md px-4 sm:px-8 py-3 rounded-xl hover:bg-on-secondary-container transition-all active:scale-95 flex items-center gap-2 shrink-0"
               @click="scrollToKoleksi"
             >
-              <span>Cari Koleksi</span>
+              <span class="material-symbols-outlined sm:hidden text-lg">search</span>
+              <span class="hidden sm:inline">Cari Koleksi</span>
             </button>
           </div>
         </div>
@@ -41,7 +42,7 @@
       <!-- Quick Access Cards -->
       <section class="max-w-container-max mx-auto -mt-20 relative z-30 px-margin-mobile md:px-margin-desktop">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
-          <NuxtLink to="/buku" class="bg-white p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
+          <NuxtLink to="/buku" class="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
             <div class="w-14 h-14 bg-primary-container text-primary-fixed rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-3xl">menu_book</span>
             </div>
@@ -49,7 +50,7 @@
             <p class="font-caption text-caption text-on-surface-variant">{{ books.length }} Buku Terdaftar</p>
           </NuxtLink>
 
-          <NuxtLink to="/buku" class="bg-white p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
+          <NuxtLink to="/buku" class="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
             <div class="w-14 h-14 bg-secondary-container text-on-secondary-container rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-3xl">category</span>
             </div>
@@ -57,7 +58,7 @@
             <p class="font-caption text-caption text-on-surface-variant">{{ categories.length }} Kategori Aktif</p>
           </NuxtLink>
 
-          <NuxtLink to="/layanan" class="bg-white p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
+          <NuxtLink to="/layanan" class="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
             <div class="w-14 h-14 bg-surface-container-high text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-3xl">meeting_room</span>
             </div>
@@ -65,7 +66,7 @@
             <p class="font-caption text-caption text-on-surface-variant">Reservasi area kolaborasi</p>
           </NuxtLink>
 
-          <NuxtLink to="/layanan" class="bg-white p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
+          <NuxtLink to="/layanan" class="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-[0px_4px_12px_rgba(10,58,90,0.05)] border border-outline-variant hover:shadow-[0px_12px_24px_rgba(10,58,90,0.08)] transition-all group cursor-pointer block">
             <div class="w-14 h-14 bg-error-container text-on-error-container rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-3xl">description</span>
             </div>
@@ -196,17 +197,17 @@
       <!-- Statistics Section (Valid Live API Data) -->
       <section class="bg-primary-container py-16">
         <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 text-center">
             <div class="flex flex-col items-center">
-              <span class="text-secondary-fixed text-5xl font-extrabold mb-2">{{ books.length > 0 ? books.length + ' Total' : '10 Total' }}</span>
+              <span class="text-secondary-fixed text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">{{ books.length > 0 ? books.length + ' Total' : '10 Total' }}</span>
               <p class="font-label-md text-label-md text-primary-fixed uppercase tracking-wider">Koleksi Buku Fisik Terdata</p>
             </div>
-            <div class="flex flex-col items-center border-y md:border-y-0 md:border-x border-primary-fixed-dim/20 py-8 md:py-0">
-              <span class="text-secondary-fixed text-5xl font-extrabold mb-2">{{ categories.length > 0 ? categories.length + ' Kategori' : '5 Kategori' }}</span>
+            <div class="flex flex-col items-center border-y sm:border-y-0 sm:border-x border-primary-fixed-dim/20 py-6 sm:py-0">
+              <span class="text-secondary-fixed text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">{{ categories.length > 0 ? categories.length + ' Kategori' : '5 Kategori' }}</span>
               <p class="font-label-md text-label-md text-primary-fixed uppercase tracking-wider">Kelompok Bidang Ilmu</p>
             </div>
             <div class="flex flex-col items-center">
-              <span class="text-secondary-fixed text-5xl font-extrabold mb-2">{{ activeMembersCount }}</span>
+              <span class="text-secondary-fixed text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">{{ activeMembersCount }}</span>
               <p class="font-label-md text-label-md text-primary-fixed uppercase tracking-wider">Anggota Aktif Terdaftar</p>
             </div>
           </div>
@@ -235,13 +236,13 @@
 
       <!-- Dynamic News Section -->
       <section id="berita" class="max-w-container-max mx-auto py-20 px-margin-mobile md:px-margin-desktop">
-        <div class="flex justify-between items-end mb-12">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 sm:mb-12 gap-4">
           <div>
             <h2 class="font-headline-lg text-headline-lg text-primary mb-2">Berita &amp; Pengumuman</h2>
             <p class="font-body-md text-body-md text-on-surface-variant">Informasi terbaru seputar kegiatan perpustakaan STAH DNJ.</p>
           </div>
-          <NuxtLink class="text-secondary font-label-md flex items-center gap-2 hover:gap-3 transition-all font-semibold" to="/berita">
-            Lihat Semua Berita <span class="material-symbols-outlined">arrow_forward</span>
+          <NuxtLink class="text-secondary font-label-md flex items-center gap-2 hover:gap-3 transition-all font-semibold shrink-0" to="/berita">
+            Lihat Semua <span class="material-symbols-outlined">arrow_forward</span>
           </NuxtLink>
         </div>
 

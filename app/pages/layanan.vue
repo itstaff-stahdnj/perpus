@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-surface-bright text-on-background font-body-md overflow-x-hidden">
     <main class="min-h-screen">
       <!-- Hero Section -->
-      <section class="relative w-full bg-primary-container py-20 md:py-24 overflow-hidden">
+      <section class="relative w-full bg-primary-container py-12 sm:py-20 md:py-24 overflow-hidden">
         <div class="absolute inset-0 opacity-10">
           <div class="absolute w-full h-full" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
         </div>
@@ -15,10 +15,10 @@
       </section>
 
       <!-- Services Grid -->
-      <section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop -mt-16 relative z-20 pb-24">
+      <section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop -mt-10 sm:-mt-16 relative z-20 pb-16 sm:pb-24">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
           <!-- Peminjaman Buku -->
-          <div class="academic-card p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
             <div>
               <div class="flex justify-between items-start mb-6">
                 <div class="w-14 h-14 rounded-lg bg-secondary-container flex items-center justify-center">
@@ -37,7 +37,7 @@
           </div>
 
           <!-- Akses E-Resources -->
-          <div class="academic-card p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
             <div>
               <div class="w-14 h-14 rounded-lg bg-primary-fixed flex items-center justify-center mb-6">
                 <span class="material-symbols-outlined text-on-primary-fixed-variant text-3xl">terminal</span>
@@ -53,7 +53,7 @@
           </div>
 
           <!-- Bantuan Riset -->
-          <div class="academic-card p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
             <div>
               <div class="w-14 h-14 rounded-lg bg-tertiary-fixed flex items-center justify-center mb-6">
                 <span class="material-symbols-outlined text-on-tertiary-fixed-variant text-3xl">psychology</span>
@@ -69,7 +69,7 @@
           </div>
 
           <!-- Fasilitas & Ruang Baca -->
-          <div class="academic-card p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
             <div>
               <div class="w-14 h-14 rounded-lg bg-surface-container-highest flex items-center justify-center mb-6">
                 <span class="material-symbols-outlined text-primary text-3xl">meeting_room</span>
@@ -85,7 +85,7 @@
           </div>
 
           <!-- Pelatihan Literasi -->
-          <div class="academic-card p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
             <div>
               <div class="w-14 h-14 rounded-lg bg-secondary-fixed flex items-center justify-center mb-6">
                 <span class="material-symbols-outlined text-on-secondary-fixed text-3xl">school</span>
@@ -119,7 +119,7 @@
       <!-- Help Section -->
       <section class="bg-surface-container-low py-20">
         <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-          <div class="bg-white rounded-2xl p-8 md:p-12 border border-outline-variant shadow-lg flex flex-col md:flex-row items-center gap-12">
+          <div class="bg-white rounded-2xl p-6 sm:p-8 md:p-12 border border-outline-variant shadow-lg flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <div class="flex-1">
               <h2 class="font-headline-lg text-headline-lg text-primary mb-4 font-bold">Butuh Bantuan Lain?</h2>
               <p class="font-body-lg text-body-lg text-on-surface-variant mb-8 leading-relaxed">
@@ -130,7 +130,7 @@
                   <span class="material-symbols-outlined text-secondary">mail</span>
                   <div>
                     <p class="text-caption text-on-surface-variant font-bold uppercase tracking-wider">Email Layanan</p>
-                    <p class="text-body-md font-bold text-primary">perpustakaan@stahdnj.ac.id</p>
+                    <p class="text-body-md font-bold text-primary break-all">perpustakaan@stahdnj.ac.id</p>
                   </div>
                 </a>
                 <a href="https://wa.me/6281234567890" target="_blank" class="flex items-center gap-3 bg-surface-bright px-6 py-4 rounded-xl border border-outline-variant hover:border-secondary transition-colors">

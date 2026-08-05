@@ -11,34 +11,34 @@
       </header>
 
       <!-- Featured News Section -->
-      <section v-if="featuredItem" class="mb-16">
-        <div class="floating-card rounded-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[480px]">
+      <section v-if="featuredItem" class="mb-12 md:mb-16">
+        <div class="floating-card rounded-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-0 md:min-h-[480px]">
           <div class="md:col-span-7 relative">
             <div 
-              class="w-full h-full bg-cover bg-center min-h-[300px]" 
+              class="w-full h-full bg-cover bg-center min-h-[220px] sm:min-h-[300px]" 
               :style="{ backgroundImage: `url('${featuredItem.image_url}')` }"
             ></div>
-            <div class="absolute top-6 left-6 flex gap-2">
-              <span class="bg-secondary text-on-secondary px-4 py-1 rounded-full font-label-md text-label-md">
+            <div class="absolute top-4 left-4 sm:top-6 sm:left-6 flex gap-2">
+              <span class="bg-secondary text-on-secondary px-3 sm:px-4 py-1 rounded-full font-label-md text-xs sm:text-label-md">
                 {{ featuredItem.category }}
               </span>
-              <span class="bg-primary/80 backdrop-blur-sm text-on-primary px-4 py-1 rounded-full font-label-md text-label-md">
+              <span class="bg-primary/80 backdrop-blur-sm text-on-primary px-3 sm:px-4 py-1 rounded-full font-label-md text-xs sm:text-label-md">
                 Utama
               </span>
             </div>
           </div>
 
-          <div class="md:col-span-5 p-10 flex flex-col justify-center">
-            <span class="text-on-surface-variant font-label-md text-label-md mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-[18px]">calendar_today</span> {{ featuredItem.published_at }}
+          <div class="md:col-span-5 p-6 sm:p-10 flex flex-col justify-center">
+            <span class="text-on-surface-variant font-label-md text-xs sm:text-label-md mb-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">calendar_today</span> {{ featuredItem.published_at }}
             </span>
-            <h2 class="font-headline-lg text-headline-lg text-primary mb-6 leading-tight">
+            <h2 class="font-headline-lg text-xl sm:text-2xl md:text-headline-lg text-primary mb-4 leading-tight font-bold">
               {{ featuredItem.title }}
             </h2>
-            <p class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed line-clamp-4">
+            <p class="font-body-md text-sm sm:text-body-md text-on-surface-variant mb-6 sm:mb-8 leading-relaxed line-clamp-3 sm:line-clamp-4">
               {{ featuredItem.content || featuredItem.summary }}
             </p>
-            <NuxtLink :to="getArticleUrl(featuredItem)" class="flex items-center gap-2 text-secondary font-bold font-body-md text-body-md group w-fit">
+            <NuxtLink :to="getArticleUrl(featuredItem)" class="flex items-center gap-2 text-secondary font-bold font-body-md text-sm sm:text-body-md group w-fit">
               <span>Baca Selengkapnya</span>
               <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </NuxtLink>
