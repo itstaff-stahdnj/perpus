@@ -243,16 +243,16 @@ export const usePustakaApi = () => {
     type?: 'NIM' | 'NIDN' | 'QR'
   ): Promise<{ success: boolean; message: string; data?: AttendanceRecord }> => {
     try {
-      let body: Record<string, any> = {};
-      if (type === 'NIM') {
-        body = { nim: identifier };
-      } else if (type === 'NIDN') {
-        body = { nidn: identifier };
-      } else if (type === 'QR') {
-        body = { qr_token: identifier };
-      } else {
-        body = { nim: identifier, nidn: identifier, qr_token: identifier };
-      }
+      const cleanId = identifier.trim();
+      
+      // Always include qr_token, nim, and nidn simultaneously in the payload
+      // so Laravel backend receives input regardless of which field name it queries
+      const body: Record<string, any> = {
+        qr_token: cleanId,
+        nim: cleanId,
+        nidn: cleanId,
+        type: type || 'NIM'
+      };
 
       const res = await $fetch<{ success: boolean; message: string; data?: any }>(`${baseUrl}/attendances`, {
         method: 'POST',
