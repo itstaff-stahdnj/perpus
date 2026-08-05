@@ -119,7 +119,7 @@ export interface SiteSettings {
 
 export const usePustakaApi = () => {
   const config = useRuntimeConfig();
-  const baseUrl = config.public.apiBaseUrl || 'https://api-pustaka.stahdnj.ac.id/api';
+  const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api';
   const apiKey = config.pustakaApiKey || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b';
   const tokenCookie = useCookie<string | null>('pustaka_token', { maxAge: 60 * 60 * 24 * 7 });
 

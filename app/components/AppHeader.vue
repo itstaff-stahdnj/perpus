@@ -52,7 +52,7 @@
     <div class="flex items-center gap-4">
       <!-- If Logged In: Profile & Dashboard Button -->
       <div v-if="tokenCookie && profile" class="flex items-center gap-3 pl-3 border-l border-outline-variant">
-        <NuxtLink :to="userDashboardRoute" class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" title="Buka Dashboard">
+        <a href="https://panel-perpus.stahdnj.ac.id" class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" title="Buka Dashboard Panel">
           <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden border border-secondary/30 shrink-0">
             <img v-if="profile?.avatar_url" class="w-full h-full object-cover" :src="profile.avatar_url" :alt="profile.name" />
             <span v-else class="text-xs">{{ (profile?.name || 'U').charAt(0) }}</span>
@@ -61,19 +61,19 @@
             <p class="font-label-md text-xs text-primary font-bold line-clamp-1 leading-tight">{{ profile?.name || 'User' }}</p>
             <p class="font-caption text-[10px] text-secondary font-bold uppercase leading-none mt-0.5">{{ userRoleLabel }}</p>
           </div>
-        </NuxtLink>
+        </a>
 
         <button @click="handleLogout" class="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer" title="Keluar (Logout)">
           <span class="material-symbols-outlined text-xl">logout</span>
         </button>
       </div>
 
-      <!-- If Logged Out: Show Login Button -->
+      <!-- If Logged Out: Show External Login Button -->
       <div v-else class="flex items-center gap-2 pl-3 border-l border-outline-variant">
-        <NuxtLink to="/login" class="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95">
+        <a href="https://portal-perpus.stahdnj.ac.id/login" class="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95">
           <span class="material-symbols-outlined text-base">login</span>
           <span>Masuk</span>
-        </NuxtLink>
+        </a>
       </div>
     </div>
 
@@ -133,22 +133,22 @@
               <span class="material-symbols-outlined">support_agent</span> Meja Bantuan
             </NuxtLink>
 
-            <NuxtLink 
+            <a 
               v-if="tokenCookie"
-              :to="userDashboardRoute" 
+              href="https://panel-perpus.stahdnj.ac.id" 
               @click="mobileMenuOpen = false"
               class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
             >
-              <span class="material-symbols-outlined">dashboard</span> Buka Dashboard
-            </NuxtLink>
-            <NuxtLink 
+              <span class="material-symbols-outlined">dashboard</span> Buka Dashboard Panel
+            </a>
+            <a 
               v-else
-              to="/login" 
+              href="https://portal-perpus.stahdnj.ac.id/login" 
               @click="mobileMenuOpen = false"
               class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
             >
               <span class="material-symbols-outlined">login</span> Masuk Ke Pustaka
-            </NuxtLink>
+            </a>
           </nav>
         </div>
 
