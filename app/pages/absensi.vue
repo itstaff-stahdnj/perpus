@@ -83,7 +83,7 @@
                 type="text" 
                 class="w-full pl-10 pr-4 py-3 bg-surface-container-low border-2 border-primary/40 focus:border-secondary rounded-xl text-center font-mono font-bold text-base text-primary outline-none transition-all placeholder:text-xs placeholder:font-sans"
                 placeholder="Arahkan scanner QR Code..." 
-                @keyup.enter="handleCheckIn"
+                @keyup.enter="handleCheckIn('QR')"
               />
             </div>
           </div>
@@ -176,7 +176,7 @@
             </button>
             <button 
               :disabled="submitting || !currentID"
-              @click="handleCheckIn"
+              @click="handleCheckIn(inputType)"
               class="flex-grow py-3 bg-secondary hover:bg-on-secondary-container text-white font-bold text-sm rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
             >
               <span class="material-symbols-outlined text-lg">login</span>
@@ -443,7 +443,7 @@ const refreshAttendanceData = async () => {
   }
 };
 
-const handleCheckIn = async () => {
+const handleCheckIn = async (checkInType?: 'NIM' | 'NIDN' | 'QR') => {
   const targetToken = currentID.value.trim();
   if (!targetToken) return;
 
@@ -452,8 +452,10 @@ const handleCheckIn = async () => {
   lastCheckedUser.value = null;
   lastCheckedRecordId.value = null;
 
+  const typeToSend = checkInType || inputType.value;
+
   try {
-    const res = await submitAttendance(targetToken);
+    const res = await submitAttendance(targetToken, typeToSend);
     if (res?.success) {
       alertSuccess.value = true;
       alertMessage.value = res.message || `Presensi berhasil tercatat!`;

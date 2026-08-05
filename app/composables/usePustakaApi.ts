@@ -238,12 +238,26 @@ export const usePustakaApi = () => {
     });
   };
 
-  const submitAttendance = async (qrTokenOrNim: string): Promise<{ success: boolean; message: string; data?: AttendanceRecord }> => {
+  const submitAttendance = async (
+    identifier: string, 
+    type?: 'NIM' | 'NIDN' | 'QR'
+  ): Promise<{ success: boolean; message: string; data?: AttendanceRecord }> => {
     try {
+      let body: Record<string, any> = {};
+      if (type === 'NIM') {
+        body = { nim: identifier };
+      } else if (type === 'NIDN') {
+        body = { nidn: identifier };
+      } else if (type === 'QR') {
+        body = { qr_token: identifier };
+      } else {
+        body = { nim: identifier, nidn: identifier, qr_token: identifier };
+      }
+
       const res = await $fetch<{ success: boolean; message: string; data?: any }>(`${baseUrl}/attendances`, {
         method: 'POST',
         headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
-        body: { qr_token: qrTokenOrNim }
+        body
       });
       return {
         success: res?.success ?? false,
@@ -251,7 +265,7 @@ export const usePustakaApi = () => {
         data: res?.data
       };
     } catch (e: any) {
-      const errorMsg = e?.data?.message || e?.message || 'Gagal mencatat presensi. QR Token/NIM tidak ditemukan.';
+      const errorMsg = e?.data?.message || e?.message || 'Gagal mencatat presensi. NIM/NIDN/QR Token tidak ditemukan.';
       return {
         success: false,
         message: errorMsg
