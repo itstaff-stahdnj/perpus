@@ -265,8 +265,8 @@
         </div>
         <div class="flex gap-6">
           <span class="text-secondary font-bold">Pengunjung: {{ todayTotal }}</span>
-          <NuxtLink to="/layanan" class="hover:text-secondary transition-colors">Tata Tertib</NuxtLink>
-          <NuxtLink to="/tentang" class="hover:text-secondary transition-colors">Meja Bantuan</NuxtLink>
+          <NuxtLink to="/tata-tertib" class="hover:text-secondary transition-colors font-semibold">Tata Tertib</NuxtLink>
+          <NuxtLink to="/bantuan" class="hover:text-secondary transition-colors font-semibold">Meja Bantuan</NuxtLink>
         </div>
       </div>
     </footer>
