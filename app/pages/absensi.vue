@@ -31,7 +31,7 @@
       </div>
     </header>
 
-    <!-- Main Content Grid -->
+    <!-- Main Content Grid 3-Kolom -->
     <main class="flex-grow pt-28 pb-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full grid grid-cols-12 gap-gutter">
       <!-- Success/Error Alert Toast -->
       <div v-if="alertMessage" class="col-span-12">
@@ -44,8 +44,7 @@
             <div>
               <h4 class="font-bold text-lg">{{ alertSuccess ? 'Presensi Berhasil' : 'Presensi Gagal' }}</h4>
               <p class="text-sm opacity-95">{{ alertMessage }}</p>
-              <!-- Show last checked-in user info -->
-              <p v-if="alertSuccess && lastCheckedUser" class="text-xs mt-1 opacity-80">
+              <p v-if="alertSuccess && lastCheckedUser" class="text-xs mt-1 opacity-90 font-medium">
                 {{ lastCheckedUser.name }} — {{ lastCheckedUser.nim || lastCheckedUser.role }}
               </p>
             </div>
@@ -56,28 +55,25 @@
         </div>
       </div>
 
-      <!-- Left Column: Scanner + Keypad -->
-      <section class="col-span-12 lg:col-span-5 flex flex-col gap-gutter">
-        <!-- Scanner Card -->
-        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col items-center border border-outline-variant relative overflow-hidden">
-          <!-- Hardware QR Sensor Active Badge -->
+      <!-- Kolom 1 (Kiri): Scan Kartu Anggota -->
+      <section class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+        <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col items-center border border-outline-variant relative overflow-hidden h-full">
           <div class="w-full flex items-center justify-between bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-2 rounded-xl mb-4 text-xs font-bold shadow-xs">
             <div class="flex items-center gap-2">
               <span class="relative flex h-3 w-3">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
               </span>
-              <span>Sensor Hardware QR Scanner (Standby)</span>
+              <span>Sensor Scanner (Standby)</span>
             </div>
             <span class="material-symbols-outlined text-sm text-emerald-600">qr_code_2</span>
           </div>
 
           <div class="text-center">
-            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-2">Scan Kartu Anggota</h2>
-            <p class="font-body-md text-body-md text-on-surface-variant text-sm">Dekatkan QR Code pada Kartu Anggota ke sensor scanner USB / Kamera</p>
+            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-1">Scan Kartu Anggota</h2>
+            <p class="font-body-md text-on-surface-variant text-xs">Arahkan QR Code Kartu ke Sensor Scanner USB/Kamera</p>
           </div>
 
-          <!-- Active Hardware QR Input Box (Captures Scanner Gun Input) -->
           <div class="w-full mt-4">
             <div class="relative">
               <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary">qr_code_scanner</span>
@@ -85,203 +81,144 @@
                 ref="qrInputRef"
                 v-model="currentID" 
                 type="text" 
-                class="w-full pl-10 pr-4 py-3 bg-surface-container-low border-2 border-primary/40 focus:border-secondary rounded-xl text-center font-mono font-bold text-lg text-primary outline-none transition-all placeholder:text-xs placeholder:font-sans placeholder:font-normal"
-                placeholder="Discan otomatis oleh alat QR Code scanner..." 
+                class="w-full pl-10 pr-4 py-3 bg-surface-container-low border-2 border-primary/40 focus:border-secondary rounded-xl text-center font-mono font-bold text-base text-primary outline-none transition-all placeholder:text-xs placeholder:font-sans"
+                placeholder="Arahkan scanner QR Code..." 
                 @keyup.enter="handleCheckIn"
               />
             </div>
           </div>
 
-          <!-- Scanner Animation Visual Box -->
-          <div class="relative w-64 h-56 border-4 border-dashed border-primary/30 rounded-2xl flex items-center justify-center overflow-hidden bg-surface-container-low my-4">
+          <div class="relative w-full h-64 border-4 border-dashed border-primary/30 rounded-2xl flex items-center justify-center overflow-hidden bg-surface-container-low my-4">
             <div class="absolute inset-0 flex items-center justify-center opacity-10">
-              <span class="material-symbols-outlined text-[130px] text-primary">qr_code_scanner</span>
+              <span class="material-symbols-outlined text-[140px] text-primary">qr_code_scanner</span>
             </div>
-
-            <!-- Scanner Animation Line -->
             <div class="scanning-line absolute left-0 right-0 h-1 bg-secondary shadow-[0_0_15px_rgba(200,155,60,0.8)] z-10"></div>
-
-            <!-- Decorative Corners -->
             <div class="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-secondary rounded-tl-sm"></div>
             <div class="absolute top-4 right-4 w-8 h-8 border-t-4 border-r-4 border-secondary rounded-tr-sm"></div>
             <div class="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-secondary rounded-bl-sm"></div>
             <div class="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-secondary rounded-br-sm"></div>
 
             <div class="text-center p-4 z-0">
-              <span class="material-symbols-outlined text-5xl text-secondary mb-2 animate-bounce">sensors</span>
-              <p class="text-xs font-bold text-primary">Siap Menerima Scan QR</p>
-              <p class="text-[11px] text-on-surface-variant">Arahkan QR Code Kartu ke Scanner</p>
+              <span class="material-symbols-outlined text-6xl text-secondary mb-2 animate-bounce">sensors</span>
+              <p class="text-sm font-bold text-primary">Siap Menerima Scan QR</p>
+              <p class="text-xs text-on-surface-variant">Arahkan QR Code Kartu ke Scanner</p>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Manual Entry Card -->
-        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col border border-outline-variant">
+      <!-- Kolom 2 (Tengah): Masukkan QR Token Manual -->
+      <section class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+        <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col border border-outline-variant h-full">
           <div class="mb-4">
             <h2 class="font-headline-md text-headline-md text-primary font-bold mb-1">Input QR Token Manual</h2>
-            <p class="font-body-md text-body-md text-on-surface-variant text-sm">Masukkan kode QR Token jika kartu tidak terbaca</p>
+            <p class="font-body-md text-on-surface-variant text-xs">Masukkan kode QR Token/NIM jika kartu tidak terbaca</p>
           </div>
 
           <!-- Display Screen -->
-          <div class="bg-surface-container-high rounded-xl p-5 mb-6 flex items-center justify-center border-2 border-outline-variant min-h-[80px]">
-            <span class="text-3xl md:text-[48px] font-bold tracking-[0.15em] text-primary font-mono">
+          <div class="bg-surface-container-high rounded-xl p-4 mb-4 flex items-center justify-center border-2 border-outline-variant min-h-[70px]">
+            <span class="text-2xl md:text-3xl font-bold tracking-[0.15em] text-primary font-mono">
               {{ currentID || '— — — — —' }}
             </span>
           </div>
 
           <!-- Keypad Grid -->
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-3 gap-2.5 flex-grow">
             <button v-for="num in ['1','2','3','4','5','6','7','8','9']" :key="num" 
                     @click="pressKey(num)" 
-                    class="keypad-button h-16 md:h-20 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-2xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
+                    class="keypad-button h-14 md:h-16 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
               {{ num }}
             </button>
             
-            <button @click="clearID" class="keypad-button h-16 md:h-20 bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-sm font-bold transition-colors uppercase active:scale-95 cursor-pointer">
+            <button @click="clearID" class="keypad-button h-14 md:h-16 bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-xs font-bold transition-colors uppercase active:scale-95 cursor-pointer">
               CLEAR
             </button>
             
-            <button @click="pressKey('0')" class="keypad-button h-16 md:h-20 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-2xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
+            <button @click="pressKey('0')" class="keypad-button h-14 md:h-16 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant rounded-xl text-xl font-bold text-primary transition-colors active:scale-95 cursor-pointer">
               0
             </button>
             
-            <button @click="backspaceID" class="keypad-button h-16 md:h-20 bg-surface-container-high hover:bg-outline-variant border border-outline-variant rounded-xl text-primary font-bold transition-colors active:scale-95 flex items-center justify-center cursor-pointer">
-              <span class="material-symbols-outlined text-2xl">backspace</span>
+            <button @click="backspaceID" class="keypad-button h-14 md:h-16 bg-surface-container-high hover:bg-outline-variant border border-outline-variant rounded-xl text-primary font-bold transition-colors active:scale-95 flex items-center justify-center cursor-pointer">
+              <span class="material-symbols-outlined text-xl">backspace</span>
             </button>
           </div>
 
-          <!-- Check-In Button -->
           <button 
             :disabled="submitting || !currentID"
             @click="handleCheckIn"
-            class="w-full mt-6 py-4 bg-secondary hover:bg-on-secondary-container text-white font-bold text-lg rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            class="w-full mt-4 py-3.5 bg-secondary hover:bg-on-secondary-container text-white font-bold text-base rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
           >
-            <span class="material-symbols-outlined text-2xl">login</span>
+            <span class="material-symbols-outlined text-xl">login</span>
             <span>{{ submitting ? 'Memproses...' : 'Check-In Masuk' }}</span>
           </button>
         </div>
       </section>
 
-      <!-- Right Column: Today's Attendance List -->
-      <section class="col-span-12 lg:col-span-7 flex flex-col gap-gutter">
-        <!-- Live Occupancy Card -->
-        <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col gap-4 border border-outline-variant">
-          <div class="flex justify-between items-center">
+      <!-- Kolom 3 (Kanan): Jumlah Pengunjung Hari Ini (Tanpa Daftar Hadir) -->
+      <section class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+        <!-- Card 1: Counter Total Pengunjung -->
+        <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col border border-outline-variant relative overflow-hidden">
+          <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-secondary text-3xl">groups</span>
-              <h3 class="font-headline-md text-headline-md text-primary font-bold">Pengunjung Hari Ini</h3>
+              <div class="p-2.5 bg-secondary/10 rounded-xl text-secondary">
+                <span class="material-symbols-outlined text-3xl">groups</span>
+              </div>
+              <div>
+                <h3 class="font-headline-md text-headline-md text-primary font-bold">Pengunjung Hari Ini</h3>
+                <p class="text-xs text-on-surface-variant">Statistik Kehadiran Akumulatif</p>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span v-if="loadingToday" class="material-symbols-outlined text-on-surface-variant animate-spin text-sm">progress_activity</span>
-              <span class="font-label-md text-xs bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-bold uppercase">
-                {{ todayDate }}
-              </span>
-            </div>
-          </div>
-
-          <div class="flex justify-between items-end mb-1">
-            <span class="font-body-lg text-on-surface-variant">Total Kehadiran</span>
-            <span class="font-headline-md font-bold text-primary text-2xl">{{ todayTotal }}</span>
-          </div>
-
-          <div class="w-full bg-surface-container-high rounded-full h-4 overflow-hidden">
-            <div class="bg-secondary h-full rounded-full transition-all duration-1000" :style="{ width: `${occupancyPercent}%` }"></div>
-          </div>
-          <p class="font-caption text-caption text-on-surface-variant italic">
-            Kapasitas ruang baca: {{ todayTotal }}/100 — Data diperbarui otomatis setiap 30 detik.
-          </p>
-        </div>
-
-        <!-- Attendance Table Card -->
-        <div class="bg-white rounded-2xl card-shadow border border-outline-variant flex flex-col overflow-hidden flex-grow">
-          <div class="p-6 pb-3 border-b border-outline-variant flex justify-between items-center">
-            <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-primary text-2xl">list_alt</span>
-              <h3 class="font-headline-md text-lg text-primary font-bold">Daftar Hadir Hari Ini</h3>
-            </div>
-            <button @click="refreshAttendanceData" :disabled="loadingToday" class="flex items-center gap-1 text-sm text-secondary hover:text-on-secondary-container transition-colors cursor-pointer disabled:opacity-50">
+            <button @click="refreshAttendanceData" :disabled="loadingToday" class="p-2 text-secondary hover:bg-secondary/10 rounded-full transition-colors cursor-pointer" title="Refresh Data">
               <span class="material-symbols-outlined text-lg" :class="{ 'animate-spin': loadingToday }">refresh</span>
-              <span class="hidden sm:inline">Refresh</span>
             </button>
           </div>
 
-          <!-- Empty state -->
-          <div v-if="!loadingToday && todayAttendees.length === 0" class="flex-grow flex flex-col items-center justify-center p-12 text-center">
-            <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">event_busy</span>
-            <h4 class="text-lg font-bold text-on-surface-variant mb-1">Belum Ada Pengunjung</h4>
-            <p class="text-sm text-on-surface-variant/70">Belum ada presensi yang tercatat untuk hari ini.</p>
-          </div>
-
-          <!-- Loading state -->
-          <div v-else-if="loadingToday && todayAttendees.length === 0" class="flex-grow flex items-center justify-center p-12">
-            <div class="flex flex-col items-center gap-3">
-              <span class="material-symbols-outlined text-4xl text-secondary animate-spin">progress_activity</span>
-              <p class="text-sm text-on-surface-variant">Memuat data kehadiran...</p>
+          <div class="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 text-center my-2">
+            <span class="font-label-md text-xs bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+              {{ todayDate }}
+            </span>
+            <div class="text-5xl md:text-6xl font-extrabold text-primary my-3 font-mono">
+              {{ todayTotal }}
             </div>
+            <p class="text-xs text-on-surface-variant font-medium">Total Pemustaka Hadir</p>
           </div>
 
-          <!-- Attendance List -->
-          <div v-else class="overflow-y-auto max-h-[480px] scrollbar-thin">
-            <table class="w-full text-left">
-              <thead class="bg-surface-container-low sticky top-0 z-10">
-                <tr class="text-xs uppercase text-on-surface-variant tracking-wider">
-                  <th class="px-6 py-3 font-semibold">No</th>
-                  <th class="px-6 py-3 font-semibold">Pemustaka</th>
-                  <th class="px-6 py-3 font-semibold hidden md:table-cell">NIM/ID</th>
-                  <th class="px-6 py-3 font-semibold hidden lg:table-cell">Prodi</th>
-                  <th class="px-6 py-3 font-semibold text-right">Waktu Masuk</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr 
-                  v-for="(item, idx) in todayAttendees" 
-                  :key="item.id" 
-                  class="border-b border-outline-variant/50 hover:bg-surface-container-low/50 transition-colors"
-                  :class="{ 'bg-secondary-fixed/20 animate-pulse-once': item.id === lastCheckedRecordId }"
-                >
-                  <td class="px-6 py-4 font-mono text-sm text-on-surface-variant">{{ idx + 1 }}</td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                      <img 
-                        :src="item.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.user?.name || 'U')}&color=4f46e5&background=e0e7ff`" 
-                        :alt="item.user?.name" 
-                        class="w-9 h-9 rounded-full ring-2 ring-outline-variant/30 object-cover"
-                      />
-                      <div>
-                        <p class="font-semibold text-sm text-on-surface">{{ item.user?.name || '-' }}</p>
-                        <p class="text-xs text-on-surface-variant capitalize md:hidden">{{ item.user?.role || '-' }}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 hidden md:table-cell">
-                    <span class="font-mono text-sm text-on-surface-variant">{{ item.user?.nim || item.user?.nidn || '-' }}</span>
-                  </td>
-                  <td class="px-6 py-4 hidden lg:table-cell">
-                    <span class="text-sm text-on-surface-variant">{{ item.user?.prodi || '-' }}</span>
-                  </td>
-                  <td class="px-6 py-4 text-right">
-                    <span class="inline-flex items-center gap-1 bg-primary-fixed/40 text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-semibold font-mono">
-                      <span class="material-symbols-outlined text-sm">schedule</span>
-                      {{ formatTime(item.created_at) }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="mt-4">
+            <div class="flex justify-between text-xs text-on-surface-variant font-medium mb-1.5">
+              <span>Kapasitas Ruang Baca</span>
+              <span>{{ todayTotal }}/100 Kursi</span>
+            </div>
+            <div class="w-full bg-surface-container-high rounded-full h-3.5 overflow-hidden">
+              <div class="bg-secondary h-full rounded-full transition-all duration-1000" :style="{ width: `${occupancyPercent}%` }"></div>
+            </div>
           </div>
         </div>
 
-        <!-- Visitor Information Card -->
-        <div class="bg-primary-container rounded-2xl card-shadow p-6 flex items-start gap-6 border-l-8 border-secondary text-white">
-          <div class="bg-secondary-container p-3 rounded-xl shrink-0">
-            <span class="material-symbols-outlined text-on-secondary-container text-3xl">info</span>
+        <!-- Card 2: Pengunjung Terakhir Check-In -->
+        <div v-if="lastCheckedUser" class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-4 text-emerald-900 shadow-xs">
+          <div class="p-3 bg-emerald-500 text-white rounded-full shrink-0">
+            <span class="material-symbols-outlined text-2xl">person_check</span>
           </div>
-          <div class="flex flex-col gap-2">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-emerald-700 font-bold">Terakhir Check-In</p>
+            <h4 class="font-bold text-base text-emerald-950">{{ lastCheckedUser.name }}</h4>
+            <p class="text-xs text-emerald-800">{{ lastCheckedUser.nim || lastCheckedUser.role }}</p>
+          </div>
+        </div>
+
+        <!-- Card 3: Informasional Kiosk / Tata Tertib -->
+        <div class="bg-primary-container rounded-2xl card-shadow p-6 flex flex-col gap-3 border-l-8 border-secondary text-white flex-grow">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-secondary-fixed text-3xl">info</span>
             <h3 class="font-headline-md text-headline-md text-white font-bold">Informasi Pemustaka</h3>
-            <p class="font-body-md text-white/90 leading-relaxed text-sm">
-              Harap Tenang &amp; Menjaga Kebersihan Lingkungan Perpustakaan. <br/>
-              Hormati rekan akademisi yang sedang melakukan riset. Pastikan perangkat seluler dalam mode hening.
-            </p>
+          </div>
+          <p class="font-body-md text-white/90 leading-relaxed text-xs">
+            Harap Tenang &amp; Menjaga Kebersihan Lingkungan Perpustakaan.<br/>
+            Hormati rekan akademisi yang sedang melakukan riset. Pastikan perangkat seluler dalam mode hening.
+          </p>
+          <div class="mt-auto pt-4 border-t border-white/10 flex justify-between text-[11px] text-white/70">
+            <span>Jam Operasional: 08.00 - 16.00 WIB</span>
+            <span>STAH DNJ</span>
           </div>
         </div>
       </section>
