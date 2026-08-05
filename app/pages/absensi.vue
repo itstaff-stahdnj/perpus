@@ -59,15 +59,43 @@
       <!-- Left Column: Scanner + Keypad -->
       <section class="col-span-12 lg:col-span-5 flex flex-col gap-gutter">
         <!-- Scanner Card -->
-        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col items-center border border-outline-variant">
-          <div class="text-center">
-            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-2">Scan Kartu Anggota</h2>
-            <p class="font-body-md text-body-md text-on-surface-variant">Arahkan QR Code atau Barcode ke sensor kamera</p>
+        <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col items-center border border-outline-variant relative overflow-hidden">
+          <!-- Hardware QR Sensor Active Badge -->
+          <div class="w-full flex items-center justify-between bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-2 rounded-xl mb-4 text-xs font-bold shadow-xs">
+            <div class="flex items-center gap-2">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <span>Sensor Hardware QR Scanner (Standby)</span>
+            </div>
+            <span class="material-symbols-outlined text-sm text-emerald-600">qr_code_2</span>
           </div>
 
-          <div class="relative w-64 h-64 border-4 border-dashed border-outline-variant rounded-2xl flex items-center justify-center overflow-hidden bg-surface-container-low my-6">
+          <div class="text-center">
+            <h2 class="font-headline-md text-headline-md text-primary font-bold mb-2">Scan Kartu Anggota</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant text-sm">Dekatkan QR Code pada Kartu Anggota ke sensor scanner USB / Kamera</p>
+          </div>
+
+          <!-- Active Hardware QR Input Box (Captures Scanner Gun Input) -->
+          <div class="w-full mt-4">
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary">qr_code_scanner</span>
+              <input 
+                ref="qrInputRef"
+                v-model="currentID" 
+                type="text" 
+                class="w-full pl-10 pr-4 py-3 bg-surface-container-low border-2 border-primary/40 focus:border-secondary rounded-xl text-center font-mono font-bold text-lg text-primary outline-none transition-all placeholder:text-xs placeholder:font-sans placeholder:font-normal"
+                placeholder="Discan otomatis oleh alat QR Code scanner..." 
+                @keyup.enter="handleCheckIn"
+              />
+            </div>
+          </div>
+
+          <!-- Scanner Animation Visual Box -->
+          <div class="relative w-64 h-56 border-4 border-dashed border-primary/30 rounded-2xl flex items-center justify-center overflow-hidden bg-surface-container-low my-4">
             <div class="absolute inset-0 flex items-center justify-center opacity-10">
-              <span class="material-symbols-outlined text-[140px]">qr_code_scanner</span>
+              <span class="material-symbols-outlined text-[130px] text-primary">qr_code_scanner</span>
             </div>
 
             <!-- Scanner Animation Line -->
@@ -79,10 +107,11 @@
             <div class="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-secondary rounded-bl-sm"></div>
             <div class="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-secondary rounded-br-sm"></div>
 
-            <div 
-              class="w-56 h-56 bg-cover bg-center rounded-lg opacity-80" 
-              style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDEWFAJHfXWrShr6KikZRRh1EeRBsjE_Quqr01mYxhTG94UIuBiKlLd13jwYLPa7tXOslnOM0dOiRkoMhvw7mtwtgjYuNn2Pp3xrfqApcKsaNumSMKqrsQf6rjANHBsC7HAS2AZ2po1epCpB6grisXEsicPtSIT4hnbJSxALaLYf0-7Adtg_zDva185rlQ4JhG07YXZ78NW7h3x1o04C81Whxc2bBTUPLGOF6JDd3kljhpeTRXR0tyBZg')"
-            ></div>
+            <div class="text-center p-4 z-0">
+              <span class="material-symbols-outlined text-5xl text-secondary mb-2 animate-bounce">sensors</span>
+              <p class="text-xs font-bold text-primary">Siap Menerima Scan QR</p>
+              <p class="text-[11px] text-on-surface-variant">Arahkan QR Code Kartu ke Scanner</p>
+            </div>
           </div>
         </div>
 
@@ -306,6 +335,7 @@ const toggleFullscreen = () => {
 
 const siteSettings = ref<SiteSettings | null>(null);
 const currentID = ref('');
+const qrInputRef = ref<HTMLInputElement | null>(null);
 const currentTime = ref('');
 const currentDate = ref('');
 const submitting = ref(false);
@@ -372,15 +402,36 @@ const backspaceID = () => {
   currentID.value = currentID.value.slice(0, -1);
 };
 
+const isToday = (dateString?: string) => {
+  if (!dateString) return false;
+  try {
+    const d = new Date(dateString);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() &&
+           d.getMonth() === now.getMonth() &&
+           d.getDate() === now.getDate();
+  } catch {
+    return false;
+  }
+};
+
 const refreshAttendanceData = async () => {
   loadingToday.value = true;
   try {
     const res = await getAttendanceToday();
     if (res?.success && res.data) {
       todayData.value = res.data;
-      todayAttendees.value = res.data.daftar_hadir || [];
-      todayTotal.value = res.data.total_hadir || 0;
-      todayDate.value = res.data.tanggal || new Date().toISOString().split('T')[0];
+      const rawList = res.data.daftar_hadir || [];
+      
+      // Filter strictly by created_at timestamp matching today
+      const todayList = rawList.filter(item => {
+        if (!item.created_at) return true;
+        return isToday(item.created_at);
+      });
+
+      todayAttendees.value = todayList;
+      todayTotal.value = todayList.length;
+      todayDate.value = (res.data.tanggal as string) || new Date().toISOString().split('T')[0];
     }
   } catch (e) {
     console.error('Error fetching today attendance:', e);
@@ -435,9 +486,25 @@ const handleCheckIn = async () => {
   }
 };
 
+const handleGlobalKeyPress = (e: KeyboardEvent) => {
+  // Auto focus input if physical QR barcode scanner device starts typing anywhere on the page
+  if (document.activeElement !== qrInputRef.value && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    qrInputRef.value?.focus();
+  }
+};
+
 onMounted(async () => {
   updateClock();
   clockTimer = setInterval(updateClock, 1000);
+
+  // Auto focus scanner input for physical QR scanner devices
+  setTimeout(() => {
+    qrInputRef.value?.focus();
+  }, 300);
+
+  if (process.client) {
+    window.addEventListener('keydown', handleGlobalKeyPress);
+  }
 
   // Load settings
   try {
@@ -459,6 +526,9 @@ onMounted(async () => {
 onUnmounted(() => {
   if (clockTimer) clearInterval(clockTimer);
   if (refreshTimer) clearInterval(refreshTimer);
+  if (process.client) {
+    window.removeEventListener('keydown', handleGlobalKeyPress);
+  }
 });
 </script>
 

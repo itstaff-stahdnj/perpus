@@ -42,6 +42,11 @@ export interface NewsItem {
   summary?: string;
   category?: string;
   image_url?: string;
+  thumbnail_url?: string;
+  author_name?: string;
+  author?: {
+    name: string;
+  };
   published_at?: string;
   created_at?: string;
 }
