@@ -11,12 +11,20 @@
         <span class="text-label-md font-label-md opacity-80 uppercase tracking-wider text-xs">System Presensi Kedatangan Akademik</span>
       </div>
 
-      <div class="flex items-center gap-6 md:gap-8">
+      <div class="flex items-center gap-4 md:gap-6">
         <div class="flex flex-col items-end">
-          <span class="text-headline-lg text-2xl md:text-headline-lg font-bold font-mono tracking-wider">{{ currentTime }}</span>
+          <span class="text-headline-lg text-xl md:text-2xl font-bold font-mono tracking-wider">{{ currentTime }}</span>
           <span class="text-xs md:text-label-md opacity-90">{{ currentDate }}</span>
         </div>
         <div class="h-10 w-[1px] bg-white/20 hidden sm:block"></div>
+        <button 
+          @click="toggleFullscreen" 
+          class="flex items-center gap-2 bg-secondary text-white hover:bg-on-secondary-container px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+          :title="isFullscreen ? 'Keluar Layar Penuh' : 'Aktifkan Mode Display Kiosk'"
+        >
+          <span class="material-symbols-outlined text-lg">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+          <span class="hidden sm:inline">{{ isFullscreen ? 'Keluar Display' : 'Mode Display TV / Kiosk' }}</span>
+        </button>
         <NuxtLink to="/" class="material-symbols-outlined text-3xl text-secondary-fixed hover:scale-110 transition-transform" title="Beranda">
           account_balance
         </NuxtLink>
@@ -271,7 +279,30 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePustakaApi, type SiteSettings, type AttendanceRecord, type AttendanceTodayResponse } from '../composables/usePustakaApi';
 
+definePageMeta({
+  layout: false
+});
+
 const { getSettings, getAttendanceToday, submitAttendance } = usePustakaApi();
+
+const isFullscreen = ref(false);
+
+const toggleFullscreen = () => {
+  if (!process.client) return;
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().then(() => {
+      isFullscreen.value = true;
+    }).catch(err => {
+      console.error('Gagal mengaktifkan mode fullscreen:', err);
+    });
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().then(() => {
+        isFullscreen.value = false;
+      });
+    }
+  }
+};
 
 const siteSettings = ref<SiteSettings | null>(null);
 const currentID = ref('');
