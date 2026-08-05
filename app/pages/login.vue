@@ -16,7 +16,7 @@
         <h1 class="font-headline-md text-2xl text-primary font-extrabold mb-2">Mengalihkan ke Portal Autentikasi</h1>
         <p class="text-xs text-on-surface-variant mb-6 leading-relaxed">
           Autentikasi terpusat STAH Dharma Nusantara berada di <strong>portal-perpus.stahdnj.ac.id</strong>.<br/>
-          Setelah masuk, Anda akan diarahkan ke Dashboard di <strong>panel-perpus.stahdnj.ac.id</strong>.
+          Setelah masuk, Anda akan langsung diarahkan ke Dashboard Perpustakaan.
         </p>
 
         <div class="space-y-3">
@@ -29,11 +29,11 @@
           </a>
 
           <a 
-            href="https://panel-perpus.stahdnj.ac.id" 
+            href="https://portal-perpus.stahdnj.ac.id" 
             class="w-full py-3 px-6 bg-surface-container-high hover:bg-secondary/10 text-primary font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 border border-outline-variant/60"
           >
             <span class="material-symbols-outlined text-base">dashboard</span>
-            <span>Langsung Ke Dashboard Panel Perpus</span>
+            <span>Langsung Ke Dashboard Portal Perpus</span>
           </a>
         </div>
 

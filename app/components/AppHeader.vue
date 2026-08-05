@@ -52,7 +52,7 @@
     <div class="flex items-center gap-4">
       <!-- If Logged In: Profile & Dashboard Button -->
       <div v-if="tokenCookie && profile" class="flex items-center gap-3 pl-3 border-l border-outline-variant">
-        <a href="https://panel-perpus.stahdnj.ac.id" class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" title="Buka Dashboard Panel">
+        <a href="https://portal-perpus.stahdnj.ac.id" class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" title="Buka Dashboard Panel">
           <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden border border-secondary/30 shrink-0">
             <img v-if="profile?.avatar_url" class="w-full h-full object-cover" :src="profile.avatar_url" :alt="profile.name" />
             <span v-else class="text-xs">{{ (profile?.name || 'U').charAt(0) }}</span>
@@ -135,11 +135,11 @@
 
             <a 
               v-if="tokenCookie"
-              href="https://panel-perpus.stahdnj.ac.id" 
+              href="https://portal-perpus.stahdnj.ac.id" 
               @click="mobileMenuOpen = false"
               class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
             >
-              <span class="material-symbols-outlined">dashboard</span> Buka Dashboard Panel
+              <span class="material-symbols-outlined">dashboard</span> Buka Portal Dashboard
             </a>
             <a 
               v-else
