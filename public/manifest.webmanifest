@@ -1,0 +1,60 @@
+{
+  "name": "Perpustakaan STAH Dharma Nusantara Jakarta",
+  "short_name": "Perpus STAH",
+  "description": "Portal digital Perpustakaan STAH Dharma Nusantara Jakarta — Katalog buku, layanan, berita, dan absensi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fd",
+  "theme_color": "#00243c",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "id-ID",
+  "categories": ["education", "books"],
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Katalog Buku",
+      "short_name": "Buku",
+      "url": "/buku",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Layanan Perpustakaan",
+      "short_name": "Layanan",
+      "url": "/layanan",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Berita Terbaru",
+      "short_name": "Berita",
+      "url": "/berita",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Absensi",
+      "short_name": "Absensi",
+      "url": "/absensi",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -10,7 +10,26 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Perpustakaan STAH Dharma Nusantara Jakarta',
+      htmlAttrs: {
+        lang: 'id'
+      },
+      meta: [
+        { name: 'description', content: 'Portal digital Perpustakaan STAH Dharma Nusantara Jakarta — Katalog buku, layanan, berita, dan absensi.' },
+        { name: 'theme-color', content: '#00243c' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'apple-mobile-web-app-title', content: 'Perpus STAH' },
+        { name: 'application-name', content: 'Perpus STAH' },
+        { name: 'msapplication-TileColor', content: '#00243c' },
+        { name: 'msapplication-TileImage', content: '/icon-192x192.png' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
+      ],
       link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'apple-touch-icon', sizes: '192x192', href: '/icon-192x192.png' },
+        { rel: 'apple-touch-icon', sizes: '512x512', href: '/icon-512x512.png' },
+        { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/icon-192x192.png' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap' }
       ],
