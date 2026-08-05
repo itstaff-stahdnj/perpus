@@ -352,6 +352,29 @@ const isToday = (dateString?: string) => {
   }
 };
 
+const formatTodayDateLabel = (dateInput?: string) => {
+  const now = new Date();
+  if (dateInput) {
+    try {
+      const parsed = new Date(dateInput);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('id-ID', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+    } catch {}
+  }
+  return now.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
 const refreshAttendanceData = async () => {
   loadingToday.value = true;
   try {
@@ -360,18 +383,22 @@ const refreshAttendanceData = async () => {
       todayData.value = res.data;
       const rawList = res.data.daftar_hadir || [];
       
-      // Filter strictly by created_at timestamp matching today
+      // Filter strictly by created_at or tanggal timestamp matching TODAY
       const todayList = rawList.filter(item => {
-        if (!item.created_at) return true;
-        return isToday(item.created_at);
+        const targetDate = item.created_at || item.tanggal;
+        if (!targetDate) return true;
+        return isToday(targetDate);
       });
 
       todayAttendees.value = todayList;
       todayTotal.value = todayList.length;
-      todayDate.value = (res.data.tanggal as string) || new Date().toISOString().split('T')[0];
+      todayDate.value = formatTodayDateLabel(res.data.tanggal);
+    } else {
+      todayDate.value = formatTodayDateLabel();
     }
   } catch (e) {
     console.error('Error fetching today attendance:', e);
+    todayDate.value = formatTodayDateLabel();
   } finally {
     loadingToday.value = false;
   }
