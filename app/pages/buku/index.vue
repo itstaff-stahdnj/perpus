@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-surface text-on-surface flex flex-col font-sans">
-    <div class="flex-1 flex max-w-container-max w-full mx-auto pt-16 md:pt-20">
+    <div class="flex-1 flex max-w-container-max w-full mx-auto py-4 md:py-6">
       <!-- SideNavBar Filter -->
-      <aside class="w-64 h-[calc(100vh-110px)] sticky top-24 bg-surface-container-low dark:bg-surface-container border-r border-outline-variant flex flex-col p-gutter gap-4 shrink-0 overflow-y-auto rounded-r-2xl hidden md:flex">
+      <aside class="w-64 h-[calc(100vh-110px)] sticky top-24 bg-surface-container-low border-r border-outline-variant flex flex-col p-gutter gap-4 shrink-0 overflow-y-auto rounded-r-2xl hidden md:flex">
         <div>
-          <h2 class="text-primary dark:text-primary-fixed-dim font-bold font-label-md text-label-md mb-1">Filter Katalog Buku</h2>
+          <h2 class="text-primary font-bold font-label-md text-label-md mb-1">Filter Katalog Buku</h2>
           <p class="text-on-surface-variant text-caption font-caption mb-4">Sesuaikan pencarian koleksi</p>
         </div>
 
@@ -14,7 +14,7 @@
           <input 
             v-model="searchQuery" 
             type="text" 
-            class="w-full pl-9 pr-3 py-2 bg-white dark:bg-surface-container-high border border-outline-variant rounded-lg text-xs font-body-md focus:ring-2 focus:ring-primary outline-none" 
+            class="w-full pl-9 pr-3 py-2 bg-white border border-outline-variant rounded-lg text-xs font-body-md focus:ring-2 focus:ring-primary outline-none" 
             placeholder="Cari judul/penulis/ISBN..." 
           />
         </div>
@@ -38,15 +38,15 @@
           <button 
             v-for="cat in categories" 
             :key="cat.id" 
-            class="w-full flex items-center justify-between p-2.5 rounded-lg text-xs font-label-md transition-all"
-            :class="selectedCategory === cat.nama_kategori ? 'bg-secondary-fixed text-primary font-bold shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'"
+            class="w-full flex items-center justify-between p-2.5 rounded-lg text-xs font-label-md transition-all cursor-pointer"
+            :class="isCategoryActive(cat) ? 'bg-secondary-fixed text-primary font-bold shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'"
             @click="selectedCategory = cat.nama_kategori"
           >
             <div class="flex items-center gap-2.5 truncate">
               <span class="material-symbols-outlined text-lg">menu_book</span>
               <span class="truncate">{{ cat.nama_kategori }}</span>
             </div>
-            <span class="text-[10px] bg-black/5 px-2 py-0.5 rounded-full font-mono">{{ cat.books_count ?? 0 }}</span>
+            <span class="text-[10px] bg-black/5 px-2 py-0.5 rounded-full font-mono">{{ getCategoryCount(cat) }}</span>
           </button>
         </div>
 
@@ -123,11 +123,23 @@
               </p>
             </div>
 
-            <!-- Mobile Search & View Mode Toggle -->
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              <div class="relative sm:hidden flex-1">
+            <!-- Mobile Search, Sort & View Mode Toggle -->
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap sm:flex-nowrap">
+              <div class="relative sm:hidden flex-1 min-w-[140px]">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
                 <input v-model="searchQuery" type="text" class="w-full pl-9 pr-3 py-2 bg-surface-container rounded-full text-xs outline-none" placeholder="Cari buku..." />
+              </div>
+
+              <!-- Sorting Dropdown -->
+              <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-outline-variant shadow-sm text-xs font-body-md text-on-surface">
+                <span class="material-symbols-outlined text-sm text-on-surface-variant">sort</span>
+                <select v-model="sortBy" class="bg-transparent border-none outline-none cursor-pointer py-1 font-label-md text-xs text-primary font-medium">
+                  <option value="default">Urutkan: Default</option>
+                  <option value="judul-asc">Judul (A - Z)</option>
+                  <option value="judul-desc">Judul (Z - A)</option>
+                  <option value="tahun-desc">Tahun (Terbaru)</option>
+                  <option value="tahun-asc">Tahun (Terlama)</option>
+                </select>
               </div>
 
               <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-outline-variant shadow-sm">
@@ -152,21 +164,25 @@
           </div>
 
           <!-- Active Filter Pills -->
-          <div v-if="selectedCategory !== 'all' || searchQuery || statusFilter !== 'all'" class="flex items-center gap-2 mt-4 flex-wrap">
+          <div v-if="selectedCategory !== 'all' || searchQuery || statusFilter !== 'all' || sortBy !== 'default'" class="flex items-center gap-2 mt-4 flex-wrap">
             <span class="text-xs text-on-surface-variant font-medium">Filter Aktif:</span>
             <span v-if="selectedCategory !== 'all'" class="bg-secondary-fixed text-on-secondary-fixed text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
               Kategori: {{ selectedCategory }}
-              <button class="hover:text-error" @click="selectedCategory = 'all'">×</button>
+              <button class="hover:text-error cursor-pointer" @click="selectedCategory = 'all'">×</button>
             </span>
             <span v-if="searchQuery" class="bg-primary-fixed text-on-primary-fixed text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
               Cari: "{{ searchQuery }}"
-              <button class="hover:text-error" @click="searchQuery = ''">×</button>
+              <button class="hover:text-error cursor-pointer" @click="searchQuery = ''">×</button>
             </span>
             <span v-if="statusFilter !== 'all'" class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
               Status: Tersedia
-              <button class="hover:text-error" @click="statusFilter = 'all'">×</button>
+              <button class="hover:text-error cursor-pointer" @click="statusFilter = 'all'">×</button>
             </span>
-            <button class="text-xs text-error font-bold hover:underline ml-2" @click="resetFilters">Reset Semua</button>
+            <span v-if="sortBy !== 'default'" class="bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+              Urutkan: {{ sortLabels[sortBy] }}
+              <button class="hover:text-error cursor-pointer" @click="sortBy = 'default'">×</button>
+            </span>
+            <button class="text-xs text-error font-bold hover:underline ml-2 cursor-pointer" @click="resetFilters">Reset Semua</button>
           </div>
         </header>
 
@@ -197,10 +213,10 @@
               v-for="cat in categories" 
               :key="cat.id" 
               class="px-3.5 py-1.5 rounded-full text-xs font-label-md transition-all whitespace-nowrap shrink-0 cursor-pointer"
-              :class="selectedCategory === cat.nama_kategori ? 'bg-primary text-white font-bold' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'"
+              :class="isCategoryActive(cat) ? 'bg-primary text-white font-bold' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'"
               @click="selectedCategory = cat.nama_kategori"
             >
-              {{ cat.nama_kategori }} ({{ cat.books_count ?? 0 }})
+              {{ cat.nama_kategori }} ({{ getCategoryCount(cat) }})
             </button>
           </div>
         </div>
@@ -212,15 +228,29 @@
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="filteredBooks.length === 0" class="bg-surface-container-low border border-outline-variant p-12 rounded-2xl text-center my-8">
+        <div v-else-if="filteredBooks.length === 0" class="bg-surface-container-low border border-outline-variant p-8 md:p-12 rounded-2xl text-center my-8">
           <span class="material-symbols-outlined text-6xl text-outline mb-4">search_off</span>
-          <h3 class="font-headline-md text-primary mb-2">Koleksi Tidak Ditemukan</h3>
-          <p class="font-body-md text-on-surface-variant max-w-md mx-auto mb-6">
-            Tidak ada buku yang sesuai dengan pencarian atau filter yang dipilih. Silakan atur ulang kata kunci.
+          <h3 class="font-headline-md text-primary mb-2 font-bold">
+            {{ selectedCategory !== 'all' ? `Belum Ada Buku di Kategori "${selectedCategory}"` : 'Koleksi Tidak Ditemukan' }}
+          </h3>
+          <p class="font-body-md text-on-surface-variant max-w-lg mx-auto mb-6">
+            {{ selectedCategory !== 'all' 
+                ? `Saat ini belum ada koleksi buku fisik terdaftar untuk kategori "${selectedCategory}". Anda bisa mencari karya ilmiah di Repository STAH DNJ atau menampilkan semua koleksi.` 
+                : 'Tidak ada buku yang sesuai dengan pencarian atau filter yang dipilih. Silakan atur ulang kata kunci.' }}
           </p>
-          <button class="bg-primary text-white px-6 py-2.5 rounded-xl font-label-md text-sm hover:bg-primary-container transition-colors" @click="resetFilters">
-            Tampilkan Semua Buku
-          </button>
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <button class="bg-primary text-white px-6 py-2.5 rounded-xl font-label-md text-xs sm:text-sm hover:bg-primary-container transition-colors cursor-pointer font-bold" @click="resetFilters">
+              Tampilkan Semua Buku ({{ books.length }})
+            </button>
+            <a 
+              :href="repositorySearchUrl" 
+              target="_blank" 
+              class="bg-secondary text-white px-6 py-2.5 rounded-xl font-label-md text-xs sm:text-sm hover:bg-on-secondary-container transition-colors font-bold inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Cari di Repository STAH</span>
+              <span class="material-symbols-outlined text-sm">open_in_new</span>
+            </a>
+          </div>
         </div>
 
         <!-- Book Grid View -->
@@ -233,16 +263,10 @@
             <div>
               <NuxtLink :to="getBookUrl(book)" class="block relative aspect-[3/4] overflow-hidden bg-surface-container-high">
                 <img 
-                  v-if="book.cover_image"
                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                  :src="book.cover_image" 
+                  :src="getBookCover(book, index)" 
                   :alt="book.judul"
-                />
-                <img 
-                  v-else
-                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                  :src="fallbackCovers[index % fallbackCovers.length]" 
-                  :alt="book.judul"
+                  @error="handleImageError($event, index)"
                 />
                 <div class="absolute top-3 left-3">
                   <span class="bg-primary-container/90 text-on-primary-container px-3 py-1 rounded-full text-caption font-label-md backdrop-blur-sm shadow-sm">
@@ -252,12 +276,15 @@
               </NuxtLink>
 
               <div class="p-5">
+                <span v-if="getBookCategoryName(book)" class="inline-block text-[10px] font-bold uppercase tracking-wider text-secondary bg-secondary-fixed/80 px-2 py-0.5 rounded-md mb-1.5">
+                  {{ getBookCategoryName(book) }}
+                </span>
                 <div class="flex justify-between items-start mb-2 gap-2">
                   <NuxtLink :to="getBookUrl(book)" class="font-label-md text-label-md text-primary group-hover:text-secondary transition-colors line-clamp-2 leading-snug font-bold">
                     {{ book.judul }}
                   </NuxtLink>
                   <button 
-                    class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors text-xl"
+                    class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors text-xl cursor-pointer"
                     :class="{ 'text-secondary font-fill': bookmarkedIds.has(book.id) }"
                     title="Simpan Buku"
                     @click.stop="toggleBookmark(book.id)"
@@ -273,8 +300,10 @@
 
             <div class="p-5 pt-0">
               <div class="flex items-center gap-1.5 mb-4">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span class="text-emerald-700 text-caption font-label-md font-semibold">Tersedia</span>
+                <span class="w-2 h-2 rounded-full" :class="(book.stok === undefined || book.stok > 0) ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                <span class="text-caption font-label-md font-semibold" :class="(book.stok === undefined || book.stok > 0) ? 'text-emerald-700' : 'text-rose-700'">
+                  {{ (book.stok === undefined || book.stok > 0) ? `Tersedia (${book.stok ?? 1})` : 'Sedang Dipinjam' }}
+                </span>
               </div>
               <div class="flex gap-2">
                 <NuxtLink 
@@ -283,12 +312,15 @@
                 >
                   Detail
                 </NuxtLink>
-                <NuxtLink 
-                  :to="getBookUrl(book)" 
-                  class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-xs hover:opacity-90 transition-opacity font-semibold text-center"
+                <a 
+                  :href="getBookPortalUrl(book)" 
+                  target="_blank" 
+                  class="bg-secondary text-white px-3 py-2 rounded-lg font-label-md text-xs hover:opacity-90 transition-opacity font-semibold text-center flex items-center justify-center gap-1 shrink-0"
+                  title="Pinjam Buku di Portal Perpustakaan"
                 >
-                  Pinjam
-                </NuxtLink>
+                  <span>Pinjam</span>
+                  <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                </a>
               </div>
             </div>
           </div>
@@ -304,21 +336,15 @@
             <div class="flex items-center gap-4">
               <NuxtLink :to="getBookUrl(book)" class="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-high block">
                 <img 
-                  v-if="book.cover_image"
-                  :src="book.cover_image" 
+                  :src="getBookCover(book, index)" 
                   :alt="book.judul" 
                   class="w-full h-full object-cover"
-                />
-                <img 
-                  v-else
-                  :src="fallbackCovers[index % fallbackCovers.length]" 
-                  :alt="book.judul" 
-                  class="w-full h-full object-cover"
+                  @error="handleImageError($event, index)"
                 />
               </NuxtLink>
               <div>
                 <span class="text-[10px] font-bold uppercase text-secondary bg-secondary-fixed px-2 py-0.5 rounded mb-1 inline-block">
-                  Buku Fisik • {{ book.tahun_terbit || '2021' }}
+                  {{ getBookCategoryName(book) ? `${getBookCategoryName(book)} • ` : '' }}{{ book.tahun_terbit || '2021' }}
                 </span>
                 <NuxtLink :to="getBookUrl(book)" class="font-headline-md text-base text-primary font-bold leading-tight mb-1 hover:text-secondary block">
                   {{ book.judul }}
@@ -329,16 +355,24 @@
 
             <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0">
               <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span class="text-emerald-700 text-xs font-semibold">Tersedia</span>
+                <span class="w-2 h-2 rounded-full" :class="(book.stok === undefined || book.stok > 0) ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                <span class="text-xs font-semibold" :class="(book.stok === undefined || book.stok > 0) ? 'text-emerald-700' : 'text-rose-700'">
+                  {{ (book.stok === undefined || book.stok > 0) ? `Tersedia (${book.stok ?? 1})` : 'Sedang Dipinjam' }}
+                </span>
               </div>
               <div class="flex items-center gap-2">
                 <NuxtLink :to="getBookUrl(book)" class="px-4 py-2 border border-primary text-primary rounded-lg text-xs font-semibold hover:bg-primary-fixed">
                   Detail
                 </NuxtLink>
-                <NuxtLink :to="getBookUrl(book)" class="px-4 py-2 bg-secondary text-white rounded-lg text-xs font-semibold hover:opacity-90">
-                  Pinjam
-                </NuxtLink>
+                <a 
+                  :href="getBookPortalUrl(book)" 
+                  target="_blank" 
+                  class="px-4 py-2 bg-secondary text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-1"
+                  title="Pinjam Buku di Portal Perpustakaan"
+                >
+                  <span>Pinjam</span>
+                  <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                </a>
               </div>
             </div>
           </div>
@@ -389,12 +423,12 @@
                   <button 
                     v-for="cat in categories" 
                     :key="cat.id" 
-                    class="p-2.5 rounded-xl text-left border text-xs transition-all flex justify-between items-center truncate"
-                    :class="selectedCategory === cat.nama_kategori ? 'bg-primary text-white border-primary font-bold' : 'border-outline-variant text-on-surface hover:bg-surface-container-low'"
+                    class="p-2.5 rounded-xl text-left border text-xs transition-all flex justify-between items-center truncate cursor-pointer"
+                    :class="isCategoryActive(cat) ? 'bg-primary text-white border-primary font-bold' : 'border-outline-variant text-on-surface hover:bg-surface-container-low'"
                     @click="selectedCategory = cat.nama_kategori"
                   >
                     <span class="truncate pr-1">{{ cat.nama_kategori }}</span>
-                    <span class="text-[10px] opacity-80 shrink-0">{{ cat.books_count ?? 0 }}</span>
+                    <span class="text-[10px] opacity-80 shrink-0">{{ getCategoryCount(cat) }}</span>
                   </button>
                 </div>
               </div>
@@ -439,12 +473,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { 
   usePustakaApi, 
   type Book, 
   type Category 
 } from '../../composables/usePustakaApi';
+
+const route = useRoute();
+const router = useRouter();
 
 const { getBooks, getCategories } = usePustakaApi();
 
@@ -452,6 +490,7 @@ const loading = ref(true);
 const searchQuery = ref('');
 const selectedCategory = ref('all');
 const statusFilter = ref('all');
+const sortBy = ref<'default' | 'judul-asc' | 'judul-desc' | 'tahun-desc' | 'tahun-asc'>('default');
 const viewMode = ref<'grid' | 'list'>('grid');
 const showMobileFilterModal = ref(false);
 
@@ -462,6 +501,14 @@ const bookmarkedIds = ref<Set<number>>(new Set());
 const itemsPerPage = 8;
 const displayedCount = ref(8);
 
+const sortLabels: Record<string, string> = {
+  'default': 'Default',
+  'judul-asc': 'Judul (A - Z)',
+  'judul-desc': 'Judul (Z - A)',
+  'tahun-desc': 'Tahun (Terbaru)',
+  'tahun-asc': 'Tahun (Terlama)'
+};
+
 const fallbackCovers = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBjq6J4ANKae7qsrtkuWYh2IKfolYdhdRZM2TNI8F_xfMmUy3GBNd_0lext2akY1DDQ-kI-MJSyq4i31ZLyKVJI5XFSESV6cHMr_388ebfR_LGzALybl-8R9nX2Nv2lVRN0jH5rOB6rB4RxN64zomhvv-ZvrVC3vpOOOKYyj_SposBs3k-n2AQqrjNdR8dMAqTChCdVpQ060FAavRTfCkWDIIgpXq02Vdd8ne-WzV9CGwL6DLoUheaybw',
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAElf4lHvPyHKSARy1FI7JoX9nUlPGcOS2dNvbSdwMaxPWRcWryz8T3KKJpzuyMG6jrTyAZ-y-SmkYHYyihTBnpiXp0S8wyZVFfYqDpT_L90rKfO7g6IXtk2VZf8SMkaHsPCcUrlvyFPiOzP3FtnygFchRAhojFKZe83RwiQYFj51Ev5V519G57hqPy31CU18xmPrlbxkcX5ezwau29gy9mBkPlaqGHV16PUX3-JX6TcO4JAvDDp97N5g',
@@ -470,9 +517,105 @@ const fallbackCovers = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCMHvivOiQ2f9XBmkY2ZKGa2D_TFfvv2m-iIIh3LxSVGPEVcvaC43svmN7LI1BKol5vzmDjqqUAKEvOwGH19G26TT59SitmrAO5ofeFKsbr9gj-vDdcvAbD7Zt6hUjsj3wzIxDEkUNNGwcL5jL4qPwkiS4udh_wipHZCoKX1tK5sEeiEqnO8mm4DuB8ev14yj4xeZAy1sKdQXNh5cWRq-z9ram0SdQUxuNJixCH0XzHpCtkf-dW7_2LwA'
 ];
 
+const handleImageError = (event: Event, index: number) => {
+  const img = event.target as HTMLImageElement;
+  if (img) {
+    img.src = fallbackCovers[index % fallbackCovers.length];
+  }
+};
+
+const isBookMatchingCategory = (b: Book, targetCategory: string): boolean => {
+  if (!targetCategory || targetCategory === 'all') return true;
+
+  const target = targetCategory.trim().toLowerCase();
+  if (target === 'all') return true;
+
+  const catObj = b.category || b.kategori;
+  if (!catObj) return false;
+
+  let cId = '';
+  let cName = '';
+  let cSlug = '';
+
+  if (typeof catObj === 'object') {
+    cId = String(catObj.id || '');
+    cName = (catObj.nama_kategori || (catObj as any).name || '').trim().toLowerCase();
+    cSlug = (catObj.slug || '').trim().toLowerCase();
+  } else if (typeof catObj === 'string') {
+    cName = catObj.trim().toLowerCase();
+  }
+
+  if (target === cId || target === cName || (cSlug && target === cSlug)) {
+    return true;
+  }
+
+  const cleanTarget = target.replace(/[^a-z0-9]+/g, ' ').trim();
+  const cleanName = cName.replace(/[^a-z0-9]+/g, ' ').trim();
+  const cleanSlug = cSlug.replace(/[^a-z0-9]+/g, ' ').trim();
+
+  if (cleanTarget && cleanName && (cleanName.includes(cleanTarget) || cleanTarget.includes(cleanName))) {
+    return true;
+  }
+  if (cleanTarget && cleanSlug && (cleanSlug.includes(cleanTarget) || cleanTarget.includes(cleanSlug))) {
+    return true;
+  }
+
+  return false;
+};
+
+const getBookCategoryName = (b: Book): string => {
+  const catObj = b.category || b.kategori;
+  if (catObj && typeof catObj === 'object') {
+    return catObj.nama_kategori || (catObj as any).name || '';
+  }
+  if (typeof catObj === 'string') {
+    return catObj;
+  }
+  return '';
+};
+
+const getBookCategorySlug = (b: Book): string => {
+  const catObj = b.category || b.kategori;
+  if (catObj && typeof catObj === 'object') {
+    return catObj.slug || '';
+  }
+  return '';
+};
+
+const getCategoryCount = (cat: Category): number => {
+  if (!books.value || books.value.length === 0) {
+    return cat.books_count ?? 0;
+  }
+  return books.value.filter(b => 
+    isBookMatchingCategory(b, cat.nama_kategori) ||
+    (cat.slug ? isBookMatchingCategory(b, cat.slug) : false) ||
+    isBookMatchingCategory(b, String(cat.id))
+  ).length;
+};
+
+const isCategoryActive = (cat: Category): boolean => {
+  if (selectedCategory.value === 'all') return false;
+  const sel = selectedCategory.value.trim().toLowerCase();
+  const catName = cat.nama_kategori.trim().toLowerCase();
+  const catSlug = (cat.slug || '').trim().toLowerCase();
+  return (
+    sel === catName ||
+    (!!catSlug && sel === catSlug) ||
+    isBookMatchingCategory({ category: cat } as any, selectedCategory.value)
+  );
+};
+
+const getBookCover = (b: Book, index: number) => {
+  return b.cover_image || b.cover_image_url || fallbackCovers[index % fallbackCovers.length];
+};
+
 const getBookUrl = (b: Book) => {
   const slug = b.slug || b.judul.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   return `/buku/${slug}-${b.id}`;
+};
+
+const getBookPortalUrl = (b: Book) => {
+  return `https://portal-perpus.stahdnj.ac.id/login?redirect=${encodeURIComponent(`/buku/${b.id}`)}`;
 };
 
 const repositorySearchUrl = computed(() => {
@@ -486,20 +629,35 @@ const filteredBooks = computed(() => {
   let list = books.value;
 
   if (selectedCategory.value !== 'all') {
-    const targetCat = selectedCategory.value.toLowerCase();
-    list = list.filter(b => 
-      (b.kategori && typeof b.kategori === 'object' && b.kategori.nama_kategori?.toLowerCase() === targetCat) ||
-      (typeof b.kategori === 'string' && (b.kategori as string).toLowerCase() === targetCat)
-    );
+    list = list.filter(b => isBookMatchingCategory(b, selectedCategory.value));
   }
 
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
-    list = list.filter(b => 
-      (b.judul && b.judul.toLowerCase().includes(q)) ||
-      (b.penulis && b.penulis.toLowerCase().includes(q)) ||
-      (b.isbn && b.isbn.toLowerCase().includes(q))
-    );
+    list = list.filter(b => {
+      const catName = getBookCategoryName(b).toLowerCase();
+      return (
+        (b.judul && b.judul.toLowerCase().includes(q)) ||
+        (b.penulis && b.penulis.toLowerCase().includes(q)) ||
+        (b.isbn && b.isbn.toLowerCase().includes(q)) ||
+        (b.penerbit && b.penerbit.toLowerCase().includes(q)) ||
+        (catName && catName.includes(q))
+      );
+    });
+  }
+
+  if (statusFilter.value === 'available') {
+    list = list.filter(b => b.stok === undefined || b.stok > 0);
+  }
+
+  if (sortBy.value === 'judul-asc') {
+    list = [...list].sort((a, b) => a.judul.localeCompare(b.judul));
+  } else if (sortBy.value === 'judul-desc') {
+    list = [...list].sort((a, b) => b.judul.localeCompare(a.judul));
+  } else if (sortBy.value === 'tahun-desc') {
+    list = [...list].sort((a, b) => (Number(b.tahun_terbit) || 0) - (Number(a.tahun_terbit) || 0));
+  } else if (sortBy.value === 'tahun-asc') {
+    list = [...list].sort((a, b) => (Number(a.tahun_terbit) || 0) - (Number(b.tahun_terbit) || 0));
   }
 
   return list;
@@ -521,11 +679,79 @@ const loadMore = () => {
   displayedCount.value += 8;
 };
 
+const syncFromRoute = () => {
+  if (route.query.q !== undefined) {
+    searchQuery.value = String(route.query.q || '');
+  }
+  if (route.query.kategori !== undefined) {
+    selectedCategory.value = String(route.query.kategori || 'all');
+  }
+  if (route.query.status !== undefined) {
+    statusFilter.value = String(route.query.status || 'all');
+  }
+  if (route.query.sort !== undefined) {
+    sortBy.value = (route.query.sort as any) || 'default';
+  }
+};
+
+const updateRouteQuery = () => {
+  const query: Record<string, string> = {};
+  if (searchQuery.value.trim()) query.q = searchQuery.value.trim();
+  if (selectedCategory.value !== 'all') query.kategori = selectedCategory.value;
+  if (statusFilter.value !== 'all') query.status = statusFilter.value;
+  if (sortBy.value !== 'default') query.sort = sortBy.value;
+
+  router.replace({ query });
+};
+
+watch([searchQuery, selectedCategory, statusFilter, sortBy], () => {
+  updateRouteQuery();
+});
+
+watch(() => route.query, () => {
+  syncFromRoute();
+});
+
 const resetFilters = () => {
   selectedCategory.value = 'all';
   searchQuery.value = '';
   statusFilter.value = 'all';
+  sortBy.value = 'default';
   displayedCount.value = 8;
+  updateRouteQuery();
+};
+
+const deriveCategoriesFromBooks = (bookList: Book[]): Category[] => {
+  const catMap = new Map<string, Category>();
+  
+  for (const b of bookList) {
+    const catObj = b.category || b.kategori;
+    if (catObj && typeof catObj === 'object' && catObj.nama_kategori) {
+      const key = catObj.nama_kategori.trim().toLowerCase();
+      if (!catMap.has(key)) {
+        catMap.set(key, {
+          id: catObj.id || (catMap.size + 1),
+          nama_kategori: catObj.nama_kategori.trim(),
+          slug: catObj.slug || catObj.nama_kategori.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          deskripsi: `Koleksi ${catObj.nama_kategori.trim()}`,
+          books_count: 0
+        });
+      }
+    } else if (typeof catObj === 'string' && catObj.trim()) {
+      const key = catObj.trim().toLowerCase();
+      if (!catMap.has(key)) {
+        catMap.set(key, {
+          id: catMap.size + 1,
+          nama_kategori: catObj.trim(),
+          slug: catObj.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          deskripsi: `Koleksi ${catObj.trim()}`,
+          books_count: 0
+        });
+      }
+    }
+  }
+
+  return Array.from(catMap.values());
 };
 
 const loadData = async () => {
@@ -536,8 +762,22 @@ const loadData = async () => {
       getCategories()
     ]);
 
-    if (resBooks?.success) books.value = resBooks.data || [];
-    if (resCat?.success) categories.value = resCat.data || [];
+    if (resBooks?.data && Array.isArray(resBooks.data)) {
+      books.value = resBooks.data;
+    } else if (Array.isArray(resBooks)) {
+      books.value = resBooks;
+    }
+
+    if (resCat?.data && Array.isArray(resCat.data) && resCat.data.length > 0) {
+      categories.value = resCat.data;
+    } else if (Array.isArray(resCat) && resCat.length > 0) {
+      categories.value = resCat;
+    }
+
+    // Dynamic Fallback: If categories array is empty, derive from books
+    if (categories.value.length === 0 && books.value.length > 0) {
+      categories.value = deriveCategoriesFromBooks(books.value);
+    }
   } catch (err) {
     console.error('Error fetching catalog data:', err);
   } finally {
@@ -546,6 +786,7 @@ const loadData = async () => {
 };
 
 onMounted(() => {
+  syncFromRoute();
   loadData();
 });
 </script>

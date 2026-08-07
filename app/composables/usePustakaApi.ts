@@ -7,12 +7,19 @@ export interface Book {
   penerbit?: string;
   tahun_terbit?: string;
   cover_image?: string;
+  cover_image_url?: string;
   deskripsi?: string;
   stok?: number;
   kategori?: {
     id: number;
     nama_kategori: string;
-  };
+    slug?: string;
+  } | string;
+  category?: {
+    id: number;
+    nama_kategori: string;
+    slug?: string;
+  } | string;
 }
 
 export interface Category {
@@ -218,22 +225,48 @@ export const usePustakaApi = () => {
   };
 
   const getBooks = async (params?: Record<string, any>): Promise<{ success: boolean; data: Book[]; meta?: any }> => {
-    return await $fetch(`${baseUrl}/books`, {
-      headers: getHeaders(),
-      params
-    });
+    try {
+      const res = await $fetch<any>(`${baseUrl}/books`, {
+        headers: getHeaders(),
+        params
+      });
+      if (Array.isArray(res)) return { success: true, data: res };
+      if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data, meta: res.meta };
+      if (res?.success && Array.isArray(res.data)) return res;
+      return { success: false, data: [] };
+    } catch (e) {
+      console.error('getBooks error:', e);
+      return { success: false, data: [] };
+    }
   };
 
   const getBookById = async (id: number | string): Promise<{ success: boolean; data: Book }> => {
-    return await $fetch(`${baseUrl}/books/${id}`, {
-      headers: getHeaders()
-    });
+    try {
+      const res = await $fetch<any>(`${baseUrl}/books/${id}`, {
+        headers: getHeaders()
+      });
+      if (res?.data && typeof res.data === 'object') return { success: true, data: res.data };
+      if (res?.judul) return { success: true, data: res };
+      return { success: false, data: res?.data || res };
+    } catch (e) {
+      console.error('getBookById error:', e);
+      return { success: false, data: null as any };
+    }
   };
 
   const getCategories = async (): Promise<{ success: boolean; data: Category[] }> => {
-    return await $fetch(`${baseUrl}/categories`, {
-      headers: getHeaders()
-    });
+    try {
+      const res = await $fetch<any>(`${baseUrl}/categories`, {
+        headers: getHeaders()
+      });
+      if (Array.isArray(res)) return { success: true, data: res };
+      if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data };
+      if (res?.success && Array.isArray(res.data)) return res;
+      return { success: false, data: [] };
+    } catch (e) {
+      console.error('getCategories error:', e);
+      return { success: false, data: [] };
+    }
   };
 
   const getLoans = async (): Promise<{ success: boolean; data: any[] }> => {

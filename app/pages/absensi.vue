@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col bg-surface text-on-surface font-sans">
     <!-- Kiosk Top Header -->
-    <header class="bg-primary dark:bg-primary-container text-white shadow-md fixed top-0 left-0 w-full z-50 h-20 flex justify-between items-center px-4 md:px-margin-desktop">
+    <header class="bg-primary text-white shadow-md fixed top-0 left-0 w-full z-50 h-20 flex justify-between items-center px-4 md:px-margin-desktop">
       <div class="flex flex-col max-w-[55%] sm:max-w-none">
         <NuxtLink to="/" class="flex items-center gap-2">
           <span class="text-sm sm:text-headline-md font-bold text-secondary-fixed truncate leading-tight">

@@ -11,9 +11,11 @@ export default defineNuxtConfig({
     head: {
       title: 'Perpustakaan STAH Dharma Nusantara Jakarta',
       htmlAttrs: {
-        lang: 'id'
+        lang: 'id',
+        class: 'light'
       },
       meta: [
+        { name: 'color-scheme', content: 'light' },
         { name: 'description', content: 'Portal digital Perpustakaan STAH Dharma Nusantara Jakarta — Katalog buku, layanan, berita, dan absensi.' },
         { name: 'theme-color', content: '#00243c' },
         { name: 'mobile-web-app-capable', content: 'yes' },
@@ -39,7 +41,7 @@ export default defineNuxtConfig({
           id: 'tailwind-config',
           innerHTML: `
             tailwind.config = {
-                darkMode: "class",
+                darkMode: "false",
                 theme: {
                     extend: {
                         "colors": {

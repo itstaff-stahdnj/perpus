@@ -1,12 +1,9 @@
 <template>
-  <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 shadow-[0px_4px_12px_rgba(10,58,90,0.05)] bg-surface/90 glass-header border-b border-outline-variant/30">
-    <div class="flex items-center gap-4">
-      <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-1 text-secondary hover:bg-surface-container-high rounded-lg transition-colors" title="Menu">
-        <span class="material-symbols-outlined text-2xl">menu</span>
-      </button>
-      <NuxtLink to="/" class="flex items-center gap-2 max-w-[200px] sm:max-w-none">
+  <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-margin-desktop h-16 shadow-[0px_4px_12px_rgba(10,58,90,0.05)] bg-surface/90 glass-header border-b border-outline-variant/30">
+    <div class="flex items-center gap-3">
+      <NuxtLink to="/" class="flex items-center gap-2 max-w-[220px] sm:max-w-none">
         <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-8 w-auto object-contain shrink-0" />
-        <h1 class="font-headline-md text-headline-md font-bold text-primary text-xs sm:text-lg md:text-xl truncate leading-tight">{{ siteName }}</h1>
+        <h1 class="font-headline-md text-headline-md font-bold text-primary text-sm sm:text-lg md:text-xl truncate leading-tight">{{ siteName }}</h1>
       </NuxtLink>
     </div>
 
@@ -97,110 +94,6 @@
         </a>
       </div>
     </div>
-
-    <!-- Mobile Navigation Drawer -->
-    <div v-if="mobileMenuOpen" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden" @click.self="mobileMenuOpen = false">
-      <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-left duration-200 overflow-y-auto">
-        <div>
-          <div class="flex items-center justify-between pb-4 mb-6 border-b border-outline-variant">
-            <div class="flex items-center gap-2">
-              <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-7 w-auto" />
-              <span class="font-bold text-primary text-xs truncate max-w-[170px]">{{ siteName }}</span>
-            </div>
-            <button @click="mobileMenuOpen = false" class="p-1.5 hover:bg-surface-container-high rounded-full transition-colors">
-              <span class="material-symbols-outlined text-xl">close</span>
-            </button>
-          </div>
-
-          <nav class="flex flex-col gap-1.5">
-            <NuxtLink 
-              to="/" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path === '/' ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">home</span> Beranda
-            </NuxtLink>
-            <NuxtLink 
-              to="/buku" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/buku') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">menu_book</span> Katalog Buku
-            </NuxtLink>
-            <NuxtLink 
-              to="/layanan" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/layanan') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">room_service</span> Layanan
-            </NuxtLink>
-            <NuxtLink 
-              to="/absensi" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/absensi') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">badge</span> Presensi Kiosk
-            </NuxtLink>
-            <NuxtLink 
-              to="/berita" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/berita') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">newspaper</span> Berita & Pengumuman
-            </NuxtLink>
-            <NuxtLink 
-              to="/tata-tertib" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/tata-tertib') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">gavel</span> Tata Tertib
-            </NuxtLink>
-            <NuxtLink 
-              to="/bantuan" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors"
-              :class="route.path.startsWith('/bantuan') ? 'bg-secondary-fixed text-primary font-bold' : 'text-on-surface hover:bg-surface-container'"
-            >
-              <span class="material-symbols-outlined">support_agent</span> Meja Bantuan
-            </NuxtLink>
-
-            <template v-if="tokenCookie">
-              <a 
-                href="https://portal-perpus.stahdnj.ac.id" 
-                @click="mobileMenuOpen = false"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
-              >
-                <span class="material-symbols-outlined">dashboard</span> Buka Portal Dashboard
-              </a>
-              <button 
-                @click="handleLogoutMobile" 
-                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-rose-600 bg-rose-50 hover:bg-rose-100 mt-2 w-full text-left transition-colors cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-rose-600">logout</span> Keluar (Logout)
-              </button>
-            </template>
-            <a 
-              v-else
-              href="https://portal-perpus.stahdnj.ac.id/login" 
-              @click="mobileMenuOpen = false"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-primary text-white mt-2"
-            >
-              <span class="material-symbols-outlined">login</span> Masuk Ke Pustaka
-            </a>
-          </nav>
-        </div>
-
-        <div class="pt-4 border-t border-outline-variant text-center">
-          <p class="text-xs text-on-surface-variant font-medium">PWA Ready • STAH DNJ</p>
-        </div>
-      </div>
-    </div>
   </header>
 </template>
 
@@ -215,7 +108,6 @@ const { getProfile, getSettings, logout, tokenCookie } = usePustakaApi();
 const profile = ref<UserProfile | null>(null);
 const siteName = ref('Perpustakaan STAH DNJ');
 const logoUrl = ref<string | undefined>(undefined);
-const mobileMenuOpen = ref(false);
 
 const adminRoles = ['admin', 'kepala_pustaka', 'kepala_perpustakaan', 'pustakawan', 'staf', 'petugas', 'operator'];
 
@@ -233,11 +125,6 @@ const handleLogout = async () => {
   await logout();
   profile.value = null;
   router.push('/login');
-};
-
-const handleLogoutMobile = async () => {
-  mobileMenuOpen.value = false;
-  await handleLogout();
 };
 
 onMounted(async () => {

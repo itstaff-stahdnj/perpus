@@ -1,5 +1,5 @@
 <template>
-  <footer id="tentang" class="bg-primary dark:bg-primary-container text-secondary-fixed w-full mt-auto pt-12 sm:pt-16 pb-24 md:pb-16 px-margin-mobile md:px-margin-desktop border-t border-primary-container">
+  <footer id="tentang" class="bg-primary text-secondary-fixed w-full mt-auto pt-12 sm:pt-16 pb-24 md:pb-16 px-margin-mobile md:px-margin-desktop border-t border-primary-container">
     <div class="max-w-container-max mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-gutter">
       <!-- Brand & Summary -->
       <div class="sm:col-span-2 lg:col-span-1">
