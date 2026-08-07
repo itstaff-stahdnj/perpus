@@ -144,13 +144,15 @@
                   v-if="book.cover_image" 
                   class="w-full h-full object-cover" 
                   :src="book.cover_image" 
-                  :alt="book.judul" 
+                  :alt="book.judul"
+                  @error="handleImgError" 
                 />
                 <img 
                   v-else 
                   class="w-full h-full object-cover" 
                   :src="fallbackCovers[index % fallbackCovers.length]" 
                   :alt="book.judul" 
+                  @error="handleImgError"
                 />
                 <span class="absolute top-2 right-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
                   {{ book.tahun_terbit || '2021' }}
@@ -293,8 +295,13 @@
             class="bg-white rounded-2xl overflow-hidden border border-outline-variant shadow-sm group transition-all hover:shadow-md flex flex-col justify-between block cursor-pointer"
           >
             <div>
-              <div class="h-44 sm:h-52 overflow-hidden relative bg-surface-container-high">
-                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :src="item.image_url" :alt="item.title" />
+              <div class="h-44 sm:h-52 overflow-hidden relative bg-surface-container-high flex items-center justify-center">
+                <img 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  :src="item.image_url || noImagePlaceholder" 
+                  :alt="item.title" 
+                  @error="handleImgError"
+                />
                 <span class="absolute top-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                   <span v-if="item.is_rss" class="material-symbols-outlined text-[12px]">rss_feed</span>
                   <span>{{ item.category }}</span>
@@ -339,7 +346,7 @@
               <div>
                 <div class="flex items-center gap-3 sm:gap-4 mb-4">
                   <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border border-outline-variant bg-surface-container flex items-center justify-center shrink-0">
-                    <img v-if="item.avatar_url" class="w-full h-full object-cover" :src="item.avatar_url" :alt="item.name" />
+                    <img v-if="item.avatar_url" class="w-full h-full object-cover" :src="item.avatar_url" :alt="item.name" @error="handleImgError" />
                     <span v-else class="font-bold text-lg text-primary">{{ item.name.charAt(0) }}</span>
                   </div>
                   <div>
@@ -383,6 +390,15 @@ const loading = ref(true);
 const searchQuery = ref('');
 const searchSource = ref<'katalog' | 'repository'>('katalog');
 
+const noImagePlaceholder = 'https://placehold.co/600x400/f1f5f9/475569?text=Tidak+Ada+Gambar';
+
+const handleImgError = (e: Event) => {
+  const target = e.target as HTMLImageElement;
+  if (target && target.src !== noImagePlaceholder) {
+    target.src = noImagePlaceholder;
+  }
+};
+
 const handleSearch = () => {
   if (searchSource.value === 'repository') {
     const targetUrl = `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(searchQuery.value)}`;
@@ -410,11 +426,6 @@ const userProfile = ref<UserProfile | null>(null);
 const fallbackCovers = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCyQOycP2e156QKOr6BO9l6k_3L5BLUq65R5lSNqyVzYPE15xHkx6EehbZ5rEkY2v0LFcLv0q5l7sYYDnrN6PH_5G7_rjbHgmVF8vQuMhCBAl_GCRCuWZWA2WODPIxZcIGHsTdl8jmjQIoEKLucszGG559PBTddW9ipzLQKWi2uOcQ_iwNypTFyslD7MI1gwgIcNf9-J95Jn9KQc8TDONO4xsZU1QGhkENxC-xchxdgRVFC0LpWanXesw',
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDp1PiSe9X0pkHzGact-cotXiz4m_yVp3eXm9yd1CZ0nGIOJ3pk9qQypHrRbx1VzoVOYyIdDshICHM2zyQq-56U-4b-gZEHxLiU0rFZvdIaRCkgCHaFxAkOBpZyDOrVzAMFLxgFkzgUtsfV_77iUpdRK5Qnr1kCb70K9KXT73ObyKLMUf5XftLpKMCPe7m_lDpKPOtU2YFOYNcIzUKHh-W5k6xud5b_wLE1Rjm1tlL_EECpMuzyaLKdxg'
-];
-
-const defaultNewsImages = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCqqnbAhYZAD5noPoJYDOjCacsw_4Fi9npvGuV_2wQCYUNIQsCDw8Z6nlGYLwBpN2vet5tWENORS5zRcj1oYD4a_RVXi5SwrgbpXr5ymDgQH6VHB_jCcY901ftzOp9sajtMG2ugaiEii46L135Ai3BpCDxA6cw_aDFsMk-lqvWWSjW9hQazpoh-3k2mTtJmEITsV7HVq4NK9o3e_98SckUCjeNB3aoQBfiu3tEXs1ixYMeIbNcEk9aySg',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCjkcB4fArcvmfFVdX0g626IbDs-slSFtcqJondro2tQPU36N00ipvwKCnaavpnN0PloF4qeCo9ucyxNT874ffmwalkseBT3g0OJixF4ewwsmdJsMWJs5BBPo86ItZjKVQafn4QroGcmHzbt5KLafysDaYwH2tpah-DoZcBOhvpQq-c8AYV5yiVIm-6fQh7IlZxa1g74xux9zEuoE5j7ufm9h9w3XEsxGyuKFXqyAN_IwZBlq-0EQr3jw'
 ];
 
 const getBookUrl = (b: Book) => {
@@ -487,7 +498,7 @@ const displayedTestimonials = computed(() => {
 const displayedNews = computed(() => {
   const combined: any[] = [];
 
-  // 1. Add RSS feed items from https://stahdnj.ac.id/feed/
+  // 1. Add RSS feed items from https://stahdnj.ac.id/feed/ or WP-JSON
   if (rssNewsList.value && rssNewsList.value.length > 0) {
     rssNewsList.value.forEach((rss) => {
       combined.push({
@@ -497,15 +508,15 @@ const displayedNews = computed(() => {
         category: rss.category || 'Berita STAH',
         published_at: rss.published_at,
         author: rss.author || 'STAH DNJ',
-        image_url: rss.image_url,
+        image_url: rss.image_url || noImagePlaceholder,
         link: rss.link,
         is_rss: true
       });
     });
   }
 
-  // 2. Add local library news
-  newsList.value.forEach((item, idx) => {
+  // 2. Add local library news (Uses item's own thumbnail, or noImagePlaceholder if unavailable)
+  newsList.value.forEach((item) => {
     let dateStr = 'Terbaru';
     if (item.published_at || item.created_at) {
       try {
@@ -516,6 +527,8 @@ const displayedNews = computed(() => {
       }
     }
 
+    const localImage = item.thumbnail_url || (item as any).image_url || (item as any).thumbnail || (item as any).cover || null;
+
     combined.push({
       id: item.id,
       title: item.title,
@@ -523,7 +536,7 @@ const displayedNews = computed(() => {
       category: item.category || 'Perpustakaan',
       published_at: dateStr,
       author: item.author_name || item.author?.name || 'Administrator',
-      image_url: item.thumbnail_url || defaultNewsImages[idx % defaultNewsImages.length],
+      image_url: localImage || noImagePlaceholder,
       is_rss: false
     });
   });
@@ -578,7 +591,7 @@ const deriveCategoriesFromBooks = (bookList: Book[]): Category[] => {
 };
 
 const fetchRssFeed = async (): Promise<any[]> => {
-  // 1. Internal server route
+  // 1. Internal server route (uses WP-JSON with _embed for full image URLs!)
   try {
     const res: any = await $fetch('/api/rss');
     if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
@@ -586,7 +599,60 @@ const fetchRssFeed = async (): Promise<any[]> => {
     }
   } catch (e) {}
 
-  // 2. Client-side fallback to rss2json
+  // 2. Direct WP-JSON fetch for featured image thumbnails
+  try {
+    const posts: any[] = await $fetch('https://stahdnj.ac.id/wp-json/wp/v2/posts?_embed&per_page=10');
+    if (Array.isArray(posts) && posts.length > 0) {
+      return posts.map((p, i) => {
+        const title = (p.title?.rendered || '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/&#8211;/g, '–');
+
+        let rawExcerpt = p.excerpt?.rendered || p.content?.rendered || '';
+        let cleanSummary = rawExcerpt
+          .replace(/<[^>]+>/g, '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/&#8211;/g, '–')
+          .replace(/\[&#8230;\]|\[\.\.\.\]/g, '...')
+          .trim();
+
+        const featMedia = p._embedded?.['wp:featuredmedia']?.[0];
+        const imageUrl = featMedia?.source_url || 
+                         featMedia?.media_details?.sizes?.medium_large?.source_url ||
+                         featMedia?.media_details?.sizes?.medium?.source_url ||
+                         noImagePlaceholder;
+
+        const categoryObj = p._embedded?.['wp:term']?.[0]?.[0];
+        const category = categoryObj?.name || 'Berita STAH';
+
+        let formattedDate = p.date;
+        try {
+          const d = new Date(p.date);
+          if (!isNaN(d.getTime())) {
+            formattedDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        } catch (e) {}
+
+        return {
+          id: `wp-${p.id || i+1}`,
+          title,
+          link: p.link,
+          summary: cleanSummary,
+          category,
+          published_at: formattedDate,
+          author: 'Humas STAH DNJ',
+          image_url: imageUrl,
+          is_rss: true
+        };
+      });
+    }
+  } catch (e) {}
+
+  // 3. Fallback to rss2json
   try {
     const res: any = await $fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fstahdnj.ac.id%2Ffeed%2F');
     if (res?.status === 'ok' && Array.isArray(res.items)) {
@@ -615,7 +681,7 @@ const fetchRssFeed = async (): Promise<any[]> => {
           category: (item.categories && item.categories[0]) || 'Berita STAH',
           published_at: formattedDate,
           author: item.author || 'STAH DNJ',
-          image_url: item.thumbnail || defaultNewsImages[0],
+          image_url: item.thumbnail || noImagePlaceholder,
           is_rss: true
         };
       });

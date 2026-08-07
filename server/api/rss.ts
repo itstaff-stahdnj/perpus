@@ -6,7 +6,74 @@ export default defineEventHandler(async (event) => {
 
   const defaultBanner = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCqqnbAhYZAD5noPoJYDOjCacsw_4Fi9npvGuV_2wQCYUNIQsCDw8Z6nlGYLwBpN2vet5tWENORS5zRcj1oYD4a_RVXi5SwrgbpXr5ymDgQH6VHB_jCcY901ftzOp9sajtMG2ugaiEii46L135Ai3BpCDxA6cw_aDFsMk-lqvWWSjW9hQazpoh-3k2mTtJmEITsV7HVq4NK9o3e_98SckUCjeNB3aoQBfiu3tEXs1ixYMeIbNcEk9aySg';
 
-  // Method 1: Fetch directly from stahdnj.ac.id/feed/
+  // Method 1 (PRIMARY): WordPress WP-JSON API with _embed (Includes exact featured images / thumbnails!)
+  try {
+    const posts = await $fetch<any[]>('https://stahdnj.ac.id/wp-json/wp/v2/posts?_embed&per_page=10', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    if (Array.isArray(posts) && posts.length > 0) {
+      const items = posts.map((p, i) => {
+        const title = (p.title?.rendered || '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/&#8211;/g, '–');
+
+        const link = p.link || `https://stahdnj.ac.id/?p=${p.id}`;
+
+        let rawExcerpt = p.excerpt?.rendered || p.content?.rendered || '';
+        let cleanSummary = rawExcerpt
+          .replace(/<[^>]+>/g, '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/&#8211;/g, '–')
+          .replace(/\[&#8230;\]|\[\.\.\.\]/g, '...')
+          .trim();
+
+        // Extract featured image from _embedded
+        const featMedia = p._embedded?.['wp:featuredmedia']?.[0];
+        const imageUrl = featMedia?.source_url || 
+                         featMedia?.media_details?.sizes?.medium_large?.source_url ||
+                         featMedia?.media_details?.sizes?.medium?.source_url ||
+                         defaultBanner;
+
+        // Category name
+        const categoryObj = p._embedded?.['wp:term']?.[0]?.[0];
+        const category = categoryObj?.name || 'Berita STAH';
+
+        // Published date
+        let formattedDate = p.date;
+        try {
+          const d = new Date(p.date);
+          if (!isNaN(d.getTime())) {
+            formattedDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        } catch (e) {}
+
+        return {
+          id: `wp-${p.id || i+1}`,
+          title,
+          link,
+          summary: cleanSummary,
+          category,
+          published_at: formattedDate,
+          author: 'Humas STAH DNJ',
+          image_url: imageUrl,
+          is_rss: true
+        };
+      });
+
+      return { success: true, data: items };
+    }
+  } catch (e) {
+    console.warn('WP-JSON fetch failed, falling back to RSS XML:', e);
+  }
+
+  // Method 2: Direct RSS XML fetch
   try {
     const xml = await $fetch<string>('https://stahdnj.ac.id/feed/', {
       headers: {
@@ -14,18 +81,7 @@ export default defineEventHandler(async (event) => {
       }
     });
 
-    const items: Array<{
-      id: string;
-      title: string;
-      link: string;
-      summary: string;
-      category: string;
-      published_at: string;
-      author: string;
-      image_url: string;
-      is_rss: boolean;
-    }> = [];
-
+    const items: Array<any> = [];
     const itemMatches = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
 
     for (let i = 0; i < itemMatches.length; i++) {
@@ -44,7 +100,6 @@ export default defineEventHandler(async (event) => {
       const pubDate = getTagValue('pubDate');
       const rawDesc = getTagValue('description');
       const category = getTagValue('category') || 'Berita STAH';
-      const author = getTagValue('dc:creator') || 'Humas STAH DNJ';
 
       let cleanDesc = rawDesc
         .replace(/&#8220;/g, '“')
@@ -72,7 +127,7 @@ export default defineEventHandler(async (event) => {
           summary: cleanDesc,
           category,
           published_at: formattedDate,
-          author,
+          author: 'Humas STAH DNJ',
           image_url: imageUrl,
           is_rss: true
         });
@@ -82,11 +137,9 @@ export default defineEventHandler(async (event) => {
     if (items.length > 0) {
       return { success: true, data: items };
     }
-  } catch (e) {
-    console.warn('Direct RSS XML fetch failed, trying rss2json fallback:', e);
-  }
+  } catch (e) {}
 
-  // Method 2: Fallback via rss2json API
+  // Method 3: Fallback via rss2json API
   try {
     const res = await $fetch<any>('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fstahdnj.ac.id%2Ffeed%2F');
     if (res?.status === 'ok' && Array.isArray(res.items)) {
@@ -114,7 +167,7 @@ export default defineEventHandler(async (event) => {
           summary: cleanSummary,
           category: (item.categories && item.categories[0]) || 'Berita STAH',
           published_at: formattedDate,
-          author: item.author || 'Humas STAH DNJ',
+          author: item.author || 'STAH DNJ',
           image_url: item.thumbnail || defaultBanner,
           is_rss: true
         };
@@ -122,9 +175,7 @@ export default defineEventHandler(async (event) => {
 
       return { success: true, data: items };
     }
-  } catch (err: any) {
-    console.error('RSS fallback failed:', err);
-  }
+  } catch (e) {}
 
   return { success: false, data: [] };
 });

@@ -22,7 +22,7 @@
           <div class="md:col-span-7 relative">
             <div 
               class="w-full h-full bg-cover bg-center min-h-[220px] sm:min-h-[300px]" 
-              :style="{ backgroundImage: `url('${featuredItem.image_url}')` }"
+              :style="{ backgroundImage: `url('${featuredItem.image_url || noImagePlaceholder}')` }"
             ></div>
             <div class="absolute top-4 left-4 sm:top-6 sm:left-6 flex gap-2">
               <span class="bg-secondary text-white px-3 sm:px-4 py-1 rounded-full font-bold text-xs shadow-sm flex items-center gap-1">
@@ -127,9 +127,14 @@
               :to="!item.is_rss ? getArticleUrl(item) : undefined"
               :target="item.is_rss ? '_blank' : undefined"
               rel="noopener noreferrer"
-              class="h-48 sm:h-52 relative bg-surface-container-high block overflow-hidden group cursor-pointer"
+              class="h-48 sm:h-52 relative bg-surface-container-high block overflow-hidden group cursor-pointer flex items-center justify-center"
             >
-              <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :src="item.image_url" :alt="item.title" />
+              <img 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                :src="item.image_url || noImagePlaceholder" 
+                :alt="item.title" 
+                @error="handleImgError"
+              />
               <span 
                 class="absolute top-3 left-3 text-white px-3 py-1 rounded-full font-bold text-xs flex items-center gap-1 shadow-sm"
                 :class="item.type === 'pengumuman' ? 'bg-amber-600' : 'bg-secondary'"
@@ -208,10 +213,14 @@ const announcementsList = ref<AnnouncementItem[]>([]);
 
 const filterCategories = ['Semua Konten', 'Berita STAH', 'Pengumuman', 'Perpustakaan'];
 
-const defaultImages = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuB2UFIBje5z6Zq-kzrRQDWSxo7TBSDI6KEWi2QVt3pnSuIY9FI-oeNN6_x1XdO0WM-2-lrHG7WQFP_wnMTFQoj-vW7waA9D2Utgve1dM4Fqu4FmJFtGjGNXPphk7MZlP-FlXT4Qg2SqL5W8EyeGJ5EIm3qEjf9Kt_t5mllcJlxALZWo2Kf5eoJ5RJpSNnyMQEheKQc5Z-4pVowcyPdEGX380sDZmbYdeJlxsTkLjDcm0XJvQFKfhvCLSA',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCFxNTj8X6WSTwKnSMzXcBm3CsMbg9unETi9qtmzmsP-xJcndffLKeJRh1tDBnxPdLlUUMjriFQdTlc0qL7G9Mum0ArpFBjIjsDoyIt1rTUYY2wDm_mxve28YO7Jlvn2eIQcKsnd-eFxiL0F_78u5RofNy5OBJOhLSTowNmtghCIfWPSBG7JyfNWSWCuiyqRld2GVOLt0Pv7MtoLREBmX4aaen2f1qaYH3DFa1T5OYP0-Hc3VIPojUabg'
-];
+const noImagePlaceholder = 'https://placehold.co/600x400/f1f5f9/475569?text=Tidak+Ada+Gambar';
+
+const handleImgError = (e: Event) => {
+  const target = e.target as HTMLImageElement;
+  if (target && target.src !== noImagePlaceholder) {
+    target.src = noImagePlaceholder;
+  }
+};
 
 const slugifyTitle = (title: string, maxWords = 5) => {
   if (!title) return 'berita';
@@ -250,14 +259,14 @@ const allFormattedItems = computed(() => {
       type: 'berita',
       published_at: rss.published_at,
       author: rss.author || 'STAH DNJ',
-      image_url: rss.image_url,
+      image_url: rss.image_url || noImagePlaceholder,
       link: rss.link,
       is_rss: true
     });
   });
 
-  // 2. Add local News Items
-  newsList.value.forEach((item, idx) => {
+  // 2. Add local News Items (Uses item's own thumbnail if available, or noImagePlaceholder)
+  newsList.value.forEach((item) => {
     let dateStr = 'Terbaru';
     if (item.published_at || item.created_at) {
       try {
@@ -267,6 +276,9 @@ const allFormattedItems = computed(() => {
         dateStr = item.published_at || 'Terbaru';
       }
     }
+
+    const localImage = item.thumbnail_url || (item as any).image_url || (item as any).thumbnail || (item as any).cover || null;
+
     list.push({
       id: 'news-' + item.id,
       title: item.title,
@@ -276,13 +288,13 @@ const allFormattedItems = computed(() => {
       type: 'berita',
       published_at: dateStr,
       author: item.author_name || item.author?.name || 'Administrator',
-      image_url: item.thumbnail_url || defaultImages[idx % defaultImages.length],
+      image_url: localImage || noImagePlaceholder,
       is_rss: false
     });
   });
 
   // 3. Add Announcement Items
-  announcementsList.value.forEach((ann, idx) => {
+  announcementsList.value.forEach((ann) => {
     let dateStr = 'Terbaru';
     if (ann.published_at || ann.created_at) {
       try {
@@ -301,7 +313,7 @@ const allFormattedItems = computed(() => {
       type: 'pengumuman',
       published_at: dateStr,
       author: 'Pengumuman Resmi',
-      image_url: defaultImages[(idx + 1) % defaultImages.length],
+      image_url: noImagePlaceholder,
       is_rss: false
     });
   });
@@ -349,7 +361,60 @@ const fetchRssFeed = async (): Promise<any[]> => {
     }
   } catch (e) {}
 
-  // 2. Client-side fallback to rss2json
+  // 2. Direct WP-JSON fetch for featured image thumbnails
+  try {
+    const posts: any[] = await $fetch('https://stahdnj.ac.id/wp-json/wp/v2/posts?_embed&per_page=10');
+    if (Array.isArray(posts) && posts.length > 0) {
+      return posts.map((p, i) => {
+        const title = (p.title?.rendered || '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/&#8211;/g, '–');
+
+        let rawExcerpt = p.excerpt?.rendered || p.content?.rendered || '';
+        let cleanSummary = rawExcerpt
+          .replace(/<[^>]+>/g, '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/&#8211;/g, '–')
+          .replace(/\[&#8230;\]|\[\.\.\.\]/g, '...')
+          .trim();
+
+        const featMedia = p._embedded?.['wp:featuredmedia']?.[0];
+        const imageUrl = featMedia?.source_url || 
+                         featMedia?.media_details?.sizes?.medium_large?.source_url ||
+                         featMedia?.media_details?.sizes?.medium?.source_url ||
+                         noImagePlaceholder;
+
+        const categoryObj = p._embedded?.['wp:term']?.[0]?.[0];
+        const category = categoryObj?.name || 'Berita STAH';
+
+        let formattedDate = p.date;
+        try {
+          const d = new Date(p.date);
+          if (!isNaN(d.getTime())) {
+            formattedDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        } catch (e) {}
+
+        return {
+          id: `wp-${p.id || i+1}`,
+          title,
+          link: p.link,
+          summary: cleanSummary,
+          category,
+          published_at: formattedDate,
+          author: 'Humas STAH DNJ',
+          image_url: imageUrl,
+          is_rss: true
+        };
+      });
+    }
+  } catch (e) {}
+
+  // 3. Fallback to rss2json
   try {
     const res: any = await $fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fstahdnj.ac.id%2Ffeed%2F');
     if (res?.status === 'ok' && Array.isArray(res.items)) {
@@ -378,7 +443,7 @@ const fetchRssFeed = async (): Promise<any[]> => {
           category: (item.categories && item.categories[0]) || 'Berita STAH',
           published_at: formattedDate,
           author: item.author || 'STAH DNJ',
-          image_url: item.thumbnail || defaultImages[0],
+          image_url: item.thumbnail || noImagePlaceholder,
           is_rss: true
         };
       });
