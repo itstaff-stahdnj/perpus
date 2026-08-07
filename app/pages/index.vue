@@ -256,12 +256,18 @@
         </NuxtLink>
       </section>
 
-      <!-- Dynamic News Section -->
+      <!-- Dynamic News Section with RSS Integration -->
       <section id="berita" class="max-w-container-max mx-auto py-12 sm:py-16 md:py-20 px-4 md:px-margin-desktop">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
           <div>
-            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">Berita &amp; Pengumuman</h2>
-            <p class="text-xs sm:text-sm text-on-surface-variant">Informasi terbaru seputar kegiatan perpustakaan STAH DNJ.</p>
+            <div class="flex items-center gap-2 mb-1">
+              <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-primary">Berita &amp; Pengumuman</h2>
+              <span class="bg-secondary/10 text-secondary text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-secondary/20">
+                <span class="material-symbols-outlined text-sm">rss_feed</span>
+                <span>Live Feed</span>
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm text-on-surface-variant">Informasi terbaru dari Kampus STAH Dharma Nusantara Jakarta &amp; Perpustakaan.</p>
           </div>
           <NuxtLink class="text-secondary text-xs sm:text-sm flex items-center gap-1.5 hover:gap-2 transition-all font-semibold shrink-0" to="/berita">
             Lihat Semua <span class="material-symbols-outlined text-sm">arrow_forward</span>
@@ -274,19 +280,24 @@
           <p class="text-on-surface-variant text-sm font-medium">Belum ada data berita publikasi perpustakaan.</p>
         </div>
 
-        <!-- News Grid -->
+        <!-- News Grid (Live RSS Feed & API Combined) -->
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-          <NuxtLink 
+          <component 
+            :is="item.is_rss ? 'a' : 'NuxtLink'"
             v-for="item in displayedNews" 
             :key="item.id" 
-            :to="getArticleUrl(item)"
+            :href="item.is_rss ? item.link : undefined"
+            :to="!item.is_rss ? getArticleUrl(item) : undefined"
+            :target="item.is_rss ? '_blank' : undefined"
+            rel="noopener noreferrer"
             class="bg-white rounded-2xl overflow-hidden border border-outline-variant shadow-sm group transition-all hover:shadow-md flex flex-col justify-between block cursor-pointer"
           >
             <div>
               <div class="h-44 sm:h-52 overflow-hidden relative bg-surface-container-high">
                 <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :src="item.image_url" :alt="item.title" />
-                <span class="absolute top-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                  {{ item.category }}
+                <span class="absolute top-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                  <span v-if="item.is_rss" class="material-symbols-outlined text-[12px]">rss_feed</span>
+                  <span>{{ item.category }}</span>
                 </span>
               </div>
               <div class="p-4 sm:p-6">
@@ -299,7 +310,7 @@
                 </p>
               </div>
             </div>
-          </NuxtLink>
+          </component>
         </div>
       </section>
 
@@ -390,6 +401,7 @@ const handleSearch = () => {
 const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);
 const newsList = ref<NewsItem[]>([]);
+const rssNewsList = ref<any[]>([]);
 const announcementsList = ref<AnnouncementItem[]>([]);
 const loansList = ref<any[]>([]);
 const testimonialsList = ref<TestimonialItem[]>([]);
@@ -473,7 +485,27 @@ const displayedTestimonials = computed(() => {
 });
 
 const displayedNews = computed(() => {
-  return newsList.value.map((item, idx) => {
+  const combined: any[] = [];
+
+  // 1. Add RSS feed items from https://stahdnj.ac.id/feed/
+  if (rssNewsList.value && rssNewsList.value.length > 0) {
+    rssNewsList.value.forEach((rss) => {
+      combined.push({
+        id: rss.id,
+        title: rss.title,
+        summary: rss.summary || 'Berita resmi dari kampus STAH Dharma Nusantara Jakarta.',
+        category: rss.category || 'Berita STAH',
+        published_at: rss.published_at,
+        author: rss.author || 'STAH DNJ',
+        image_url: rss.image_url,
+        link: rss.link,
+        is_rss: true
+      });
+    });
+  }
+
+  // 2. Add local library news
+  newsList.value.forEach((item, idx) => {
     let dateStr = 'Terbaru';
     if (item.published_at || item.created_at) {
       try {
@@ -484,16 +516,19 @@ const displayedNews = computed(() => {
       }
     }
 
-    return {
+    combined.push({
       id: item.id,
       title: item.title,
       summary: item.content || item.summary || 'Informasi resmi dari perpustakaan STAH DNJ.',
-      category: item.category || 'Berita',
+      category: item.category || 'Perpustakaan',
       published_at: dateStr,
       author: item.author_name || item.author?.name || 'Administrator',
-      image_url: item.thumbnail_url || defaultNewsImages[idx % defaultNewsImages.length]
-    };
+      image_url: item.thumbnail_url || defaultNewsImages[idx % defaultNewsImages.length],
+      is_rss: false
+    });
   });
+
+  return combined;
 });
 
 const filteredBooks = computed(() => {
@@ -545,10 +580,11 @@ const deriveCategoriesFromBooks = (bookList: Book[]): Category[] => {
 const loadData = async () => {
   loading.value = true;
   try {
-    const [resBooks, resCat, resNews, resAnnouncements, resLoans, resProfile, resTestimonials, resSettings] = await Promise.all([
+    const [resBooks, resCat, resNews, resRss, resAnnouncements, resLoans, resProfile, resTestimonials, resSettings] = await Promise.all([
       getBooks(),
       getCategories(),
       getNews().catch(() => ({ success: false, data: [] })),
+      $fetch('/api/rss').catch(() => ({ success: false, data: [] })),
       getAnnouncements().catch(() => ({ success: false, data: [] })),
       getLoans().catch(() => ({ success: false, data: [] })),
       getProfile().catch(() => ({ success: false, data: null })),
@@ -568,12 +604,12 @@ const loadData = async () => {
       categories.value = resCat;
     }
 
-    // Dynamic Fallback: If categories array is empty, derive from books
     if (categories.value.length === 0 && books.value.length > 0) {
       categories.value = deriveCategoriesFromBooks(books.value);
     }
 
     if (resNews?.success) newsList.value = resNews.data || [];
+    if (resRss?.success && Array.isArray(resRss.data)) rssNewsList.value = resRss.data;
     if (resAnnouncements?.success) announcementsList.value = resAnnouncements.data || [];
     if (resLoans?.success) loansList.value = resLoans.data || [];
     if (resProfile?.success && resProfile.data) userProfile.value = resProfile.data.user || resProfile.data;
