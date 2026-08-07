@@ -30,13 +30,7 @@
       >
         Layanan
       </NuxtLink>
-      <NuxtLink 
-        to="/absensi" 
-        class="font-label-md text-label-md hover:bg-surface-container-high transition-colors px-3 py-2 rounded-lg"
-        :class="route.path.startsWith('/absensi') ? 'text-secondary font-bold' : 'text-on-surface-variant'"
-      >
-        Presensi
-      </NuxtLink>
+
       <NuxtLink 
         to="/berita" 
         class="font-label-md text-label-md hover:bg-surface-container-high transition-colors px-3 py-2 rounded-lg"
