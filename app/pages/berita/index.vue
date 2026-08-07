@@ -340,17 +340,65 @@ const resetFilters = () => {
   searchQuery.value = '';
 };
 
+const fetchRssFeed = async (): Promise<any[]> => {
+  // 1. Internal server route
+  try {
+    const res: any = await $fetch('/api/rss');
+    if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+      return res.data;
+    }
+  } catch (e) {}
+
+  // 2. Client-side fallback to rss2json
+  try {
+    const res: any = await $fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fstahdnj.ac.id%2Ffeed%2F');
+    if (res?.status === 'ok' && Array.isArray(res.items)) {
+      return res.items.map((item: any, i: number) => {
+        let formattedDate = item.pubDate;
+        try {
+          const d = new Date(item.pubDate);
+          if (!isNaN(d.getTime())) {
+            formattedDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        } catch (e) {}
+
+        const cleanSummary = (item.description || item.content || '')
+          .replace(/<[^>]+>/g, '')
+          .replace(/&#8220;/g, '“')
+          .replace(/&#8221;/g, '”')
+          .replace(/&#8217;/g, '’')
+          .replace(/\[&#8230;\]|\[\.\.\.\]/g, '...')
+          .trim();
+
+        return {
+          id: `rss-${i+1}`,
+          title: item.title,
+          link: item.link,
+          summary: cleanSummary,
+          category: (item.categories && item.categories[0]) || 'Berita STAH',
+          published_at: formattedDate,
+          author: item.author || 'STAH DNJ',
+          image_url: item.thumbnail || defaultImages[0],
+          is_rss: true
+        };
+      });
+    }
+  } catch (e) {}
+
+  return [];
+};
+
 const loadData = async () => {
   loading.value = true;
   try {
-    const [resNews, resRss, resAnn] = await Promise.all([
+    const [resNews, rssItems, resAnn] = await Promise.all([
       getNews().catch(() => ({ success: false, data: [] })),
-      $fetch('/api/rss').catch(() => ({ success: false, data: [] })),
+      fetchRssFeed(),
       getAnnouncements().catch(() => ({ success: false, data: [] }))
     ]);
 
     if (resNews?.success) newsList.value = resNews.data || [];
-    if (resRss?.success && Array.isArray(resRss.data)) rssNewsList.value = resRss.data;
+    if (Array.isArray(rssItems)) rssNewsList.value = rssItems;
     if (resAnn?.success) announcementsList.value = resAnn.data || [];
   } catch (err) {
     console.error('Error fetching Berita & Pengumuman data:', err);
