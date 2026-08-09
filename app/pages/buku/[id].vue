@@ -119,8 +119,8 @@
               </p>
             </div>
 
-            <!-- TOMBOL AKSI: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <!-- TOMBOL AKSI: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (HANYA DITAMPILKAN JIKA USER SUDAH LOGIN) -->
+            <div v-if="tokenCookie" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               
               <!-- Tombol Pinjam Mandiri -->
               <button 
@@ -154,6 +154,18 @@
                 <span>{{ inCart ? 'Batal Tampung' : '📌 Tampung (Multi)' }}</span>
               </button>
 
+            </div>
+
+            <!-- JIKA USER BELUM LOGIN: TAMPILKAN TOMBOL LOGIN SSO -->
+            <div v-else class="pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <a 
+                href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>🔑</span>
+                <span>Login untuk Meminjam & Reservasi Buku</span>
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+              </a>
             </div>
           </div>
         </div>

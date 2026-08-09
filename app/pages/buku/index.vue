@@ -209,6 +209,21 @@
                       {{ book.tahun_terbit || 'STAH DNJ' }}
                     </span>
                   </div>
+
+                  <!-- Tombol Favorit / Wishlist Animasi (HANYA DITAMPILKAN JIKA USER SUDAN LOGIN) -->
+                  <button 
+                    v-if="tokenCookie"
+                    @click.stop.prevent="toggleWishlist(book)"
+                    class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-125 active:scale-95 transition-all duration-300 cursor-pointer z-10"
+                    :title="isWishlisted(book.id) ? 'Hapus dari favorit' : 'Tambah ke favorit'"
+                  >
+                    <span 
+                      class="text-base transition-transform duration-300"
+                      :class="isWishlisted(book.id) ? 'scale-110 animate-bounce' : 'scale-100 opacity-60 hover:opacity-100'"
+                    >
+                      {{ isWishlisted(book.id) ? '❤️' : '🤍' }}
+                    </span>
+                  </button>
                 </NuxtLink>
 
                 <div class="p-5">
@@ -242,7 +257,7 @@
                   </span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-1.5">
+                <div v-if="tokenCookie" class="grid grid-cols-2 gap-1.5">
                   <button 
                     @click="openBorrowModal(book)"
                     class="bg-[#C89B3C] text-white py-2 rounded-lg font-label-md text-[11px] hover:brightness-105 transition-all font-bold text-center flex items-center justify-center gap-1 shadow-xs cursor-pointer"
@@ -262,6 +277,14 @@
                     <span>{{ isInCart(book.id) ? 'Batal' : 'Tampung' }}</span>
                   </button>
                 </div>
+
+                <a 
+                  v-else
+                  href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                  class="block w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <span>🔑 Login untuk Meminjam</span>
+                </a>
 
                 <NuxtLink 
                   :to="getBookUrl(book)" 
@@ -309,22 +332,47 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <button 
-                    @click="openBorrowModal(book)"
-                    class="bg-[#C89B3C] text-white px-3 py-2 rounded-lg font-label-md text-xs hover:brightness-105 transition-all font-bold flex items-center gap-1 shadow-xs cursor-pointer"
-                  >
-                    <span class="material-symbols-outlined text-sm">bookmark_add</span>
-                    <span>Pinjam Mandiri</span>
-                  </button>
+                  <template v-if="tokenCookie">
+                    <button 
+                      @click="openBorrowModal(book)"
+                      class="bg-[#C89B3C] text-white px-3 py-2 rounded-lg font-label-md text-xs hover:brightness-105 transition-all font-bold flex items-center gap-1 shadow-xs cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-sm">bookmark_add</span>
+                      <span>Pinjam Mandiri</span>
+                    </button>
 
-                  <button 
-                    @click="toggleCart(book)"
-                    class="px-3 py-2 rounded-lg font-label-md text-xs transition-colors font-bold flex items-center gap-1 cursor-pointer border"
-                    :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'"
-                    :title="isInCart(book.id) ? 'Hapus dari keranjang' : 'Tampung ke keranjang untuk meminjam lebih dari 1 buku sekaligus'"
+                    <button 
+                      @click="toggleCart(book)"
+                      class="px-3 py-2 rounded-lg font-label-md text-xs transition-colors font-bold flex items-center gap-1 cursor-pointer border"
+                      :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'"
+                      :title="isInCart(book.id) ? 'Hapus dari keranjang' : 'Tampung ke keranjang untuk meminjam lebih dari 1 buku sekaligus'"
+                    >
+                      <span class="material-symbols-outlined text-sm text-amber-700">shopping_cart</span>
+                      <span>{{ isInCart(book.id) ? 'Batal Tampung' : 'Tampung' }}</span>
+                    </button>
+                  </template>
+
+                  <a 
+                    v-else
+                    href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                    class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                   >
-                    <span class="material-symbols-outlined text-sm text-amber-700">shopping_cart</span>
-                    <span>{{ isInCart(book.id) ? 'Batal Tampung' : 'Tampung' }}</span>
+                    <span>🔑 Login untuk Meminjam</span>
+                  </a>
+
+                  <!-- Tombol Favorit / Wishlist Animasi List View (HANYA DITAMPILKAN JIKA USER SUDAH LOGIN) -->
+                  <button 
+                    v-if="tokenCookie"
+                    @click.stop.prevent="toggleWishlist(book)"
+                    class="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-base shadow-xs hover:scale-125 active:scale-95 transition-all duration-300 cursor-pointer shrink-0"
+                    :title="isWishlisted(book.id) ? 'Hapus dari favorit' : 'Tambah ke favorit'"
+                  >
+                    <span 
+                      class="transition-transform duration-300"
+                      :class="isWishlisted(book.id) ? 'scale-110 animate-bounce' : 'scale-100 opacity-60 hover:opacity-100'"
+                    >
+                      {{ isWishlisted(book.id) ? '❤️' : '🤍' }}
+                    </span>
                   </button>
 
                   <NuxtLink 
@@ -492,8 +540,38 @@ import CartBorrowModal from '../../components/CartBorrowModal.vue';
 const route = useRoute();
 const router = useRouter();
 
-const { getBooks, getCategories, selfBorrow, createReservation, tokenCookie } = usePustakaApi();
+const { getBooks, getCategories, selfBorrow, createReservation, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
+
+const wishlistedIds = ref<Set<number>>(new Set());
+
+const isWishlisted = (id: number | string): boolean => {
+  return wishlistedIds.value.has(Number(id));
+};
+
+const toggleWishlist = async (b: Book) => {
+  if (!tokenCookie.value) return;
+
+  const bookId = Number(b.id);
+  if (wishlistedIds.value.has(bookId)) {
+    wishlistedIds.value.delete(bookId);
+    await removeFromWishlist(bookId).catch(() => {});
+  } else {
+    wishlistedIds.value.add(bookId);
+    await addToWishlist(bookId).catch(() => {});
+  }
+};
+
+const loadWishlistData = async () => {
+  if (!tokenCookie.value) return;
+  try {
+    const res = await getWishlist();
+    if (res?.data && Array.isArray(res.data)) {
+      const ids = res.data.map((w: any) => Number(w.id || w.book_id));
+      wishlistedIds.value = new Set(ids);
+    }
+  } catch (e) {}
+};
 
 const loading = ref(true);
 const searchQuery = ref('');
@@ -855,6 +933,7 @@ const loadData = async () => {
 onMounted(() => {
   syncFromRoute();
   loadData();
+  loadWishlistData();
 });
 </script>
 

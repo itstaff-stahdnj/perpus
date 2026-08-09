@@ -154,9 +154,24 @@
                   :alt="book.judul" 
                   @error="handleImgError"
                 />
-                <span class="absolute top-2 right-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
+                <span class="absolute top-2 left-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
                   {{ book.tahun_terbit || '2021' }}
                 </span>
+
+                <!-- Tombol Favorit / Wishlist Animasi (HANYA DITAMPILKAN JIKA USER SUDAH LOGIN) -->
+                <button 
+                  v-if="tokenCookie"
+                  @click.stop.prevent="toggleWishlist(book)"
+                  class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md flex items-center justify-center text-sm shadow-md hover:scale-125 active:scale-95 transition-all duration-300 cursor-pointer z-10"
+                  :title="isWishlisted(book.id) ? 'Hapus dari favorit' : 'Tambah ke favorit'"
+                >
+                  <span 
+                    class="transition-transform duration-300"
+                    :class="isWishlisted(book.id) ? 'scale-110 animate-bounce' : 'scale-100 opacity-60 hover:opacity-100'"
+                  >
+                    {{ isWishlisted(book.id) ? '❤️' : '🤍' }}
+                  </span>
+                </button>
               </div>
 
               <h5 class="font-bold text-xs sm:text-sm text-primary group-hover:text-secondary transition-colors mb-1 line-clamp-2 leading-tight">
@@ -394,7 +409,37 @@ import {
   type SiteSettings
 } from '../composables/usePustakaApi';
 
-const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile, getTestimonials, getSettings } = usePustakaApi();
+const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile, getTestimonials, getSettings, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
+
+const wishlistedIds = ref<Set<number>>(new Set());
+
+const isWishlisted = (id: number | string): boolean => {
+  return wishlistedIds.value.has(Number(id));
+};
+
+const toggleWishlist = async (b: Book) => {
+  if (!tokenCookie.value) return;
+
+  const bookId = Number(b.id);
+  if (wishlistedIds.value.has(bookId)) {
+    wishlistedIds.value.delete(bookId);
+    await removeFromWishlist(bookId).catch(() => {});
+  } else {
+    wishlistedIds.value.add(bookId);
+    await addToWishlist(bookId).catch(() => {});
+  }
+};
+
+const loadWishlistData = async () => {
+  if (!tokenCookie.value) return;
+  try {
+    const res = await getWishlist();
+    if (res?.data && Array.isArray(res.data)) {
+      const ids = res.data.map((w: any) => Number(w.id || w.book_id));
+      wishlistedIds.value = new Set(ids);
+    }
+  } catch (e) {}
+};
 
 const loading = ref(true);
 const searchQuery = ref('');
@@ -749,6 +794,7 @@ const loadData = async () => {
 
 onMounted(() => {
   loadData();
+  loadWishlistData();
 });
 </script>
 

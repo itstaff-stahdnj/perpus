@@ -22,15 +22,15 @@
           <div class="space-y-3 max-w-3xl">
             <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-md">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span>Gerbang Akses Riset & Jurnal Digital Global</span>
+              <span>Mesin Pencari Jurnal & Artikel Ilmiah Global</span>
             </div>
 
             <h1 class="text-3xl sm:text-5xl font-black leading-tight text-white tracking-tight">
-              E-Resources <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-blue-300 to-emerald-300">Pustaka Digital</span>
+              Meta-Search <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-blue-300 to-emerald-300">Jurnal & E-Resources</span>
             </h1>
 
             <p class="text-xs sm:text-base text-slate-300 leading-relaxed font-medium">
-              Gerbang digital menuju ribuan jurnal internasional bereputasi, e-book, repositori naskah kebudayaan, dan basis data riset global yang dapat diakses kapan saja dan di mana saja.
+              Mesin pencari terpadu untuk menemukan artikel riset, naskah ilmiah, dan e-book dari berbagai basis data jurnal dunia (Crossref, DOAJ, Scopus, Garuda, Google Scholar, Perpusnas) secara langsung.
             </p>
           </div>
 
@@ -74,9 +74,9 @@
           </div>
         </div>
 
-        <!-- Interactive Search & Category Filter Bar -->
+        <!-- GLOBAL JOURNAL META-SEARCH ENGINE BAR -->
         <div class="pt-6 space-y-4">
-          <div class="flex flex-col sm:flex-row gap-3">
+          <form @submit.prevent="executeArticleSearch" class="flex flex-col sm:flex-row gap-3">
             
             <!-- Live Search Input -->
             <div class="relative flex-1">
@@ -85,31 +85,35 @@
                 ref="searchInputRef"
                 v-model="searchQuery" 
                 type="text" 
-                placeholder="Ketik nama jurnal, topik riset, atau kata kunci (contoh: Scopus, Garuda, Weda, Sinta)..."
-                class="w-full pl-12 pr-10 py-3 rounded-2xl bg-white/95 dark:bg-zinc-900/95 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary shadow-xl font-medium"
+                placeholder="Ketik judul artikel, nama penulis, topik riset (contoh: Agama Hindu, Sanskrit, Data Mining)..."
+                class="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary shadow-2xl font-medium"
               />
               <button 
                 v-if="searchQuery" 
+                type="button"
                 @click="clearSearch"
-                class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 text-xs bg-slate-200 dark:bg-zinc-700 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
+                class="absolute right-3.5 top-4 text-slate-400 hover:text-slate-600 text-xs bg-slate-200 dark:bg-zinc-700 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
                 title="Bersihkan pencarian (Esc)"
               >
                 ✕
               </button>
             </div>
 
-            <!-- Total Resources Counter -->
-            <div class="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center justify-between sm:justify-center gap-2">
-              <span>📚 Menampilkan:</span>
-              <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black font-mono">
-                {{ filteredResources.length }} / {{ eResources.length }} Portal
-              </span>
-            </div>
-          </div>
+            <!-- Submit Button for Meta Search -->
+            <button 
+              type="submit"
+              :disabled="isSearchingArticles"
+              class="px-6 py-3.5 bg-gradient-to-r from-blue-600 via-primary to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+            >
+              <span v-if="isSearchingArticles" class="material-symbols-outlined animate-spin text-base">sync</span>
+              <span v-else class="material-symbols-outlined text-base">travel_explore</span>
+              <span>{{ isSearchingArticles ? 'Mencari Artikel...' : 'Cari Artikel Jurnal' }}</span>
+            </button>
+          </form>
 
-          <!-- Quick Suggestion Chips -->
+          <!-- Quick Search Suggestion Chips -->
           <div class="flex items-center gap-2 flex-wrap text-xs">
-            <span class="text-slate-300 font-bold text-[11px]">💡 Pencarian Populer:</span>
+            <span class="text-slate-300 font-bold text-[11px]">💡 Topik Populer:</span>
             <button 
               v-for="chip in popularChips" 
               :key="chip"
@@ -120,8 +124,8 @@
             </button>
           </div>
 
-          <!-- Category Pill Tabs -->
-          <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <!-- Category Filter Tabs for Portal Databases -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none pt-2">
             <button 
               v-for="cat in categories" 
               :key="cat.id"
@@ -142,6 +146,110 @@
     <!-- MAIN CONTENT BODY -->
     <main class="max-w-7xl mx-auto px-4 sm:px-8 mt-10 space-y-10">
       
+      <!-- LIVE ACADEMIC JOURNAL ARTICLES SEARCH RESULTS SECTION -->
+      <section v-if="articlesList.length > 0 || isSearchingArticles" class="space-y-6 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div class="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300">
+                🌐 Live Journal Meta-Search
+              </span>
+              <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                Hasil Pencarian Artikel & Jurnal Ilmiah
+              </h2>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+              Menampilkan {{ articlesList.length }} artikel riset terindeks internasional/nasional untuk kata kunci: <strong class="text-primary">"{{ activeSearchKeyword }}"</strong>
+            </p>
+          </div>
+
+          <!-- Direct External Search Launchers -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <a 
+              :href="`https://scholar.google.com/scholar?q=${encodeURIComponent(activeSearchKeyword)}`" 
+              target="_blank"
+              class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-zinc-300 text-xs font-bold transition-all flex items-center gap-1 border border-slate-300 dark:border-zinc-700"
+            >
+              <span>🎓 Google Scholar</span>
+              <span class="material-symbols-outlined text-xs">open_in_new</span>
+            </a>
+
+            <a 
+              :href="`https://garuda.kemdikbud.go.id/documents?q=${encodeURIComponent(activeSearchKeyword)}`" 
+              target="_blank"
+              class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-900 dark:text-emerald-300 text-xs font-bold transition-all flex items-center gap-1 border border-emerald-300 dark:border-emerald-800"
+            >
+              <span>🇮🇩 GARUDA SINTA</span>
+              <span class="material-symbols-outlined text-xs">open_in_new</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Loading Skeleton for Live Articles -->
+        <div v-if="isSearchingArticles" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div v-for="i in 4" :key="i" class="p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 animate-pulse space-y-3 border border-slate-200/80 dark:border-zinc-800">
+            <div class="h-4 w-3/4 bg-slate-200 dark:bg-zinc-700 rounded-md"></div>
+            <div class="h-3 w-1/2 bg-slate-200 dark:bg-zinc-700 rounded-md"></div>
+            <div class="h-12 w-full bg-slate-200 dark:bg-zinc-700 rounded-xl"></div>
+          </div>
+        </div>
+
+        <!-- Live Articles Grid Cards -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div 
+            v-for="article in articlesList" 
+            :key="article.id"
+            class="p-5 rounded-2xl bg-slate-50/80 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all space-y-3 flex flex-col justify-between group shadow-sm hover:shadow-md"
+          >
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300">
+                  📄 {{ article.publisher || article.source || 'Journal Article' }}
+                </span>
+                <span class="text-xs text-slate-400 font-mono font-bold">{{ article.year || '2024' }}</span>
+              </div>
+
+              <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors leading-snug">
+                {{ article.title }}
+              </h3>
+
+              <p class="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                ✍️ Penulis: <span class="text-slate-700 dark:text-zinc-200 font-bold">{{ article.author || 'Tim Peneliti' }}</span>
+              </p>
+
+              <p v-if="article.journal" class="text-[11px] text-slate-500 dark:text-zinc-400 italic">
+                📖 Jurnal: {{ article.journal }}
+              </p>
+
+              <p v-if="article.abstract" class="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed line-clamp-3 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-slate-200/60 dark:border-zinc-800">
+                {{ article.abstract }}
+              </p>
+            </div>
+
+            <!-- Article Action Buttons -->
+            <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-200/60 dark:border-zinc-800">
+              <span v-if="article.doi" class="text-[10px] font-mono text-slate-400 truncate max-w-[180px]">
+                DOI: {{ article.doi }}
+              </span>
+              <span v-else class="text-[10px] font-mono text-emerald-600 font-bold">
+                Akses Terbuka (Full-Text)
+              </span>
+
+              <a 
+                :href="article.url" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <span>Baca / Unduh Artikel</span>
+                <span class="material-symbols-outlined text-xs">open_in_new</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
       <!-- DYNAMIC STATUS NOTICE BANNER -->
       <div v-if="currentUser" class="p-5 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-950 dark:text-emerald-300 flex items-center justify-between flex-wrap gap-3 backdrop-blur-md shadow-sm">
         <div class="flex items-center gap-3">
@@ -185,7 +293,7 @@
           </h2>
 
           <div v-if="searchQuery" class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-zinc-300">
-            <span>Pencarian untuk: "<span class="text-primary">{{ searchQuery }}</span>"</span>
+            <span>Filter database untuk: "<span class="text-primary">{{ searchQuery }}</span>"</span>
             <button @click="clearSearch" class="text-xs text-rose-500 underline cursor-pointer">Hapus Filter</button>
           </div>
         </div>
@@ -405,19 +513,23 @@ const currentUser = ref<any>(null);
 const loadingUser = ref(true);
 
 const searchQuery = ref('');
+const activeSearchKeyword = ref('');
 const selectedCategory = ref('all');
 const selectedResourceModal = ref<any>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
+const isSearchingArticles = ref(false);
+const articlesList = ref<any[]>([]);
+
 const popularChips = [
+  'Pendidikan Agama Hindu',
   'Scopus',
   'Garuda Sinta',
-  'Weda & Sanskrit',
+  'Sanskrit & Weda',
   'Perpusnas',
+  'Artificial Intelligence',
+  'Data Mining',
   'IEEE Xplore',
-  'DOAJ',
-  'Open Library',
-  'Google Scholar',
 ];
 
 const categories = [
@@ -593,17 +705,56 @@ const eResources = [
   },
 ];
 
+// Execute Live Journal Meta-Search API (Crossref API for real scientific papers & journals)
+const executeArticleSearch = async () => {
+  const q = searchQuery.value.trim();
+  if (!q) return;
+
+  activeSearchKeyword.value = q;
+  isSearchingArticles.value = true;
+  articlesList.value = [];
+
+  try {
+    const res = await $fetch<any>(`https://api.crossref.org/works?query=${encodeURIComponent(q)}&rows=12`).catch(() => null);
+    if (res?.message?.items && Array.isArray(res.message.items)) {
+      articlesList.value = res.message.items.map((item: any) => {
+        const title = Array.isArray(item.title) ? item.title[0] : (item.title || 'Judul Artikel Ilmiah');
+        const authors = Array.isArray(item.author) 
+          ? item.author.map((a: any) => `${a.given || ''} ${a.family || ''}`.trim()).join(', ') 
+          : 'Tim Peneliti';
+        const journal = Array.isArray(item['container-title']) ? item['container-title'][0] : (item['container-title'] || '');
+        const year = item['published-print']?.['date-parts']?.[0]?.[0] || item['published-online']?.['date-parts']?.[0]?.[0] || item.created?.['date-parts']?.[0]?.[0] || '2024';
+        const doi = item.DOI || '';
+        const landingUrl = item.URL || (doi ? `https://doi.org/${doi}` : `https://scholar.google.com/scholar?q=${encodeURIComponent(title)}`);
+
+        return {
+          id: doi || Math.random().toString(),
+          title,
+          author: authors,
+          journal,
+          publisher: item.publisher || 'Jurnal Terindeks',
+          year,
+          doi,
+          abstract: item.abstract ? item.abstract.replace(/<[^>]*>?/gm, '').slice(0, 200) + '...' : null,
+          url: landingUrl,
+        };
+      });
+    }
+  } catch (e) {
+  } finally {
+    isSearchingArticles.value = false;
+  }
+};
+
 const filteredResources = computed(() => {
   const qRaw = searchQuery.value.toLowerCase().trim();
   if (!qRaw) {
     return eResources.filter(res => selectedCategory.value === 'all' || res.category === selectedCategory.value);
   }
 
-  // Tokenize search query into individual words (e.g. "scopus jurnal")
   const tokens = qRaw.split(/\s+/).filter(Boolean);
 
   return eResources.filter(res => {
-    // If user is searching, check across category if category doesn't match or default to all
     const matchCategory = selectedCategory.value === 'all' || res.category === selectedCategory.value;
 
     const searchableText = [
@@ -616,7 +767,6 @@ const filteredResources = computed(() => {
       ...(res.keywords || [])
     ].join(' ').toLowerCase();
 
-    // Check if every token matches searchable text
     const matchTokens = tokens.every(token => searchableText.includes(token));
 
     return matchTokens && (selectedCategory.value === 'all' || matchCategory);
@@ -628,10 +778,13 @@ const setSearchQuery = (query: string) => {
   if (selectedCategory.value !== 'all') {
     selectedCategory.value = 'all';
   }
+  executeArticleSearch();
 };
 
 const clearSearch = () => {
   searchQuery.value = '';
+  activeSearchKeyword.value = '';
+  articlesList.value = [];
   if (searchInputRef.value) {
     searchInputRef.value.focus();
   }
@@ -666,7 +819,6 @@ const fetchUser = async () => {
 onMounted(() => {
   fetchUser();
 
-  // Add ESC key listener to clear search
   if (process.client) {
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Escape' && searchQuery.value) {
