@@ -282,42 +282,52 @@
           <p class="text-on-surface-variant text-sm font-medium">Belum ada data berita publikasi perpustakaan.</p>
         </div>
 
-        <!-- News Grid (Live RSS Feed & API Combined) -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-          <component 
-            :is="item.is_rss ? 'a' : 'NuxtLink'"
-            v-for="item in displayedNews" 
-            :key="item.id" 
-            :href="item.is_rss ? item.link : undefined"
-            :to="!item.is_rss ? getArticleUrl(item) : undefined"
-            :target="item.is_rss ? '_blank' : undefined"
-            rel="noopener noreferrer"
-            class="bg-white rounded-2xl overflow-hidden border border-outline-variant shadow-sm group transition-all hover:shadow-md flex flex-col justify-between block cursor-pointer"
-          >
-            <div>
-              <div class="h-44 sm:h-52 overflow-hidden relative bg-surface-container-high flex items-center justify-center">
-                <img 
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                  :src="item.image_url || noImagePlaceholder" 
-                  :alt="item.title" 
-                  @error="handleImgError"
-                />
-                <span class="absolute top-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                  <span v-if="item.is_rss" class="material-symbols-outlined text-[12px]">rss_feed</span>
-                  <span>{{ item.category }}</span>
-                </span>
+        <!-- News Grid (Limit 6 Items max on Home Page) -->
+        <div v-else>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            <component 
+              :is="item.is_rss ? 'a' : 'NuxtLink'"
+              v-for="item in displayedNews" 
+              :key="item.id" 
+              :href="item.is_rss ? item.link : undefined"
+              :to="!item.is_rss ? getArticleUrl(item) : undefined"
+              :target="item.is_rss ? '_blank' : undefined"
+              rel="noopener noreferrer"
+              class="bg-white rounded-2xl overflow-hidden border border-outline-variant shadow-sm group transition-all hover:shadow-md flex flex-col justify-between block cursor-pointer"
+            >
+              <div>
+                <div class="h-44 sm:h-52 overflow-hidden relative bg-surface-container-high flex items-center justify-center">
+                  <img 
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    :src="item.image_url || noImagePlaceholder" 
+                    :alt="item.title" 
+                    @error="handleImgError"
+                  />
+                  <span class="absolute top-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                    <span v-if="item.is_rss" class="material-symbols-outlined text-[12px]">rss_feed</span>
+                    <span>{{ item.category }}</span>
+                  </span>
+                </div>
+                <div class="p-4 sm:p-6">
+                  <p class="text-xs text-on-surface-variant mb-1.5">📅 {{ item.published_at }} • Oleh {{ item.author }}</p>
+                  <h4 class="font-bold text-sm sm:text-base text-primary mb-2 leading-tight group-hover:text-secondary transition-colors line-clamp-2">
+                    {{ item.title }}
+                  </h4>
+                  <p class="text-xs sm:text-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+                    {{ item.summary }}
+                  </p>
+                </div>
               </div>
-              <div class="p-4 sm:p-6">
-                <p class="text-xs text-on-surface-variant mb-1.5">📅 {{ item.published_at }} • Oleh {{ item.author }}</p>
-                <h4 class="font-bold text-sm sm:text-base text-primary mb-2 leading-tight group-hover:text-secondary transition-colors line-clamp-2">
-                  {{ item.title }}
-                </h4>
-                <p class="text-xs sm:text-sm text-on-surface-variant line-clamp-2 leading-relaxed">
-                  {{ item.summary }}
-                </p>
-              </div>
-            </div>
-          </component>
+            </component>
+          </div>
+
+          <!-- Bottom CTA Button for See All News -->
+          <div class="mt-8 sm:mt-10 text-center">
+            <NuxtLink to="/berita" class="inline-flex items-center gap-2 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 font-bold px-6 py-3 rounded-xl text-xs sm:text-sm transition-all shadow-xs hover:shadow-sm cursor-pointer">
+              <span>Lihat Semua Berita &amp; Pengumuman</span>
+              <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </NuxtLink>
+          </div>
         </div>
       </section>
 
@@ -541,7 +551,8 @@ const displayedNews = computed(() => {
     });
   });
 
-  return combined;
+  // Limit to maximum 6 items on home page
+  return combined.slice(0, 6);
 });
 
 const filteredBooks = computed(() => {
