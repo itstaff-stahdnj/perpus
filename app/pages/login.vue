@@ -13,27 +13,27 @@
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-secondary mb-4 shadow-md">
           <span class="material-symbols-outlined text-4xl">vpn_key</span>
         </div>
-        <h1 class="font-headline-md text-2xl text-primary font-extrabold mb-2">Mengalihkan ke Portal Autentikasi</h1>
+        <h1 class="font-headline-md text-2xl text-primary font-extrabold mb-2">Single Sign-On (SSO) Portal</h1>
         <p class="text-xs text-on-surface-variant mb-6 leading-relaxed">
-          Autentikasi terpusat STAH Dharma Nusantara berada di <strong>portal-perpus.stahdnj.ac.id</strong>.<br/>
-          Setelah masuk, Anda akan langsung diarahkan ke Dashboard Perpustakaan.
+          Autentikasi terpusat STAH Dharma Nusantara Jakarta berada di <strong>portal-perpus.stahdnj.ac.id</strong>.<br/>
+          Anda sedang dialihkan ke sistem SSO portal...
         </p>
 
         <div class="space-y-3">
           <a 
-            href="https://portal-perpus.stahdnj.ac.id/login" 
+            href="https://portal-perpus.stahdnj.ac.id/sso/perpus" 
             class="w-full py-4 px-6 bg-primary hover:bg-primary-container text-white font-bold text-sm rounded-xl transition-all shadow-md active:scale-[98%] flex items-center justify-center gap-2"
           >
             <span class="material-symbols-outlined text-lg">open_in_new</span>
-            <span>Masuk Lewat portal-perpus.stahdnj.ac.id</span>
+            <span>Masuk via SSO Portal Perpus</span>
           </a>
 
           <a 
-            href="https://portal-perpus.stahdnj.ac.id" 
+            href="https://portal-perpus.stahdnj.ac.id/member" 
             class="w-full py-3 px-6 bg-surface-container-high hover:bg-secondary/10 text-primary font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 border border-outline-variant/60"
           >
             <span class="material-symbols-outlined text-base">dashboard</span>
-            <span>Langsung Ke Dashboard Portal Perpus</span>
+            <span>Buka Dashboard Member Portal</span>
           </a>
         </div>
 
@@ -54,16 +54,16 @@ definePageMeta({
 });
 
 onMounted(() => {
-  // Auto redirect after 1.5s
-  setTimeout(() => {
-    window.location.href = 'https://portal-perpus.stahdnj.ac.id/login';
-  }, 1500);
+  // Auto redirect immediately to portal SSO endpoint
+  if (process.client) {
+    window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+  }
 });
 
 useHead({
-  title: 'Pengalihan Portal Login - STAH Dharma Nusantara Jakarta',
+  title: 'Pengalihan SSO Portal - STAH Dharma Nusantara Jakarta',
   meta: [
-    { name: 'description', content: 'Autentikasi terpusat portal perpustakaan STAH Dharma Nusantara Jakarta.' }
+    { name: 'description', content: 'Autentikasi terpusat SSO portal perpustakaan STAH Dharma Nusantara Jakarta.' }
   ]
 });
 </script>

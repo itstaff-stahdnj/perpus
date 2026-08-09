@@ -520,7 +520,7 @@ const fallbackCovers = [
 const handleImageError = (event: Event, index: number) => {
   const img = event.target as HTMLImageElement;
   if (img) {
-    img.src = fallbackCovers[index % fallbackCovers.length];
+    img.src = fallbackCovers[Math.abs(index) % fallbackCovers.length] || '';
   }
 };
 

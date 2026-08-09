@@ -85,13 +85,13 @@ export default defineEventHandler(async (event) => {
     const itemMatches = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
 
     for (let i = 0; i < itemMatches.length; i++) {
-      const rawItem = itemMatches[i];
+      const rawItem = itemMatches[i] || '';
 
       const getTagValue = (tagName: string): string => {
         const regex = new RegExp(`<${tagName}[^>]*>(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([\\s\\S]*?))<\\/${tagName}>`, 'i');
         const match = rawItem.match(regex);
         if (!match) return '';
-        const val = match[1] !== undefined ? match[1] : match[2];
+        const val = match[1] ?? match[2] ?? '';
         return val.replace(/<[^>]+>/g, '').trim();
       };
 
@@ -109,7 +109,7 @@ export default defineEventHandler(async (event) => {
         .replace(/\[&#8230;\]|\[\.\.\.\]/g, '...');
 
       const imgMatch = rawItem.match(/src=["']([^"']+\.(?:jpg|jpeg|png|webp|gif))["']/i);
-      const imageUrl = imgMatch ? imgMatch[1] : defaultBanner;
+      const imageUrl = imgMatch && imgMatch[1] ? imgMatch[1] : defaultBanner;
 
       let formattedDate = pubDate;
       try {

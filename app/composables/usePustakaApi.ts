@@ -64,6 +64,7 @@ export interface AnnouncementItem {
   content?: string;
   type?: string;
   is_active?: boolean;
+  published_at?: string;
   created_at?: string;
 }
 

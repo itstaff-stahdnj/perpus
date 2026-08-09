@@ -1,11 +1,11 @@
 <template>
   <nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-outline-variant/40 shadow-[0_-4px_16px_rgba(10,58,90,0.06)]" style="padding-bottom: env(safe-area-inset-bottom);">
-    <div class="flex items-center justify-around px-1 h-16">
+    <div class="flex items-center justify-around px-2 h-16 max-w-md mx-auto">
       <NuxtLink 
         v-for="item in navItems" 
         :key="item.to"
         :to="item.to"
-        class="flex flex-col items-center justify-center gap-0.5 w-14 py-1 rounded-xl transition-all duration-200"
+        class="flex flex-col items-center justify-center gap-0.5 w-16 py-1 rounded-xl transition-all duration-200"
         :class="isActive(item.to) 
           ? 'text-secondary' 
           : 'text-on-surface-variant hover:text-primary'"
@@ -32,9 +32,8 @@ const route = useRoute();
 
 const navItems = [
   { to: '/', icon: 'home', label: 'Beranda' },
-  { to: '/buku', icon: 'menu_book', label: 'Buku' },
+  { to: '/buku', icon: 'menu_book', label: 'Katalog' },
   { to: '/layanan', icon: 'room_service', label: 'Layanan' },
-  { to: '/absensi', icon: 'badge', label: 'Absensi' },
   { to: '/berita', icon: 'newspaper', label: 'Berita' },
 ];
 
