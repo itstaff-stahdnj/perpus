@@ -52,26 +52,56 @@
 
           <!-- Primary Actions -->
           <div class="flex flex-col gap-2.5">
-            <a 
-              :href="getBookPortalUrl(book)" 
-              target="_blank"
-              class="w-full bg-[#C89B3C] text-white py-3 rounded-lg font-label-md text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:brightness-105 transition-all shadow-sm active:scale-[0.98] font-bold text-center"
-              title="Pinjam Buku di Portal Perpustakaan"
+            <button 
+              @click="openBorrowModal"
+              class="w-full bg-[#C89B3C] text-white py-3 rounded-lg font-label-md text-xs sm:text-sm flex items-center justify-center gap-1.5 hover:brightness-105 transition-all shadow-sm active:scale-[0.98] font-bold text-center cursor-pointer"
+              title="Pinjam Buku Secara Mandiri"
             >
               <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">bookmark_add</span>
-              <span>Pinjam di Portal</span>
-              <span class="material-symbols-outlined text-xs">open_in_new</span>
-            </a>
+              <span>Pinjam Mandiri</span>
+            </button>
 
             <button 
-              class="w-full bg-white border border-slate-300 text-slate-700 py-2.5 rounded-lg font-label-md text-xs flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors font-semibold cursor-pointer"
-              @click="isFavorite = !isFavorite"
+              @click="openReservationModal"
+              class="w-full bg-primary text-white py-2.5 rounded-lg font-label-md text-xs flex items-center justify-center gap-1.5 hover:bg-primary-container transition-all shadow-xs font-bold text-center cursor-pointer"
+              title="Reservasi Antrean Buku"
+            >
+              <span class="material-symbols-outlined text-base">schedule</span>
+              <span>Reservasi Antrean</span>
+            </button>
+
+            <button 
+              @click="toggleFavorite"
+              :disabled="togglingWishlist"
+              class="w-full py-2.5 rounded-lg font-label-md text-xs flex items-center justify-center gap-1.5 transition-all font-bold cursor-pointer active:scale-95 shadow-xs"
+              :class="isFavorite ? 'bg-rose-50 border border-rose-300 text-rose-700 hover:bg-rose-100' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'"
+              :title="isFavorite ? 'Klik untuk membatalkan favorit' : 'Simpan buku ini ke daftar wishlist favorit Anda'"
             >
               <span class="material-symbols-outlined text-base" :class="{ 'text-rose-600 font-fill': isFavorite }">
                 {{ isFavorite ? 'favorite' : 'favorite_border' }}
               </span>
-              <span>{{ isFavorite ? 'Disimpan di Favorit' : 'Simpan ke Favorit' }}</span>
+              <span>{{ isFavorite ? 'Disimpan di Favorit (Batalkan)' : 'Simpan ke Favorit' }}</span>
             </button>
+
+            <!-- Social Proof: Avatar Group & Favorite Counter -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2.5 text-xs">
+              <!-- Avatar Stack (3 Circles) -->
+              <div class="flex -space-x-2 overflow-hidden shrink-0">
+                <div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&q=80" class="h-full w-full object-cover" alt="User 1" />
+                </div>
+                <div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&q=80" class="h-full w-full object-cover" alt="User 2" />
+                </div>
+                <div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-primary text-white font-bold text-[10px] flex items-center justify-center overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&q=80" class="h-full w-full object-cover" alt="User 3" />
+                </div>
+              </div>
+              
+              <p class="text-[11px] text-slate-600 leading-tight">
+                <strong class="text-rose-600 font-bold">{{ favoriteCount }} orang</strong> sudah memfavoritkan buku ini
+              </p>
+            </div>
 
             <button 
               class="w-full bg-white border border-slate-300 text-slate-600 py-2 rounded-lg font-label-md text-xs flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors cursor-pointer"
@@ -216,9 +246,9 @@
             <!-- Row: Status Ketersediaan -->
             <div class="flex bg-[#EEF4FF]">
               <div class="w-32 sm:w-44 px-4 py-3 font-semibold text-slate-700 shrink-0">Status Ketersediaan</div>
-              <div class="px-4 py-3 flex-1 font-semibold flex items-center gap-2" :class="(book.stok === undefined || book.stok > 0) ? 'text-emerald-700' : 'text-rose-700'">
-                <span class="w-2 h-2 rounded-full" :class="(book.stok === undefined || book.stok > 0) ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                <span>{{ (book.stok === undefined || book.stok > 0) ? `Tersedia di Rak (${book.stok ?? 1} eksemplar)` : 'Sedang Dipinjam' }}</span>
+              <div class="px-4 py-3 flex-1 font-semibold flex items-center gap-2" :class="isBookAvailable ? 'text-emerald-700' : 'text-rose-700'">
+                <span class="w-2 h-2 rounded-full" :class="isBookAvailable ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                <span>{{ isBookAvailable ? `Tersedia di Rak (${availableCopyCount} eksemplar)` : 'Tidak Tersedia (Sedang Dipinjam / Direservasi)' }}</span>
               </div>
             </div>
           </div>
@@ -420,11 +450,133 @@
           <div class="bg-white rounded-lg p-6 border border-slate-200 shadow-xs mb-8">
             <h3 class="font-bold text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#0288D1] text-lg">description</span>
-              <span>Sinopsis & Abstraksi Buku</span>
+              <span>Sinopsis &amp; Abstraksi Buku</span>
             </h3>
             <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
               {{ book.deskripsi || 'Buku ini merupakan referensi akademik terkemuka yang membahas landasan keilmuan mendalam di lingkungan STAH Dharma Nusantara Jakarta. Penulis menyajikan kajian ilmiah yang komprehensif untuk mendukung riset mahasiswa dan sivitas akademika.' }}
             </p>
+          </div>
+
+          <!-- Rating & Reviews Section -->
+          <div class="bg-white rounded-lg p-6 border border-slate-200 shadow-xs mb-8 space-y-6">
+            <!-- Header Summary -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                  <span class="material-symbols-outlined text-amber-500 text-xl">star</span>
+                  <span>Rating &amp; Ulasan Pemustaka</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Pendapat &amp; tanggapan sivitas akademika mengenai buku ini</p>
+              </div>
+
+              <!-- Rating Score Badge -->
+              <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl">
+                <span class="text-2xl font-black text-amber-900">4.9</span>
+                <div>
+                  <div class="flex text-amber-400 text-xs">
+                    <span class="material-symbols-outlined text-sm font-fill">star</span>
+                    <span class="material-symbols-outlined text-sm font-fill">star</span>
+                    <span class="material-symbols-outlined text-sm font-fill">star</span>
+                    <span class="material-symbols-outlined text-sm font-fill">star</span>
+                    <span class="material-symbols-outlined text-sm font-fill">star</span>
+                  </div>
+                  <span class="text-[10px] text-slate-500 font-semibold">{{ reviewsList.length }} Ulasan</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Review Form (Require Login Check) -->
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <h4 class="font-bold text-xs text-slate-800">Berikan Ulasan &amp; Rating Anda</h4>
+
+              <!-- If Logged In -->
+              <div v-if="tokenCookie" class="space-y-3">
+                <!-- Star Rating Picker -->
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-slate-700">Rating:</span>
+                  <div class="flex items-center gap-1 cursor-pointer">
+                    <span 
+                      v-for="star in 5" 
+                      :key="star"
+                      @click="reviewRating = star"
+                      class="material-symbols-outlined text-xl transition-all"
+                      :class="star <= reviewRating ? 'text-amber-400 font-fill' : 'text-slate-300'"
+                    >
+                      star
+                    </span>
+                  </div>
+                  <span class="text-xs font-bold text-amber-600">({{ reviewRating }} / 5 ⭐)</span>
+                </div>
+
+                <!-- Review Comment Box -->
+                <textarea 
+                  v-model="reviewComment" 
+                  rows="3" 
+                  placeholder="Tuliskan ulasan &amp; tanggapan Anda mengenai isi buku ini..."
+                  class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-primary"
+                ></textarea>
+
+                <div class="flex justify-end">
+                  <button 
+                    @click="submitReview"
+                    :disabled="submittingReview"
+                    class="px-5 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span v-if="submittingReview" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span class="material-symbols-outlined text-sm">send</span>
+                    <span>{{ submittingReview ? 'Mengirim...' : 'Kirim Ulasan & Rating' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- If NOT Logged In -->
+              <div v-else class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-center space-y-2">
+                <p class="text-xs text-amber-950 font-medium">
+                  🔒 Silakan <strong>masuk / login</strong> terlebih dahulu untuk memberikan rating dan ulasan pada buku ini.
+                </p>
+                <a 
+                  href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-sm">vpn_key</span>
+                  <span>Masuk via SSO Portal STAH DNJ</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Community Reviews List -->
+            <div class="space-y-4 pt-2">
+              <h4 class="font-bold text-xs text-slate-700">Ulasan Pemustaka Lainnya</h4>
+
+              <div v-if="reviewsList.length === 0" class="py-6 text-center text-slate-400 text-xs italic">
+                Belum ada ulasan untuk buku ini. Jadilah yang pertama memberikan ulasan!
+              </div>
+
+              <div v-else class="divide-y divide-slate-100">
+                <div v-for="rev in reviewsList" :key="rev.id" class="py-3.5 space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs overflow-hidden">
+                        <img v-if="rev.user?.avatar_url" :src="rev.user.avatar_url" class="w-full h-full object-cover" alt="User" />
+                        <span v-else>{{ (rev.user?.name || 'U').charAt(0) }}</span>
+                      </div>
+                      <div>
+                        <span class="font-bold text-slate-900 block leading-tight">{{ rev.user?.name || 'Pemustaka STAH' }}</span>
+                        <span class="text-[10px] text-slate-400">{{ formatDate(rev.created_at) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="flex text-amber-400 text-xs">
+                      <span v-for="s in (rev.rating || 5)" :key="s" class="material-symbols-outlined text-sm font-fill">star</span>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-slate-700 leading-relaxed pl-9">
+                    {{ rev.ulasan || rev.comment || rev.ulasan_text }}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -449,6 +601,114 @@
         </aside>
       </div>
     </main>
+
+    <!-- Modal 1: Pinjam Mandiri Modal -->
+    <div v-if="showBorrowModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" @click.self="showBorrowModal = false">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-slate-200 animate-in fade-in zoom-in duration-200 text-slate-800">
+        <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors" @click="showBorrowModal = false">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-xl">bookmark_add</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base sm:text-lg">Konfirmasi Pinjam Mandiri</h3>
+            <p class="text-[11px] text-slate-500">Pustaka Utama STAH DNJ</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex gap-3 mb-4">
+          <div class="w-12 h-16 rounded bg-slate-200 overflow-hidden shrink-0 border border-slate-300">
+            <img v-if="book?.cover_image" :src="book.cover_image" alt="Cover" class="w-full h-full object-cover" />
+            <span v-else class="material-symbols-outlined text-2xl text-slate-400 flex items-center justify-center h-full">book</span>
+          </div>
+          <div class="min-w-0 flex flex-col justify-center text-xs">
+            <h4 class="font-bold text-slate-900 line-clamp-2">{{ book?.judul }}</h4>
+            <p class="text-slate-500 mt-0.5">{{ book?.penulis || 'STAH DNJ' }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-xs mb-6">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Durasi Peminjaman (Hari)</label>
+            <select v-model="borrowDuration" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-primary">
+              <option :value="3">3 Hari</option>
+              <option :value="5">5 Hari</option>
+              <option :value="7">7 Hari (Maksimal Standar)</option>
+            </select>
+          </div>
+
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 flex justify-between items-center">
+            <span>Estimasi Tenggat Pengembalian:</span>
+            <strong class="font-mono font-bold text-amber-950">{{ calculatedDueDate }}</strong>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2.5">
+          <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer" @click="showBorrowModal = false">
+            Batal
+          </button>
+          <button 
+            :disabled="submittingBorrow"
+            class="px-5 py-2 bg-[#C89B3C] hover:brightness-105 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95" 
+            @click="submitBorrow"
+          >
+            <span v-if="submittingBorrow" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>{{ submittingBorrow ? 'Memproses...' : 'Konfirmasi Pinjam Buku' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Reservasi Antrean Modal -->
+    <div v-if="showReservationModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" @click.self="showReservationModal = false">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-slate-200 animate-in fade-in zoom-in duration-200 text-slate-800">
+        <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors" @click="showReservationModal = false">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-xl">schedule</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base sm:text-lg">Konfirmasi Reservasi Antrean</h3>
+            <p class="text-[11px] text-slate-500">Pustaka Utama STAH DNJ</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex gap-3 mb-4">
+          <div class="w-12 h-16 rounded bg-slate-200 overflow-hidden shrink-0 border border-slate-300">
+            <img v-if="book?.cover_image" :src="book.cover_image" alt="Cover" class="w-full h-full object-cover" />
+            <span v-else class="material-symbols-outlined text-2xl text-slate-400 flex items-center justify-center h-full">book</span>
+          </div>
+          <div class="min-w-0 flex flex-col justify-center text-xs">
+            <h4 class="font-bold text-slate-900 line-clamp-2">{{ book?.judul }}</h4>
+            <p class="text-slate-500 mt-0.5">{{ book?.penulis || 'STAH DNJ' }}</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed mb-6">
+          Pengajuan reservasi akan mencatatkan Anda dalam daftar antrean pengambilan buku. Anda akan dinotifikasi saat pustakawan telah menyiapkan buku tersebut.
+        </p>
+
+        <div class="flex justify-end gap-2.5">
+          <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer" @click="showReservationModal = false">
+            Batal
+          </button>
+          <button 
+            :disabled="submittingReservation"
+            class="px-5 py-2 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95" 
+            @click="submitReservation"
+          >
+            <span v-if="submittingReservation" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>{{ submittingReservation ? 'Memproses...' : 'Konfirmasi Reservasi' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Citation Modal (Cite This) -->
     <div v-if="showCitationModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" @click.self="showCitationModal = false">
@@ -499,16 +759,156 @@ import { useRoute } from 'vue-router';
 import { usePustakaApi, type Book } from '../../composables/usePustakaApi';
 
 const route = useRoute();
-const { getBookById, getBooks } = usePustakaApi();
+const { getBookById, getBooks, selfBorrow, createReservation, getWishlist, addToWishlist, removeFromWishlist, createReview, getReviews, tokenCookie } = usePustakaApi();
 
 const loading = ref(true);
 const book = ref<Book | null>(null);
 const allBooks = ref<Book[]>([]);
 const isFavorite = ref(false);
+const favoriteCount = ref(14);
+const togglingWishlist = ref(false);
 const isTampung = ref(false);
 const showCitationModal = ref(false);
 const sharedNotice = ref(false);
 const toastMessage = ref('');
+
+// Review State
+const reviewRating = ref(5);
+const reviewComment = ref('');
+const submittingReview = ref(false);
+const reviewsList = ref<any[]>([]);
+
+const submitReview = async () => {
+  if (!tokenCookie.value) {
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+    }
+    return;
+  }
+  if (!book.value) return;
+  if (!reviewComment.value.trim()) {
+    alert('Harap isi ulasan atau tanggapan Anda mengenai buku ini.');
+    return;
+  }
+
+  submittingReview.value = true;
+  try {
+    const res = await createReview(book.value.id, reviewRating.value, reviewComment.value);
+    alert(res.message);
+    if (res.success) {
+      reviewComment.value = '';
+      loadReviews(book.value.id);
+    }
+  } finally {
+    submittingReview.value = false;
+  }
+};
+
+const loadReviews = async (bookId: number | string) => {
+  try {
+    const res = await getReviews(bookId).catch(() => null);
+    if (res?.data && Array.isArray(res.data)) {
+      reviewsList.value = res.data;
+      return;
+    }
+    if ((book.value as any)?.reviews && Array.isArray((book.value as any).reviews)) {
+      reviewsList.value = (book.value as any).reviews;
+      return;
+    }
+  } catch (e) {}
+
+  reviewsList.value = [];
+};
+
+const toggleFavorite = async () => {
+  if (!tokenCookie.value) {
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+    }
+    return;
+  }
+  if (!book.value) return;
+
+  togglingWishlist.value = true;
+  try {
+    if (isFavorite.value) {
+      const res = await removeFromWishlist(book.value.id);
+      isFavorite.value = false;
+      favoriteCount.value = Math.max(0, favoriteCount.value - 1);
+      showToast(res.message || 'Buku dihapus dari Favorit');
+    } else {
+      const res = await addToWishlist(book.value.id);
+      isFavorite.value = true;
+      favoriteCount.value += 1;
+      showToast(res.message || 'Buku berhasil disimpan ke Favorit!');
+    }
+  } finally {
+    togglingWishlist.value = false;
+  }
+};
+
+// Modals State
+const showBorrowModal = ref(false);
+const showReservationModal = ref(false);
+const borrowDuration = ref(7);
+const submittingBorrow = ref(false);
+const submittingReservation = ref(false);
+
+const calculatedDueDate = computed(() => {
+  const d = new Date();
+  d.setDate(d.getDate() + Number(borrowDuration.value));
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+});
+
+const openBorrowModal = () => {
+  if (!tokenCookie.value) {
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+    }
+    return;
+  }
+  showBorrowModal.value = true;
+};
+
+const openReservationModal = () => {
+  if (!tokenCookie.value) {
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+    }
+    return;
+  }
+  showReservationModal.value = true;
+};
+
+const submitBorrow = async () => {
+  if (!book.value) return;
+  submittingBorrow.value = true;
+  try {
+    const res = await selfBorrow(book.value.id, borrowDuration.value);
+    showBorrowModal.value = false;
+    showToast(res.message);
+    if (!res.success) {
+      alert(res.message);
+    }
+  } finally {
+    submittingBorrow.value = false;
+  }
+};
+
+const submitReservation = async () => {
+  if (!book.value) return;
+  submittingReservation.value = true;
+  try {
+    const res = await createReservation(book.value.id);
+    showReservationModal.value = false;
+    showToast(res.message);
+    if (!res.success) {
+      alert(res.message);
+    }
+  } finally {
+    submittingReservation.value = false;
+  }
+};
 
 // Tabbed OPAC states
 const activeTab = ref<'eksemplar' | 'digital' | 'marc'>('eksemplar');
@@ -556,11 +956,6 @@ const getBookUrl = (b: Book) => {
   return `/buku/${slug}-${b.id}`;
 };
 
-const getBookPortalUrl = (b?: Book | null) => {
-  const id = b?.id ? String(b.id) : '';
-  return `https://portal-perpus.stahdnj.ac.id/login${id ? `?redirect=${encodeURIComponent(`/buku/${id}`)}` : ''}`;
-};
-
 const repositorySearchUrl = computed(() => {
   if (book.value?.judul) {
     return `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(book.value.judul)}`;
@@ -575,23 +970,51 @@ const relatedBooks = computed(() => {
     .slice(0, 5);
 });
 
+const availableCopyCount = computed(() => {
+  if (!book.value) return 0;
+  const rawCopies = (book.value as any).copies || (book.value as any).book_copies || (book.value as any).eksemplar;
+  if (Array.isArray(rawCopies) && rawCopies.length > 0) {
+    return rawCopies.filter((c: any) => String(c.status || '').toLowerCase() === 'tersedia').length;
+  }
+  return (book.value.stok === undefined || book.value.stok > 0) ? 1 : 0;
+});
+
+const isBookAvailable = computed(() => {
+  return availableCopyCount.value > 0;
+});
+
 const eksemplarList = computed(() => {
   if (!book.value) return [];
+  const rawCopies = (book.value as any).copies || (book.value as any).book_copies || (book.value as any).eksemplar;
+  if (Array.isArray(rawCopies) && rawCopies.length > 0) {
+    return rawCopies.map((c: any) => {
+      const isAvail = String(c.status || '').toLowerCase() === 'tersedia';
+      return {
+        barcode: c.barcode_qr_buku || c.barcode || `BC-${c.id}`,
+        callNumber: c.nomor_panggil || book.value?.no_panggil || `D EKMA ${c.id}`,
+        akses: isAvail ? 'Dapat Dipinjam' : 'Sirkulasi (Sedang Dipinjam)',
+        lokasi: c.lokasi_rak || book.value?.lokasi_rak || 'Sayap Timur Rak 04A',
+        ketersediaan: isAvail ? 'Tersedia' : 'Tidak Tersedia (Sedang Dipinjam)'
+      };
+    });
+  }
+
+  const isAvail = isBookAvailable.value;
   const bId = String(book.value.id || 1);
   return [
     {
       barcode: `23/302${bId}3`,
-      callNumber: `D EKMA 42${bId}3`,
-      akses: 'Tandon',
-      lokasi: 'Perpustakaan STAH DNJ - Ruang Sidang Lantai 1',
+      callNumber: book.value.no_panggil || `D EKMA 42${bId}3`,
+      akses: 'Tandon (Referensi)',
+      lokasi: book.value.lokasi_rak || 'Perpustakaan STAH DNJ - Ruang Sidang Lantai 1',
       ketersediaan: 'Tersedia'
     },
     {
       barcode: `23/902${bId}3`,
-      callNumber: `EKMA 42${bId}3`,
-      akses: (book.value.stok === undefined || book.value.stok > 0) ? 'Dapat dipinjam' : 'Sirkulasi',
-      lokasi: 'Perpustakaan STAH DNJ - Sayap Timur Rak 04A',
-      ketersediaan: (book.value.stok === undefined || book.value.stok > 0) ? 'Tersedia' : 'Sedang Dipinjam'
+      callNumber: book.value.no_panggil || `EKMA 42${bId}3`,
+      akses: isAvail ? 'Dapat Dipinjam' : 'Sirkulasi (Sedang Dipinjam)',
+      lokasi: book.value.lokasi_rak || 'Perpustakaan STAH DNJ - Sayap Timur Rak 04A',
+      ketersediaan: isAvail ? 'Tersedia' : 'Tidak Tersedia (Sedang Dipinjam)'
     }
   ];
 });
@@ -631,6 +1054,16 @@ const toggleSort = (col: string) => {
   }
 };
 
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return 'Baru saja';
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const loadBookDetail = async () => {
   loading.value = true;
   const rawParam = route.params.id as string;
@@ -651,6 +1084,18 @@ const loadBookDetail = async () => {
     if (resAll?.success) {
       allBooks.value = resAll.data || [];
     }
+
+    if (tokenCookie.value) {
+      const wishRes = await getWishlist().catch(() => null);
+      if (wishRes?.data && Array.isArray(wishRes.data)) {
+        isFavorite.value = wishRes.data.some((b: any) => String(b.id) === String(bookId));
+      }
+    }
+
+    const baseCount = Number((book.value as any)?.wishlist_count || (book.value as any)?.likes || 14);
+    favoriteCount.value = baseCount + (isFavorite.value ? 1 : 0);
+
+    loadReviews(bookId);
   } catch (err) {
     console.error('Error loading book detail:', err);
   } finally {

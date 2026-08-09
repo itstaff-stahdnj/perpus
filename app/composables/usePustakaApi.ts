@@ -10,6 +10,8 @@ export interface Book {
   cover_image_url?: string;
   deskripsi?: string;
   stok?: number;
+  rating_avg?: number;
+  reviews_count?: number;
   kategori?: {
     id: number;
     nama_kategori: string;
@@ -37,8 +39,13 @@ export interface UserProfile {
   role: string;
   status_keanggotaan: string;
   nim?: string;
+  nidn?: string;
+  prodi?: string;
+  whatsapp?: string;
+  bebas_pustaka?: boolean;
   qr_token?: string;
   avatar_url?: string;
+  badges?: string[];
 }
 
 export interface NewsItem {
@@ -102,6 +109,25 @@ export interface AttendanceTodayResponse {
   daftar_hadir: AttendanceRecord[];
 }
 
+export interface ReviewItem {
+  id: number;
+  book_id: number;
+  user_name: string;
+  rating: number;
+  ulasan: string;
+  created_at?: string;
+}
+
+export interface ActivityToastItem {
+  id?: number | string;
+  user_name: string;
+  action_title: string;
+  book_title: string;
+  book_id?: number | string;
+  book_cover?: string;
+  time_formatted?: string;
+}
+
 export interface SiteSettings {
   id?: number;
   app_name?: string;
@@ -148,8 +174,8 @@ export const usePustakaApi = () => {
       const cleanInput = emailOrNim.trim();
       const isEmail = cleanInput.includes('@');
 
-      // Prepare payload to fit common Laravel auth validators
       const bodyPayload: Record<string, any> = {
+        login: cleanInput,
         password: password
       };
 
@@ -164,14 +190,14 @@ export const usePustakaApi = () => {
 
       let res: any = null;
       try {
-        res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/login`, {
+        res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/auth/login`, {
           method: 'POST',
           headers: getHeaders({ 'Content-Type': 'application/json' }),
           body: bodyPayload
         });
       } catch (err: any) {
         if (err?.status === 404 || err?.statusCode === 404) {
-          res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/auth/login`, {
+          res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/login`, {
             method: 'POST',
             headers: getHeaders({ 'Content-Type': 'application/json' }),
             body: bodyPayload
@@ -196,8 +222,6 @@ export const usePustakaApi = () => {
       return { success: false, message: res?.message || 'Login gagal. Periksa kembali NIM/Email dan password Anda.' };
     } catch (e: any) {
       let errorMsg = 'Gagal melakukan otentikasi. Silakan periksa kredensial Anda.';
-
-      // Handle Laravel HTTP 422 Validation Errors
       if (e?.data?.errors && typeof e.data.errors === 'object') {
         const fieldErrors = Object.values(e.data.errors).flat().filter(Boolean);
         if (fieldErrors.length > 0) {
@@ -208,7 +232,6 @@ export const usePustakaApi = () => {
       } else if (e?.message) {
         errorMsg = e.message;
       }
-
       return { success: false, message: errorMsg };
     }
   };
@@ -223,6 +246,60 @@ export const usePustakaApi = () => {
       } catch {}
     }
     tokenCookie.value = null;
+  };
+
+  const getProfile = async (): Promise<{ success: boolean; data: UserProfile; user?: UserProfile; bebas_pustaka?: boolean; badges?: string[] }> => {
+    try {
+      let res = await $fetch<any>(`${baseUrl}/me`, {
+        headers: getHeaders()
+      }).catch(() => null);
+
+      if (!res) {
+        res = await $fetch<any>(`${baseUrl}/auth/me`, {
+          headers: getHeaders()
+        }).catch(() => null);
+      }
+
+      if (!res) return { success: false, data: null as any };
+
+      const userObj = res?.data?.user || res?.data || res?.user || res;
+      return {
+        success: res?.success ?? true,
+        data: userObj,
+        user: userObj,
+        bebas_pustaka: res?.data?.bebas_pustaka ?? res?.bebas_pustaka,
+        badges: res?.data?.badges ?? res?.badges
+      };
+    } catch (e) {
+      console.error('getProfile error:', e);
+      return { success: false, data: null as any };
+    }
+  };
+
+  const updateProfile = async (profileData: Partial<UserProfile> & { password?: string }): Promise<{ success: boolean; message: string; data?: UserProfile }> => {
+    try {
+      let res: any = null;
+      try {
+        res = await $fetch<any>(`${baseUrl}/me/profile`, {
+          method: 'PUT',
+          headers: getHeaders({ 'Content-Type': 'application/json' }),
+          body: profileData
+        });
+      } catch (err: any) {
+        if (err?.status === 404 || err?.statusCode === 404) {
+          res = await $fetch<any>(`${baseUrl}/me`, {
+            method: 'PUT',
+            headers: getHeaders({ 'Content-Type': 'application/json' }),
+            body: profileData
+          });
+        } else {
+          throw err;
+        }
+      }
+      return { success: res?.success ?? true, message: res?.message || 'Profil berhasil diperbarui!', data: res?.data };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal memperbarui profil' };
+    }
   };
 
   const getBooks = async (params?: Record<string, any>): Promise<{ success: boolean; data: Book[]; meta?: any }> => {
@@ -270,16 +347,164 @@ export const usePustakaApi = () => {
     }
   };
 
+  // Self Borrow (Peminjaman Mandiri)
+  const selfBorrow = async (bookCopyIdOrQr: number | string, durasiHari: number = 7): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const bodyPayload = typeof bookCopyIdOrQr === 'number' 
+        ? { book_copy_id: bookCopyIdOrQr, durasi_hari: durasiHari }
+        : { barcode_qr_buku: bookCopyIdOrQr, durasi_hari: durasiHari };
+
+      const res = await $fetch<any>(`${baseUrl}/loans/self-borrow`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: bodyPayload
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Peminjaman mandiri berhasil diproses!', data: res?.data };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal memproses peminjaman mandiri' };
+    }
+  };
+
   const getLoans = async (): Promise<{ success: boolean; data: any[] }> => {
     return await $fetch(`${baseUrl}/loans`, {
       headers: getHeaders()
     });
   };
 
-  const getProfile = async (): Promise<{ success: boolean; data: any; user?: any }> => {
-    return await $fetch(`${baseUrl}/me`, {
-      headers: getHeaders()
-    });
+  const extendLoan = async (loanId: number | string): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/loans/extend/${loanId}`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Tenggat peminjaman berhasil diperpanjang 7 hari!', data: res?.data };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal memperpanjang peminjaman' };
+    }
+  };
+
+  const returnLoan = async (loanId: number | string): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/loans/return/${loanId}`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Pengembalian buku berhasil diproses!', data: res?.data };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal memproses pengembalian buku' };
+    }
+  };
+
+  // Reservations
+  const createReservation = async (bookId: number | string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/reservations`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: { book_id: bookId }
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Reservasi berhasil dibuat!' };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || 'Gagal membuat reservasi.' };
+    }
+  };
+
+  const updateReservationStatus = async (reservationId: number | string, status: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/reservations/${reservationId}`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: { status }
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Status reservasi berhasil diperbarui!' };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || 'Gagal memperbarui status reservasi.' };
+    }
+  };
+
+  const getReservations = async (): Promise<{ success: boolean; data: any[] }> => {
+    try {
+      return await $fetch(`${baseUrl}/reservations`, {
+        headers: getHeaders()
+      });
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  };
+
+  // Reviews
+  const createReview = async (bookId: number | string, rating: number, ulasan: string): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/reviews`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: { book_id: Number(bookId), rating, ulasan }
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Ulasan & rating berhasil dikirim!', data: res?.data };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal mengirimkan ulasan' };
+    }
+  };
+
+  const getReviews = async (bookId?: number | string): Promise<{ success: boolean; data: ReviewItem[] }> => {
+    try {
+      return await $fetch(`${baseUrl}/reviews`, {
+        headers: getHeaders(),
+        params: bookId ? { book_id: bookId } : undefined
+      });
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  };
+
+  // Wishlist Pemustaka
+  const getWishlist = async (): Promise<{ success: boolean; data: Book[] }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/wishlist`, {
+        headers: getHeaders()
+      });
+      if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data };
+      if (Array.isArray(res)) return { success: true, data: res };
+      return { success: false, data: [] };
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  };
+
+  const addToWishlist = async (bookId: number | string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/wishlist`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: { book_id: Number(bookId) }
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Buku berhasil ditambahkan ke Wishlist!' };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal menyukai buku' };
+    }
+  };
+
+  const removeFromWishlist = async (bookId: number | string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/wishlist/${bookId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Buku dihapus dari Wishlist!' };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal menghapus dari Wishlist' };
+    }
+  };
+
+  // Realtime Activity Toast
+  const getRecentActivities = async (): Promise<{ success: boolean; data: ActivityToastItem[] }> => {
+    try {
+      return await $fetch(`${baseUrl}/aktivitas-terbaru`, {
+        headers: getHeaders()
+      });
+    } catch (e) {
+      return { success: false, data: [] };
+    }
   };
 
   const getNews = async (): Promise<{ success: boolean; data: NewsItem[]; message?: string }> => {
@@ -368,7 +593,6 @@ export const usePustakaApi = () => {
   ): Promise<{ success: boolean; message: string; data?: AttendanceRecord }> => {
     try {
       const cleanId = identifier.trim();
-      
       const body: Record<string, any> = {
         qr_token: cleanId,
         nim: cleanId,
@@ -440,14 +664,27 @@ export const usePustakaApi = () => {
     getHeaders,
     login,
     logout,
+    getProfile,
+    updateProfile,
     getBooks,
     getBookById,
     createBook,
     updateBook,
     deleteBook,
     getCategories,
+    selfBorrow,
     getLoans,
-    getProfile,
+    extendLoan,
+    returnLoan,
+    createReservation,
+    updateReservationStatus,
+    getReservations,
+    createReview,
+    getReviews,
+    getWishlist,
+    addToWishlist,
+    removeFromWishlist,
+    getRecentActivities,
     getNews,
     getNewsById,
     getAnnouncements,
