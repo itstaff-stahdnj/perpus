@@ -347,6 +347,24 @@ export const usePustakaApi = () => {
     }
   };
 
+  // Get Staff Online Status (Facebook-style Presence)
+  const getStaffStatus = async (): Promise<{ success: boolean; is_online: boolean; online_count: number; message: string; online_staff: any[] }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/staff-status`, {
+        headers: getHeaders()
+      });
+      return {
+        success: res?.success ?? true,
+        is_online: res?.is_online ?? true,
+        online_count: res?.online_count ?? 0,
+        message: res?.message || '',
+        online_staff: res?.online_staff || []
+      };
+    } catch (e) {
+      return { success: false, is_online: true, online_count: 1, message: 'Petugas online', online_staff: [] };
+    }
+  };
+
   // Self Borrow (Peminjaman Mandiri)
   const selfBorrow = async (bookCopyIdOrQr: number | string, durasiHari: number = 7): Promise<{ success: boolean; message: string; data?: any }> => {
     try {
@@ -693,6 +711,7 @@ export const usePustakaApi = () => {
     getAttendanceToday,
     getAttendances,
     getUsers,
-    submitAttendance
+    submitAttendance,
+    getStaffStatus
   };
 };

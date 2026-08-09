@@ -266,11 +266,11 @@
 
                   <button 
                     v-if="String(res.status).toLowerCase() === 'siap_diambil'"
-                    @click="openStaffVerifyQrModal(res)"
-                    class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-md"
+                    @click="handleChangeReservationStatus(res.id, 'selesai')"
+                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-md"
                   >
-                    <span class="material-symbols-outlined text-sm">verified_user</span>
-                    <span>📷 Scan QR Verifikasi</span>
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    <span>Serahkan Buku (Selesai)</span>
                   </button>
                 </template>
 
@@ -288,11 +288,11 @@
 
                   <button 
                     v-if="String(res.status).toLowerCase() === 'siap_diambil'"
-                    @click="openUserQrModal(res)"
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 animate-bounce"
+                    @click="handleChangeReservationStatus(res.id, 'selesai')"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                   >
-                    <span class="material-symbols-outlined text-base">qr_code_scanner</span>
-                    <span>📱 Scan QR Konfirmasi Peminjam</span>
+                    <span class="material-symbols-outlined text-base">check_circle</span>
+                    <span>Konfirmasi Terima Buku</span>
                   </button>
                 </template>
               </div>
@@ -553,11 +553,11 @@
 
         <div class="space-y-3 text-xs mb-6">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Scan Token / Input NIM Pemustaka</label>
+            <label class="block font-bold text-slate-700 mb-1">Input NIM / ID Pemustaka</label>
             <input 
               v-model="scannedTokenInput" 
               type="text" 
-              placeholder="Scan barcode QR atau ketik NIM pemustaka"
+              placeholder="Ketik NIM / ID pemustaka"
               class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-primary"
             />
             <span class="text-[10px] text-slate-400 mt-0.5 block">NIM Peminjam: {{ selectedReservationForStaffVerify.user?.nim || user?.nim }}</span>

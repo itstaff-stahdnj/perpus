@@ -253,12 +253,13 @@
                   </button>
 
                   <button 
-                    @click="openReservationModal(book)"
-                    class="bg-primary text-white py-2 rounded-lg font-label-md text-[11px] hover:bg-primary-container transition-colors font-bold text-center flex items-center justify-center gap-1 cursor-pointer"
-                    title="Reservasi Antrean Buku"
+                    @click="toggleCart(book)"
+                    class="py-2 rounded-lg font-label-md text-[11px] transition-colors font-bold text-center flex items-center justify-center gap-1 cursor-pointer"
+                    :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'"
+                    :title="isInCart(book.id) ? 'Hapus dari keranjang' : 'Tampung ke keranjang untuk meminjam lebih dari 1 buku sekaligus'"
                   >
-                    <span class="material-symbols-outlined text-xs">schedule</span>
-                    <span>Reservasi</span>
+                    <span class="material-symbols-outlined text-xs text-amber-700">shopping_cart</span>
+                    <span>{{ isInCart(book.id) ? 'Batal' : 'Tampung' }}</span>
                   </button>
                 </div>
 
@@ -317,11 +318,13 @@
                   </button>
 
                   <button 
-                    @click="openReservationModal(book)"
-                    class="bg-primary text-white px-3 py-2 rounded-lg font-label-md text-xs hover:bg-primary-container transition-colors font-bold flex items-center gap-1 cursor-pointer"
+                    @click="toggleCart(book)"
+                    class="px-3 py-2 rounded-lg font-label-md text-xs transition-colors font-bold flex items-center gap-1 cursor-pointer border"
+                    :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'"
+                    :title="isInCart(book.id) ? 'Hapus dari keranjang' : 'Tampung ke keranjang untuk meminjam lebih dari 1 buku sekaligus'"
                   >
-                    <span class="material-symbols-outlined text-sm">schedule</span>
-                    <span>Reservasi</span>
+                    <span class="material-symbols-outlined text-sm text-amber-700">shopping_cart</span>
+                    <span>{{ isInCart(book.id) ? 'Batal Tampung' : 'Tampung' }}</span>
                   </button>
 
                   <NuxtLink 
@@ -455,6 +458,22 @@
         </div>
       </div>
     </div>
+
+    <!-- Floating Multi-Book Cart Button -->
+    <button 
+      v-if="cartCount > 0"
+      @click="showCartModal = true"
+      class="fixed bottom-20 md:bottom-8 right-6 z-40 bg-slate-900 hover:bg-slate-800 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center gap-3 transition-all hover:scale-105 active:scale-95 border-2 border-amber-400 cursor-pointer animate-bounce"
+    >
+      <span class="material-symbols-outlined text-2xl text-amber-400">shopping_cart</span>
+      <div class="text-left leading-tight">
+        <p class="font-extrabold text-xs text-white">Keranjang Tampungan</p>
+        <p class="text-[10px] text-amber-300 font-bold">{{ cartCount }} Buku Terpilih — Pinjam Sekaligus</p>
+      </div>
+    </button>
+
+    <!-- Multi-Book Cart Borrowing Modal -->
+    <CartBorrowModal v-model="showCartModal" @borrowed-success="loadData" />
   </div>
 </template>
 
@@ -467,10 +486,14 @@ import {
   type Category 
 } from '../../composables/usePustakaApi';
 
+import { usePustakaCart } from '../../composables/usePustakaCart';
+import CartBorrowModal from '../../components/CartBorrowModal.vue';
+
 const route = useRoute();
 const router = useRouter();
 
 const { getBooks, getCategories, selfBorrow, createReservation, tokenCookie } = usePustakaApi();
+const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
 
 const loading = ref(true);
 const searchQuery = ref('');
@@ -479,6 +502,7 @@ const statusFilter = ref('all');
 const sortBy = ref<'default' | 'judul-asc' | 'judul-desc' | 'tahun-desc' | 'tahun-asc'>('default');
 const viewMode = ref<'grid' | 'list'>('grid');
 const showMobileFilterModal = ref(false);
+const showCartModal = ref(false);
 
 const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);
@@ -663,8 +687,7 @@ const getBookCover = (b: Book, index: number) => {
 };
 
 const getBookUrl = (b: Book) => {
-  const slug = b.slug || b.judul.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-  return `/buku/${slug}-${b.id}`;
+  return `/buku/${b.id}`;
 };
 
 const repositorySearchUrl = computed(() => {
