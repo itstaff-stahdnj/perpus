@@ -88,32 +88,59 @@
               </span>
             </div>
 
-            <!-- Pemantauan Stok Multi-Cabang -->
+            <!-- Pemantauan Stok Sesuai Database -->
             <div class="p-3.5 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 rounded-2xl space-y-2 text-xs">
-              <p class="font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-primary text-base">storefront</span>
-                <span>Pemantauan Stok Per Cabang Perpustakaan</span>
-              </p>
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-primary text-base">inventory_2</span>
+                  <span>Pemantauan Stok &amp; Eksemplar (Database)</span>
+                </p>
+                <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold" :class="availableCopiesCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
+                  {{ availableCopiesCount > 0 ? 'STATUS: TERSEDIA' : 'STATUS: DIPINJAM' }}
+                </span>
+              </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1">
+              <div class="grid grid-cols-1" :class="hasBranchData ? 'sm:grid-cols-2 gap-2' : 'gap-2'">
+                <!-- Card Utama Perpustakaan STAH DNJ -->
+                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1.5 text-[11px]">
                   <div class="flex items-center justify-between font-bold">
-                    <span>🏢 Pusat (Kampus Utama)</span>
-                    <span :class="((book as any)?.stok_pusat ?? (availableCopiesCount > 0 ? 1 : 0)) > 0 ? 'text-emerald-600' : 'text-rose-600'">
-                      {{ ((book as any)?.stok_pusat ?? (availableCopiesCount > 0 ? 1 : 0)) > 0 ? 'Tersedia' : 'Sedang Dipinjam' }}
+                    <span>🏢 Perpustakaan STAH DNJ</span>
+                    <span :class="availableCopiesCount > 0 ? 'text-emerald-600 font-extrabold' : 'text-rose-600 font-extrabold'">
+                      {{ availableCopiesCount > 0 ? `${availableCopiesCount} Eksemplar Tersedia` : 'Sedang Dipinjam' }}
                     </span>
                   </div>
-                  <p class="text-slate-500 dark:text-zinc-400">📍 {{ book.lokasi_rak || 'Rak Ref-01 (Sayap Timur)' }}</p>
+
+                  <div class="grid grid-cols-3 gap-1 py-1 px-2 bg-slate-50 dark:bg-zinc-800/60 rounded-lg text-center text-[10px]">
+                    <div>
+                      <span class="block text-slate-400">Total Stok</span>
+                      <strong class="font-bold text-slate-800 dark:text-zinc-200">{{ totalCopiesCount }}</strong>
+                    </div>
+                    <div>
+                      <span class="block text-slate-400">Tersedia</span>
+                      <strong class="font-bold text-emerald-600">{{ availableCopiesCount }}</strong>
+                    </div>
+                    <div>
+                      <span class="block text-slate-400">Dipinjam</span>
+                      <strong class="font-bold text-rose-500">{{ borrowedCopiesCount }}</strong>
+                    </div>
+                  </div>
+
+                  <p class="text-slate-500 dark:text-zinc-400 text-[11px] pt-0.5">
+                    📍 Lokasi Rak: <strong class="text-slate-700 dark:text-zinc-200 font-semibold">{{ book.lokasi_rak || (book as any).lokasi || 'Koleksi Perpustakaan STAH DNJ' }}</strong>
+                  </p>
                 </div>
 
-                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1">
+                <!-- Card Cabang (HANYA DITAMPILKAN JIKA DITAMBAHKAN PADA DATABASE) -->
+                <div v-if="hasBranchData" class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1.5 text-[11px]">
                   <div class="flex items-center justify-between font-bold">
-                    <span>🏛️ Cabang (Kampus II)</span>
-                    <span :class="((book as any)?.stok_cabang ?? (availableCopiesCount > 0 ? 1 : 0)) > 0 ? 'text-emerald-600' : 'text-rose-600'">
-                      {{ ((book as any)?.stok_cabang ?? (availableCopiesCount > 0 ? 1 : 0)) > 0 ? 'Tersedia' : 'Sedang Dipinjam' }}
+                    <span>🏛️ Cabang Perpustakaan</span>
+                    <span :class="((book as any)?.stok_cabang ?? 0) > 0 ? 'text-emerald-600 font-extrabold' : 'text-rose-600 font-extrabold'">
+                      {{ ((book as any)?.stok_cabang ?? 0) > 0 ? `${(book as any)?.stok_cabang} Eksemplar` : 'Tidak Tersedia' }}
                     </span>
                   </div>
-                  <p class="text-slate-500 dark:text-zinc-400">📍 Rak 02B (Gedung B Lantai 2)</p>
+                  <p class="text-slate-500 dark:text-zinc-400 text-[11px]">
+                    📍 {{ (book as any)?.lokasi_cabang || (book as any)?.cabang || 'Cabang Kampus' }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -366,6 +393,30 @@ const availableCopiesCount = computed(() => {
   return 0;
 });
 
+const totalCopiesCount = computed(() => {
+  if (!book.value) return 0;
+  const b = book.value as any;
+  if (typeof b.total_stok === 'number') return b.total_stok;
+  if (typeof b.jumlah_buku === 'number') return b.jumlah_buku;
+  if (typeof b.jumlah_eksemplar === 'number') return b.jumlah_eksemplar;
+  const rawCopies = b.copies || b.book_copies || b.eksemplar;
+  if (Array.isArray(rawCopies) && rawCopies.length > 0) {
+    return rawCopies.length;
+  }
+  return typeof book.value.stok === 'number' ? book.value.stok : 0;
+});
+
+const borrowedCopiesCount = computed(() => {
+  const diff = totalCopiesCount.value - availableCopiesCount.value;
+  return diff > 0 ? diff : 0;
+});
+
+const hasBranchData = computed(() => {
+  if (!book.value) return false;
+  const b = book.value as any;
+  return (b.stok_cabang !== undefined && b.stok_cabang !== null) || b.cabang !== undefined || b.lokasi_cabang !== undefined;
+});
+
 const inCart = computed(() => {
   return book.value ? isInCart(book.value.id) : false;
 });
@@ -468,12 +519,20 @@ const handleReservation = async () => {
   submittingReservation.value = true;
   try {
     const res = await createReservation(book.value.id);
-    alert(res.message || '🎉 Reservasi berhasil diajukan! Menunggu pengolahan Pustakawan / Kepala Pustaka.');
+    const msg = res.message || '🎉 Reservasi berhasil diajukan! Menunggu pengolahan Pustakawan / Kepala Pustaka.';
+    alert(msg);
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/admin/reservations';
+    }
     if (res.success) {
       loadBookDetail();
     }
   } catch (err: any) {
-    alert(err?.data?.message || err?.message || 'Reservasi gagal. Pastikan ada Pustakawan / Kepala Pustaka yang aktif di sistem.');
+    const errorMsg = err?.data?.message || err?.message || 'Reservasi gagal. Pastikan ada Pustakawan / Kepala Pustaka yang aktif di sistem.';
+    alert(errorMsg);
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/admin/reservations';
+    }
   } finally {
     submittingReservation.value = false;
   }

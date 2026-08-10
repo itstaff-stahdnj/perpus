@@ -124,7 +124,11 @@ const dismissToast = () => {
 const handleToastClick = () => {
   const actionText = String(toast.value?.action_title || '').toLowerCase()
   if (actionText.includes('reservasi') || actionText.includes('antre') || actionText.includes('pesan')) {
-    router.push('/reservasi')
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/admin/reservations'
+    } else {
+      router.push('/reservasi')
+    }
   } else if (toast.value?.book_id) {
     router.push(`/buku/${toast.value.book_id}`)
   } else {
