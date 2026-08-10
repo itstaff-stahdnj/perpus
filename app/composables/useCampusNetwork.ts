@@ -13,9 +13,12 @@ export const useCampusNetwork = () => {
 
   const checkNetworkStatus = async () => {
     try {
-      const config = useRuntimeConfig();
-      const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api';
-      const res = await $fetch<any>(`${baseUrl}/network/check`).catch(() => null);
+      let res = await $fetch<any>('/api/pustaka/network/check').catch(() => null);
+      if (!res || res.is_campus_network === undefined) {
+        const config = useRuntimeConfig();
+        const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api';
+        res = await $fetch<any>(`${baseUrl}/network/check`).catch(() => null);
+      }
       if (res && res.is_campus_network !== undefined) {
         isCampusNetwork.value = Boolean(res.is_campus_network);
       }

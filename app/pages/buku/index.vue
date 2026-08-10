@@ -52,6 +52,41 @@
               </div>
             </div>
 
+            <!-- Kode DDC (Klasifikasi 3 Angka) Filter -->
+            <div class="border-t border-outline-variant pt-4">
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold text-xs text-primary flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">tag</span>
+                  <span>Kode DDC</span>
+                </label>
+                <span class="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-mono font-bold">3 Angka</span>
+              </div>
+              
+              <div class="space-y-1 max-h-52 overflow-y-auto pr-1">
+                <button 
+                  class="w-full text-left px-3 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer"
+                  :class="selectedDdc === 'all' ? 'bg-primary-container text-primary font-bold' : 'hover:bg-surface-container-high text-on-surface-variant'"
+                  @click="selectedDdc = 'all'"
+                >
+                  <span>Semua Kode DDC</span>
+                  <span class="text-[11px] opacity-75">({{ books.length }})</span>
+                </button>
+                <button 
+                  v-for="opt in availableDdcOptions" 
+                  :key="opt.code"
+                  class="w-full text-left px-3 py-1.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer"
+                  :class="selectedDdc === opt.code ? 'bg-primary-container text-primary font-bold' : 'hover:bg-surface-container-high text-on-surface-variant'"
+                  @click="selectedDdc = opt.code"
+                >
+                  <span class="truncate pr-2 flex items-center gap-1.5">
+                    <span class="font-mono bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-[10px] font-bold border border-slate-200 shrink-0">{{ opt.code }}</span>
+                    <span class="truncate text-[11px]">{{ opt.name }}</span>
+                  </span>
+                  <span class="text-[11px] opacity-75 shrink-0">({{ opt.count }})</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Availability Status Filter -->
             <div class="border-t border-outline-variant pt-4">
               <label class="block font-bold text-xs text-primary mb-2.5">Status Ketersediaan</label>
@@ -227,9 +262,14 @@
                 </NuxtLink>
 
                 <div class="p-5">
-                  <span v-if="getBookCategoryName(book)" class="inline-block text-[10px] font-bold uppercase tracking-wider text-secondary bg-secondary-fixed/80 px-2 py-0.5 rounded-md mb-1.5">
-                    {{ getBookCategoryName(book) }}
-                  </span>
+                  <div class="flex items-center gap-1.5 flex-wrap mb-1.5">
+                    <span v-if="getBookCategoryName(book)" class="inline-block text-[10px] font-bold uppercase tracking-wider text-secondary bg-secondary-fixed/80 px-2 py-0.5 rounded-md">
+                      {{ getBookCategoryName(book) }}
+                    </span>
+                    <span v-if="getBookDdcCode(book)" class="inline-block font-mono text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded-md border border-amber-200" title="Kode DDC (3 Angka)">
+                      DDC {{ getBookDdcCode(book) }}
+                    </span>
+                  </div>
                   <div class="flex justify-between items-start mb-2 gap-2">
                     <NuxtLink :to="getBookUrl(book)" class="font-label-md text-label-md text-primary group-hover:text-secondary transition-colors line-clamp-2 leading-snug font-bold">
                       {{ book.judul }}
@@ -327,9 +367,14 @@
                   />
                 </NuxtLink>
                 <div>
-                  <span class="text-[10px] font-bold uppercase text-secondary bg-secondary-fixed px-2 py-0.5 rounded mb-1 inline-block">
-                    {{ getBookCategoryName(book) ? `${getBookCategoryName(book)} • ` : '' }}{{ book.tahun_terbit || '2021' }}
-                  </span>
+                  <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                    <span class="text-[10px] font-bold uppercase text-secondary bg-secondary-fixed px-2 py-0.5 rounded inline-block">
+                      {{ getBookCategoryName(book) ? `${getBookCategoryName(book)} • ` : '' }}{{ book.tahun_terbit || '2021' }}
+                    </span>
+                    <span v-if="getBookDdcCode(book)" class="font-mono text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 inline-block" title="Kode DDC (3 Angka)">
+                      DDC {{ getBookDdcCode(book) }}
+                    </span>
+                  </div>
                   <NuxtLink :to="getBookUrl(book)" class="font-headline-md text-base text-primary font-bold leading-tight mb-1 hover:text-secondary block">
                     {{ book.judul }}
                   </NuxtLink>
@@ -533,6 +578,75 @@
       </div>
     </div>
 
+    <!-- Modal 3: Mobile Filter Modal -->
+    <div v-if="showMobileFilterModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showMobileFilterModal = false">
+      <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col p-5 shadow-2xl relative border border-slate-200 animate-in slide-in-from-bottom duration-200 text-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+          <h3 class="font-bold text-primary text-base flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">filter_alt</span>
+            <span>Filter Katalog Pustaka</span>
+          </h3>
+          <button class="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer" @click="showMobileFilterModal = false">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto space-y-5 pr-1 text-xs">
+          <!-- Kategori -->
+          <div>
+            <label class="block font-bold text-xs text-primary mb-2">Kategori Koleksi</label>
+            <select v-model="selectedCategory" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-xs focus:outline-none focus:border-primary">
+              <option value="all">Semua Kategori ({{ books.length }})</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.nama_kategori">
+                {{ cat.nama_kategori }} ({{ getCategoryCount(cat) }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Kode DDC -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="font-bold text-xs text-primary flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">tag</span>
+                <span>Kode DDC (Klasifikasi 3 Angka)</span>
+              </label>
+              <span class="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-mono font-bold">3 Digit</span>
+            </div>
+            <select v-model="selectedDdc" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs focus:outline-none focus:border-primary">
+              <option value="all">Semua Kode DDC (3 Angka)</option>
+              <option v-for="opt in availableDdcOptions" :key="opt.code" :value="opt.code">
+                {{ opt.code }} - {{ opt.name }} ({{ opt.count }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div>
+            <label class="block font-bold text-xs text-primary mb-2">Status Ketersediaan</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 text-xs text-slate-800 cursor-pointer">
+                <input type="radio" v-model="statusFilter" value="all" class="accent-primary" />
+                <span>Semua Status</span>
+              </label>
+              <label class="flex items-center gap-2 text-xs text-slate-800 cursor-pointer">
+                <input type="radio" v-model="statusFilter" value="available" class="accent-primary" />
+                <span class="text-emerald-700 font-semibold">Tersedia di Rak</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 border-t border-slate-200 mt-4">
+          <button class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer" @click="resetFilters(); showMobileFilterModal = false">
+            Reset Filter
+          </button>
+          <button class="flex-1 py-2.5 bg-primary text-white font-bold rounded-xl text-xs cursor-pointer shadow-md" @click="showMobileFilterModal = false">
+            Terapkan Filter ({{ filteredBooks.length }})
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Floating Multi-Book Cart Button -->
     <button 
       v-if="cartCount > 0"
@@ -641,6 +755,7 @@ const loadWishlistData = async () => {
 const loading = ref(true);
 const searchQuery = ref('');
 const selectedCategory = ref('all');
+const selectedDdc = ref('all');
 const statusFilter = ref('all');
 const sortBy = ref<'default' | 'judul-asc' | 'judul-desc' | 'tahun-desc' | 'tahun-asc'>('default');
 const viewMode = ref<'grid' | 'list'>('grid');
@@ -819,6 +934,107 @@ const isCategoryActive = (cat: Category): boolean => {
   );
 };
 
+const standardDdcMainClasses = [
+  { code: '000', name: 'Karya Umum & Informasi' },
+  { code: '100', name: 'Filsafat & Psikologi' },
+  { code: '200', name: 'Agama' },
+  { code: '294', name: 'Agama Hindu / Veda' },
+  { code: '300', name: 'Ilmu-Ilmu Sosial' },
+  { code: '400', name: 'Bahasa & Linguistik' },
+  { code: '500', name: 'Sains & Ilmu Murni' },
+  { code: '600', name: 'Teknologi & Terapan' },
+  { code: '700', name: 'Kesenian & Olahraga' },
+  { code: '800', name: 'Kesusastraan & Sastra' },
+  { code: '900', name: 'Sejarah & Geografi' }
+];
+
+const getBookDdcCode = (b: Book): string => {
+  if (!b) return '';
+  const raw = String(
+    (b as any).ddc ||
+    (b as any).kode_ddc ||
+    (b as any).klasifikasi ||
+    (b as any).nomor_panggil ||
+    (b as any).no_panggil ||
+    (b as any).call_number ||
+    (typeof b.category === 'object' ? b.category?.nama_kategori : b.category) ||
+    (typeof b.kategori === 'object' ? b.kategori?.nama_kategori : b.kategori) ||
+    ''
+  );
+
+  const match = raw.match(/\b(\d{3})\b/) || raw.match(/(\d{3})/);
+  if (match) {
+    return match[1];
+  }
+
+  const shortMatch = raw.match(/\b(\d{1,2})\b/);
+  if (shortMatch) {
+    return shortMatch[1].padStart(3, '0');
+  }
+
+  return '';
+};
+
+const isBookMatchingDdc = (b: Book, targetDdc: string): boolean => {
+  if (!targetDdc || targetDdc === 'all') return true;
+  const bookDdc = getBookDdcCode(b);
+  if (!bookDdc) return false;
+
+  if (bookDdc === targetDdc) return true;
+
+  if (targetDdc.endsWith('00')) {
+    return bookDdc.charAt(0) === targetDdc.charAt(0);
+  }
+
+  return false;
+};
+
+const availableDdcOptions = computed(() => {
+  const countMap = new Map<string, number>();
+
+  for (const std of standardDdcMainClasses) {
+    countMap.set(std.code, 0);
+  }
+
+  if (books.value && Array.isArray(books.value)) {
+    for (const b of books.value) {
+      const code = getBookDdcCode(b);
+      if (code) {
+        countMap.set(code, (countMap.get(code) || 0) + 1);
+        const hundred = `${code.charAt(0)}00`;
+        if (hundred !== code && countMap.has(hundred)) {
+          countMap.set(hundred, (countMap.get(hundred) || 0) + 1);
+        }
+      }
+    }
+  }
+
+  const result: { code: string; name: string; count: number }[] = [];
+  const processed = new Set<string>();
+
+  for (const std of standardDdcMainClasses) {
+    result.push({
+      code: std.code,
+      name: std.name,
+      count: countMap.get(std.code) || 0
+    });
+    processed.add(std.code);
+  }
+
+  for (const [code, count] of countMap.entries()) {
+    if (!processed.has(code) && /^\d{3}$/.test(code) && count > 0) {
+      result.push({
+        code,
+        name: `Klasifikasi ${code}`,
+        count
+      });
+      processed.add(code);
+    }
+  }
+
+  return result.sort((a, b) => a.code.localeCompare(b.code));
+});
+
 const getBookCover = (b: Book) => {
   return b.cover_image || b.cover_image_url || fallbackCover;
 };
@@ -841,16 +1057,22 @@ const filteredBooks = computed(() => {
     list = list.filter(b => isBookMatchingCategory(b, selectedCategory.value));
   }
 
+  if (selectedDdc.value !== 'all') {
+    list = list.filter(b => isBookMatchingDdc(b, selectedDdc.value));
+  }
+
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
     list = list.filter(b => {
       const catName = getBookCategoryName(b).toLowerCase();
+      const ddcCode = getBookDdcCode(b);
       return (
         (b.judul && b.judul.toLowerCase().includes(q)) ||
         (b.penulis && b.penulis.toLowerCase().includes(q)) ||
         (b.isbn && b.isbn.toLowerCase().includes(q)) ||
         (b.penerbit && b.penerbit.toLowerCase().includes(q)) ||
-        (catName && catName.includes(q))
+        (catName && catName.includes(q)) ||
+        (ddcCode && ddcCode.includes(q))
       );
     });
   }
@@ -891,6 +1113,9 @@ const syncFromRoute = () => {
   if (route.query.kategori !== undefined) {
     selectedCategory.value = String(route.query.kategori || 'all');
   }
+  if (route.query.ddc !== undefined) {
+    selectedDdc.value = String(route.query.ddc || 'all');
+  }
   if (route.query.status !== undefined) {
     statusFilter.value = String(route.query.status || 'all');
   }
@@ -903,13 +1128,14 @@ const updateRouteQuery = () => {
   const query: Record<string, string> = {};
   if (searchQuery.value.trim()) query.q = searchQuery.value.trim();
   if (selectedCategory.value !== 'all') query.kategori = selectedCategory.value;
+  if (selectedDdc.value !== 'all') query.ddc = selectedDdc.value;
   if (statusFilter.value !== 'all') query.status = statusFilter.value;
   if (sortBy.value !== 'default') query.sort = sortBy.value;
 
   router.replace({ query });
 };
 
-watch([searchQuery, selectedCategory, statusFilter, sortBy], () => {
+watch([searchQuery, selectedCategory, selectedDdc, statusFilter, sortBy], () => {
   updateRouteQuery();
 });
 
@@ -919,6 +1145,7 @@ watch(() => route.query, () => {
 
 const resetFilters = () => {
   selectedCategory.value = 'all';
+  selectedDdc.value = 'all';
   searchQuery.value = '';
   statusFilter.value = 'all';
   sortBy.value = 'default';

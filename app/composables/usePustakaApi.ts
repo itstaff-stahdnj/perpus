@@ -22,6 +22,12 @@ export interface Book {
     nama_kategori: string;
     slug?: string;
   } | string;
+  ddc?: string;
+  kode_ddc?: string;
+  klasifikasi?: string;
+  no_panggil?: string;
+  nomor_panggil?: string;
+  call_number?: string;
 }
 
 export interface Category {
