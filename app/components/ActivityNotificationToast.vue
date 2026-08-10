@@ -129,7 +129,10 @@ const dismissToast = () => {
 }
 
 const handleToastClick = () => {
-  if (toast.value?.book_id) {
+  const actionText = String(toast.value?.action_title || '').toLowerCase()
+  if (actionText.includes('reservasi') || actionText.includes('antre') || actionText.includes('pesan')) {
+    router.push('/reservasi')
+  } else if (toast.value?.book_id) {
     router.push(`/buku/${toast.value.book_id}`)
   } else {
     router.push('/buku')
