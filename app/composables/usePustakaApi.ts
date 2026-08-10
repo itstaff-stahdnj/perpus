@@ -384,14 +384,23 @@ export const usePustakaApi = () => {
   const selfBorrow = async (bookCopyIdOrQr: number | string, durasiHari: number = 7): Promise<{ success: boolean; message: string; data?: any }> => {
     try {
       const bodyPayload = typeof bookCopyIdOrQr === 'number' 
-        ? { book_copy_id: bookCopyIdOrQr, durasi_hari: durasiHari }
+        ? { book_id: bookCopyIdOrQr, book_copy_id: bookCopyIdOrQr, durasi_hari: durasiHari }
         : { barcode_qr_buku: bookCopyIdOrQr, durasi_hari: durasiHari };
 
-      const res = await $fetch<any>(`${baseUrl}/loans/self-borrow`, {
+      let res: any = await $fetch<any>('/api/pustaka/loans/self-borrow', {
         method: 'POST',
         headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: bodyPayload
-      });
+      }).catch(() => null);
+
+      if (!res) {
+        res = await $fetch<any>(`${baseUrl}/loans/self-borrow`, {
+          method: 'POST',
+          headers: getHeaders({ 'Content-Type': 'application/json' }),
+          body: bodyPayload
+        });
+      }
+
       return { success: res?.success ?? true, message: res?.message || 'Peminjaman mandiri berhasil diproses!', data: res?.data };
     } catch (e: any) {
       return { success: false, message: e?.data?.message || e?.message || 'Gagal memproses peminjaman mandiri' };

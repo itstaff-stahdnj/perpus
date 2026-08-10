@@ -26,11 +26,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // Forward client IP for Wi-Fi campus network detection
-  const clientIp = incomingHeaders['cf-connecting-ip'] || incomingHeaders['x-forwarded-for'] || incomingHeaders['x-real-ip'];
+  const query = getQuery(event);
+  const clientIp = query.client_ip || incomingHeaders['x-client-ip'] || incomingHeaders['cf-connecting-ip'] || incomingHeaders['x-forwarded-for'] || incomingHeaders['x-real-ip'];
   if (clientIp) {
-    headersToSend['x-forwarded-for'] = Array.isArray(clientIp) ? clientIp.join(',') : clientIp;
-    headersToSend['cf-connecting-ip'] = Array.isArray(clientIp) ? clientIp[0] : clientIp;
-    headersToSend['x-real-ip'] = Array.isArray(clientIp) ? clientIp[0] : clientIp;
+    const parsedIp = Array.isArray(clientIp) ? clientIp[0] : String(clientIp);
+    headersToSend['x-forwarded-for'] = parsedIp;
+    headersToSend['cf-connecting-ip'] = parsedIp;
+    headersToSend['x-real-ip'] = parsedIp;
+    headersToSend['x-client-ip'] = parsedIp;
   }
 
   try {
