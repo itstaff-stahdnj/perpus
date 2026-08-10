@@ -93,7 +93,7 @@
               <div class="flex items-center justify-between">
                 <p class="font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
                   <span class="material-symbols-outlined text-primary text-base">inventory_2</span>
-                  <span>Pemantauan Stok &amp; Eksemplar (Database)</span>
+                  <span>Pemantauan Stok &amp; Eksemplar</span>
                 </p>
                 <span class="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold" :class="availableCopiesCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
                   {{ availableCopiesCount > 0 ? 'STATUS: TERSEDIA' : 'STATUS: DIPINJAM' }}
