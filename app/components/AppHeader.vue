@@ -12,10 +12,10 @@
             class="h-8 sm:h-9 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform" 
           />
           <div class="truncate">
-            <h1 class="font-headline-md text-xs sm:text-base md:text-lg font-bold text-primary truncate leading-snug group-hover:text-secondary transition-colors">
+            <h1 class="font-headline-md text-xs sm:text-base md:text-lg font-bold text-primary truncate leading-tight group-hover:text-secondary transition-colors">
               {{ siteName }}
             </h1>
-            <p class="text-[10px] text-on-surface-variant hidden sm:block truncate leading-none">STAH Dharma Nusantara Jakarta</p>
+            <p class="text-[9px] sm:text-[10px] text-on-surface-variant block truncate leading-tight mt-0.5">STAH Dharma Nusantara Jakarta</p>
           </div>
         </NuxtLink>
       </div>
