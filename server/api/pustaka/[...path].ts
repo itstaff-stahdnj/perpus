@@ -25,6 +25,14 @@ export default defineEventHandler(async (event) => {
     headersToSend['content-type'] = incomingHeaders['content-type'];
   }
 
+  // Forward client IP for Wi-Fi campus network detection
+  const clientIp = incomingHeaders['cf-connecting-ip'] || incomingHeaders['x-forwarded-for'] || incomingHeaders['x-real-ip'];
+  if (clientIp) {
+    headersToSend['x-forwarded-for'] = Array.isArray(clientIp) ? clientIp.join(',') : clientIp;
+    headersToSend['cf-connecting-ip'] = Array.isArray(clientIp) ? clientIp[0] : clientIp;
+    headersToSend['x-real-ip'] = Array.isArray(clientIp) ? clientIp[0] : clientIp;
+  }
+
   try {
     return await proxyRequest(event, targetUrl, {
       headers: headersToSend
