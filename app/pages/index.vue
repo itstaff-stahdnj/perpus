@@ -259,15 +259,15 @@
         <div class="max-w-container-max mx-auto px-4 md:px-margin-desktop">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12 text-center">
             <div class="flex flex-col items-center">
-              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ (books?.length || 0) > 0 ? books.length + ' Total' : '10 Total' }}</span>
+              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ realTotalBooks }}</span>
               <p class="text-xs sm:text-sm text-primary-fixed uppercase tracking-wider font-semibold">Koleksi Buku Fisik Terdata</p>
             </div>
             <div class="flex flex-col items-center border-y sm:border-y-0 sm:border-x border-primary-fixed-dim/20 py-4 sm:py-0">
-              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ (categories?.length || 0) > 0 ? categories.length + ' Kategori' : '5 Kategori' }}</span>
+              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ realTotalCategories }}</span>
               <p class="text-xs sm:text-sm text-primary-fixed uppercase tracking-wider font-semibold">Kelompok Bidang Ilmu</p>
             </div>
             <div class="flex flex-col items-center">
-              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ activeMembersCount }}</span>
+              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ realTotalMembers }}</span>
               <p class="text-xs sm:text-sm text-primary-fixed uppercase tracking-wider font-semibold">Anggota Aktif Terdaftar</p>
             </div>
           </div>
@@ -430,7 +430,7 @@ import {
   type SiteSettings
 } from '../composables/usePustakaApi';
 
-const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile, getTestimonials, getSettings, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
+const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile, getTestimonials, getSettings, tokenCookie, getWishlist, addToWishlist, removeFromWishlist, getUsers, getPublicStats } = usePustakaApi();
 
 const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);
@@ -441,6 +441,10 @@ const loansList = ref<any[]>([]);
 const userProfile = ref<UserProfile | null>(null);
 const testimonialsList = ref<TestimonialItem[]>([]);
 const wishlistedIds = ref<Set<number>>(new Set());
+
+const totalBooksCount = ref<number>(0);
+const totalCategoriesCount = ref<number>(0);
+const totalMembersCount = ref<number>(0);
 
 const isWishlisted = (id: number | string): boolean => {
   return wishlistedIds.value.has(Number(id));
@@ -568,9 +572,22 @@ const getArticleUrl = (item: any) => {
   return `/berita/${year}/${month}/${slug}`;
 };
 
-const activeMembersCount = computed(() => {
-  const borrowerIds = new Set<string | number>();
+const realTotalBooks = computed(() => {
+  const count = totalBooksCount.value || books.value?.length || 0;
+  return count > 0 ? `${count} Total` : '0 Total';
+});
 
+const realTotalCategories = computed(() => {
+  const count = totalCategoriesCount.value || categories.value?.length || 0;
+  return count > 0 ? `${count} Kategori` : '0 Kategori';
+});
+
+const realTotalMembers = computed(() => {
+  if (totalMembersCount.value > 0) {
+    return `${totalMembersCount.value} Anggota`;
+  }
+  
+  const borrowerIds = new Set<string | number>();
   if (userProfile.value && (userProfile.value.status_keanggotaan === 'Aktif' || userProfile.value.role)) {
     borrowerIds.add(userProfile.value.id || userProfile.value.email);
   }
@@ -790,8 +807,8 @@ const fetchRssFeed = async (): Promise<any[]> => {
 const loadData = async () => {
   loading.value = true;
   try {
-    const [resBooks, resCat, resNews, rssItems, resAnnouncements, resLoans, resProfile, resTestimonials, resSettings] = await Promise.all([
-      getBooks(),
+    const [resBooks, resCat, resNews, rssItems, resAnnouncements, resLoans, resProfile, resTestimonials, resSettings, resUsers, resPublicStats] = await Promise.all([
+      getBooks({ per_page: 1000 }),
       getCategories(),
       getNews().catch(() => ({ success: false, data: [] })),
       fetchRssFeed(),
@@ -799,8 +816,34 @@ const loadData = async () => {
       getLoans().catch(() => ({ success: false, data: [] })),
       getProfile().catch(() => ({ success: false, data: null })),
       getTestimonials().catch(() => ({ success: false, data: [] })),
-      getSettings().catch(() => ({ success: false, data: null as any }))
+      getSettings().catch(() => ({ success: false, data: null as any })),
+      getUsers({ per_page: 1000 }).catch(() => ({ success: false, data: [] })),
+      getPublicStats().catch(() => ({ success: false, data: {} }))
     ]);
+
+    if (resPublicStats?.data) {
+      if (resPublicStats.data.total_books) totalBooksCount.value = Number(resPublicStats.data.total_books);
+      if (resPublicStats.data.total_categories) totalCategoriesCount.value = Number(resPublicStats.data.total_categories);
+      if (resPublicStats.data.total_members) totalMembersCount.value = Number(resPublicStats.data.total_members);
+    }
+
+    if (resBooks?.meta?.total) {
+      totalBooksCount.value = Number(resBooks.meta.total);
+    } else if (resBooks?.data && Array.isArray(resBooks.data)) {
+      totalBooksCount.value = resBooks.data.length;
+    }
+
+    if (resCat?.meta?.total) {
+      totalCategoriesCount.value = Number(resCat.meta.total);
+    } else if (resCat?.data && Array.isArray(resCat.data) && resCat.data.length > 0) {
+      totalCategoriesCount.value = resCat.data.length;
+    }
+
+    if (resUsers?.meta?.total) {
+      totalMembersCount.value = Number(resUsers.meta.total);
+    } else if (resUsers?.data && Array.isArray(resUsers.data) && resUsers.data.length > 0) {
+      totalMembersCount.value = resUsers.data.length;
+    }
 
     if (resBooks?.data && Array.isArray(resBooks.data)) {
       books.value = resBooks.data;

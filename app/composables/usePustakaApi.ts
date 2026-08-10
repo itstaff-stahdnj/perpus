@@ -654,6 +654,16 @@ export const usePustakaApi = () => {
     });
   };
 
+  const getPublicStats = async (): Promise<{ success: boolean; data: { total_books?: number; total_categories?: number; total_members?: number } }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/stats`, {
+        headers: getHeaders()
+      }).catch(() => null);
+      if (res?.data || res?.total_books) return { success: true, data: res.data || res };
+    } catch {}
+    return { success: false, data: {} };
+  };
+
   const submitAttendance = async (
     identifier: string, 
     type?: 'NIM' | 'NIDN' | 'QR'
@@ -761,6 +771,7 @@ export const usePustakaApi = () => {
     getAttendanceToday,
     getAttendances,
     getUsers,
+    getPublicStats,
     submitAttendance,
     getStaffStatus
   };
