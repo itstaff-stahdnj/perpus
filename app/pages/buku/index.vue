@@ -729,18 +729,12 @@ const sortLabels: Record<string, string> = {
   'tahun-asc': 'Tahun (Terlama)'
 };
 
-const fallbackCovers = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBjq6J4ANKae7qsrtkuWYh2IKfolYdhdRZM2TNI8F_xfMmUy3GBNd_0lext2akY1DDQ-kI-MJSyq4i31ZLyKVJI5XFSESV6cHMr_388ebfR_LGzALybl-8R9nX2Nv2lVRN0jH5rOB6rB4RxN64zomhvv-ZvrVC3vpOOOKYyj_SposBs3k-n2AQqrjNdR8dMAqTChCdVpQ060FAavRTfCkWDIIgpXq02Vdd8ne-WzV9CGwL6DLoUheaybw',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAElf4lHvPyHKSARy1FI7JoX9nUlPGcOS2dNvbSdwMaxPWRcWryz8T3KKJpzuyMG6jrTyAZ-y-SmkYHYyihTBnpiXp0S8wyZVFfYqDpT_L90rKfO7g6IXtk2VZf8SMkaHsPCcUrlvyFPiOzP3FtnygFchRAhojFKZe83RwiQYFj51Ev5V519G57hqPy31CU18xmPrlbxkcX5ezwau29gy9mBkPlaqGHV16PUX3-JX6TcO4JAvDDp97N5g',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCcT8QugJ0fdCpEvQJ_O7fef3ejlWyO3QKD18BrYf_tTxChyP-HaPX9qIdyMsNxjPUcoWvAWRMPcflN-ZE3l6MlYpxSHM6lY148obzhfOD5Z0dEayFicVHw4R_A0w00MolYHCjZFHtONz8CEUF-Imv7OY5gKCT3QQsj2zjuVm2AocdoX_tD2pvxx8c_icEAXEGWKjJhdESVU-psGL9QzdouJsYJ0ItkdMfktdm8Hqa6XuL86NbWyQnXKw',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAtxh2Tjw2Jcky-k9qbAni-am-iauV-krkGreT9NGiDa84AIQi4Y1tTI08mH4mNQc8yT0qt6z2xCCJxZnQZ88W5v6bW5jrClYo8zIDMZl-UWmh9w0ZC_xbUa3gfTHE05SDMD_mh0lNyGtPTJ9KLLQ1puJHuGcwaDMTezYU1a_DwVqV03FoLTZ2BuCFZpZS5DuhVIVEpViNlrVe4W3ilf4vkvMIyr4SUny72SV-eyYPtWzt01jD2YmZMdg',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCMHvivOiQ2f9XBmkY2ZKGa2D_TFfvv2m-iIIh3LxSVGPEVcvaC43svmN7LI1BKol5vzmDjqqUAKEvOwGH19G26TT59SitmrAO5ofeFKsbr9gj-vDdcvAbD7Zt6hUjsj3wzIxDEkUNNGwcL5jL4qPwkiS4udh_wipHZCoKX1tK5sEeiEqnO8mm4DuB8ev14yj4xeZAy1sKdQXNh5cWRq-z9ram0SdQUxuNJixCH0XzHpCtkf-dW7_2LwA'
-];
+const fallbackCover = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400" fill="none"><rect width="300" height="400" fill="#0f172a"/><rect x="15" y="15" width="270" height="370" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/><path d="M150 140 C130 130 90 130 70 140 V240 C90 230 130 230 150 240 C170 230 210 230 230 240 V140 C210 130 170 130 150 140 Z" fill="#475569"/><path d="M150 140 V240" stroke="#1e293b" stroke-width="3"/><text x="150" y="285" font-family="sans-serif" font-size="16" font-weight="bold" fill="#94a3b8" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
 
-const handleImageError = (event: Event, index: number) => {
+const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
   if (img) {
-    img.src = fallbackCovers[Math.abs(index) % fallbackCovers.length] || '';
+    img.src = fallbackCover;
   }
 };
 
@@ -825,8 +819,8 @@ const isCategoryActive = (cat: Category): boolean => {
   );
 };
 
-const getBookCover = (b: Book, index: number) => {
-  return b.cover_image || b.cover_image_url || fallbackCovers[index % fallbackCovers.length];
+const getBookCover = (b: Book) => {
+  return b.cover_image || b.cover_image_url || fallbackCover;
 };
 
 const getBookUrl = (b: Book) => {

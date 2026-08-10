@@ -25,10 +25,11 @@
         
         <div class="flex flex-col md:flex-row gap-8 items-start">
           <!-- Sampul Buku dengan Bayangan & Lencana Wishlist -->
-          <div class="relative w-48 sm:w-56 h-68 sm:h-80 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-800 shadow-2xl bg-slate-100 dark:bg-zinc-800 mx-auto md:mx-0">
+          <div class="relative w-48 sm:w-56 h-68 sm:h-80 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-800 shadow-2xl bg-slate-100 dark:bg-zinc-800 mx-auto md:mx-0 flex items-center justify-center">
             <img 
-              :src="book.cover_image || book.cover_image_url || book.sampul || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCI61U0Gb0GCI3csX5g_Tws6K5775TufoAItfBr2ZGCANRNu0NlxeseUAuBqzB1HzuvrIrNV4NL21OSkV2q370ak_bZc5ebYvc7EokgVQMknIbqYuCSawR1NSfEuUD6E5AQrhSg6ZUkbaPs4t2BL3nAkKNCggbNKDXGvVa66mTDLxbv5FTt8BL1NUy1G07xpcgZGOlGMxPMbFyoCq3umgCSOwvRXmcGF_BSqvr7ev8nerw29xv8txFLMQ'" 
+              :src="book.cover_image || book.cover_image_url || book.sampul || fallbackCover" 
               :alt="book.judul"
+              @error="handleImageError"
               class="w-full h-full object-cover" 
             />
             <button 
@@ -316,6 +317,15 @@ const {
 } = usePustakaApi();
 
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
+
+const fallbackCover = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400" fill="none"><rect width="300" height="400" fill="#0f172a"/><rect x="15" y="15" width="270" height="370" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/><path d="M150 140 C130 130 90 130 70 140 V240 C90 230 130 230 150 240 C170 230 210 230 230 240 V140 C210 130 170 130 150 140 Z" fill="#475569"/><path d="M150 140 V240" stroke="#1e293b" stroke-width="3"/><text x="150" y="285" font-family="sans-serif" font-size="16" font-weight="bold" fill="#94a3b8" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  if (img) {
+    img.src = fallbackCover;
+  }
+};
 
 const loading = ref(true);
 const book = ref<Book | null>(null);

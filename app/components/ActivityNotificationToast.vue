@@ -41,7 +41,7 @@ const toast = ref(null)
 const list = ref([])
 let dismissTimer = null
 
-const noImagePlaceholder = 'https://placehold.co/120x160/1e293b/cbd5e1?text=Pustaka'
+const noImagePlaceholder = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="160" viewBox="0 0 120 160" fill="none"><rect width="120" height="160" fill="#1e293b"/><path d="M60 50 C50 45 35 45 25 50 V90 C35 85 50 85 60 90 C70 85 85 85 95 90 V50 C85 45 70 45 60 50 Z" fill="#334155"/><text x="60" y="115" font-family="sans-serif" font-size="10" font-weight="bold" fill="#cbd5e1" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
 
 const handleImgError = (event) => {
   if (event?.target) {

@@ -325,9 +325,12 @@
             <!-- Left Info Section: Book & Borrower -->
             <div class="flex items-start gap-4 flex-1 min-w-0">
               <!-- Book Cover Thumbnail -->
-              <div class="w-14 h-20 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shrink-0 shadow-xs flex items-center justify-center text-slate-400">
+              <div class="w-14 h-20 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shrink-0 shadow-xs flex flex-col items-center justify-center text-slate-400 p-1 text-center">
                 <img v-if="res.buku?.cover_image || res.book?.cover_image" :src="res.buku?.cover_image || res.book?.cover_image" alt="Cover" class="w-full h-full object-cover" />
-                <span v-else class="material-symbols-outlined text-2xl">book</span>
+                <template v-else>
+                  <span class="material-symbols-outlined text-lg text-slate-400">menu_book</span>
+                  <span class="text-[9px] font-bold text-slate-500 leading-tight mt-0.5">Tidak Ada Cover</span>
+                </template>
               </div>
 
               <!-- Reservation & User Details -->

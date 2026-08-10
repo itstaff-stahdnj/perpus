@@ -503,49 +503,10 @@ const loading = ref(true);
 const searchQuery = ref('');
 const searchSource = ref<'katalog' | 'pasupati' | 'repository'>('katalog');
 
-const noImagePlaceholder = 'https://placehold.co/600x400/f1f5f9/475569?text=Tidak+Ada+Gambar';
-
-const handleImgError = (e: Event) => {
-  const target = e.target as HTMLImageElement;
-  if (target && target.src !== noImagePlaceholder) {
-    target.src = noImagePlaceholder;
-  }
-};
-
-const handleSearch = () => {
-  const q = searchQuery.value.trim();
-
-  if (searchSource.value === 'pasupati') {
-    const targetUrl = `https://ojs.stahdnj.ac.id/pasupati/search/search?query=${encodeURIComponent(q)}&authors=&title=&abstract=&galleyFullText=&suppFiles=&dateFromMonth=&dateFromDay=&dateFromYear=&dateToMonth=&dateToDay=&dateToYear=&dateToHour=23&dateToMinute=59&dateToSecond=59&discipline=&subject=&type=&coverage=&indexTerms=`;
-    if (process.client) {
-      window.open(targetUrl, '_blank');
-    }
-  } else if (searchSource.value === 'repository') {
-    const targetUrl = `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(q)}`;
-    if (process.client) {
-      window.open(targetUrl, '_blank');
-    }
-  } else {
-    if (q) {
-      navigateTo({ path: '/buku', query: { q } });
-    } else {
-      navigateTo('/buku');
-    }
-  }
-};
-
-const books = ref<Book[]>([]);
-const categories = ref<Category[]>([]);
-const newsList = ref<NewsItem[]>([]);
-const rssNewsList = ref<any[]>([]);
-const announcementsList = ref<AnnouncementItem[]>([]);
-const loansList = ref<any[]>([]);
-const testimonialsList = ref<TestimonialItem[]>([]);
-const userProfile = ref<UserProfile | null>(null);
+const noImagePlaceholder = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400" fill="none"><rect width="300" height="400" fill="#0f172a"/><rect x="15" y="15" width="270" height="370" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/><path d="M150 140 C130 130 90 130 70 140 V240 C90 230 130 230 150 240 C170 230 210 230 230 240 V140 C210 130 170 130 150 140 Z" fill="#475569"/><path d="M150 140 V240" stroke="#1e293b" stroke-width="3"/><text x="150" y="285" font-family="sans-serif" font-size="16" font-weight="bold" fill="#94a3b8" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
 
 const fallbackCovers = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCyQOycP2e156QKOr6BO9l6k_3L5BLUq65R5lSNqyVzYPE15xHkx6EehbZ5rEkY2v0LFcLv0q5l7sYYDnrN6PH_5G7_rjbHgmVF8vQuMhCBAl_GCRCuWZWA2WODPIxZcIGHsTdl8jmjQIoEKLucszGG559PBTddW9ipzLQKWi2uOcQ_iwNypTFyslD7MI1gwgIcNf9-J95Jn9KQc8TDONO4xsZU1QGhkENxC-xchxdgRVFC0LpWanXesw',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDp1PiSe9X0pkHzGact-cotXiz4m_yVp3eXm9yd1CZ0nGIOJ3pk9qQypHrRbx1VzoVOYyIdDshICHM2zyQq-56U-4b-gZEHxLiU0rFZvdIaRCkgCHaFxAkOBpZyDOrVzAMFLxgFkzgUtsfV_77iUpdRK5Qnr1kCb70K9KXT73ObyKLMUf5XftLpKMCPe7m_lDpKPOtU2YFOYNcIzUKHh-W5k6xud5b_wLE1Rjm1tlL_EECpMuzyaLKdxg'
+  noImagePlaceholder
 ];
 
 const getBookUrl = (b: Book) => {
