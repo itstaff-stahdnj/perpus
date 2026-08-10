@@ -30,7 +30,7 @@
             </h1>
 
             <p class="text-xs sm:text-base text-slate-300 leading-relaxed font-medium">
-              Mesin pencari terpadu untuk menemukan artikel riset, naskah ilmiah, dan e-book dari berbagai basis data jurnal dunia (Crossref, DOAJ, Scopus, Garuda, Google Scholar, Perpusnas) secara langsung.
+              Mesin pencari terpadu untuk menemukan artikel riset dari <strong>OJS Jurnal Pasupati STAH DNJ</strong>, Crossref, DOAJ, Scopus, Garuda, Google Scholar, dan Perpusnas secara langsung.
             </p>
           </div>
 
@@ -85,7 +85,7 @@
                 ref="searchInputRef"
                 v-model="searchQuery" 
                 type="text" 
-                placeholder="Ketik judul artikel, nama penulis, topik riset (contoh: Agama Hindu, Sanskrit, Data Mining)..."
+                placeholder="Cari artikel di OJS Jurnal Pasupati, Crossref, Garuda (contoh: Kebudayaan Hindu, Agama, Pasupati)..."
                 class="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary shadow-2xl font-medium"
               />
               <button 
@@ -159,18 +159,18 @@
               </h2>
             </div>
             <p class="text-xs text-slate-500 dark:text-zinc-400">
-              Menampilkan {{ articlesList.length }} artikel riset terindeks internasional/nasional untuk kata kunci: <strong class="text-primary">"{{ activeSearchKeyword }}"</strong>
+              Menampilkan {{ articlesList.length }} artikel riset dari OJS Pasupati & portal jurnal untuk kata kunci: <strong class="text-primary">"{{ activeSearchKeyword }}"</strong>
             </p>
           </div>
 
           <!-- Direct External Search Launchers -->
           <div class="flex items-center gap-2 flex-wrap">
             <a 
-              :href="`https://scholar.google.com/scholar?q=${encodeURIComponent(activeSearchKeyword)}`" 
+              :href="`https://ojs.stahdnj.ac.id/pasupati/search/search?query=${encodeURIComponent(activeSearchKeyword)}`" 
               target="_blank"
-              class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-zinc-300 text-xs font-bold transition-all flex items-center gap-1 border border-slate-300 dark:border-zinc-700"
+              class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md shadow-amber-500/20"
             >
-              <span>🎓 Google Scholar</span>
+              <span>📜 OJS Jurnal Pasupati STAH</span>
               <span class="material-symbols-outlined text-xs">open_in_new</span>
             </a>
 
@@ -180,6 +180,15 @@
               class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-900 dark:text-emerald-300 text-xs font-bold transition-all flex items-center gap-1 border border-emerald-300 dark:border-emerald-800"
             >
               <span>🇮🇩 GARUDA SINTA</span>
+              <span class="material-symbols-outlined text-xs">open_in_new</span>
+            </a>
+
+            <a 
+              :href="`https://scholar.google.com/scholar?q=${encodeURIComponent(activeSearchKeyword)}`" 
+              target="_blank"
+              class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-zinc-300 text-xs font-bold transition-all flex items-center gap-1 border border-slate-300 dark:border-zinc-700"
+            >
+              <span>🎓 Google Scholar</span>
               <span class="material-symbols-outlined text-xs">open_in_new</span>
             </a>
           </div>
@@ -195,15 +204,19 @@
         </div>
 
         <!-- Live Articles Grid Cards -->
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div v-else v-auto-animate class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div 
             v-for="article in articlesList" 
             :key="article.id"
             class="p-5 rounded-2xl bg-slate-50/80 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all space-y-3 flex flex-col justify-between group shadow-sm hover:shadow-md"
+            :class="article.id.includes('pasupati') ? 'ring-2 ring-amber-400/50 bg-amber-500/5' : ''"
           >
             <div class="space-y-2">
               <div class="flex items-center justify-between gap-2">
-                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300">
+                <span 
+                  class="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase"
+                  :class="article.id.includes('pasupati') ? 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-300' : 'bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300'"
+                >
                   📄 {{ article.publisher || article.source || 'Journal Article' }}
                 </span>
                 <span class="text-xs text-slate-400 font-mono font-bold">{{ article.year || '2024' }}</span>
@@ -379,7 +392,7 @@
           <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-3xl mx-auto">🔍</div>
           <h4 class="text-base font-bold text-slate-900 dark:text-white">Basis Data Tidak Ditemukan</h4>
           <p class="text-xs text-slate-500 max-w-md mx-auto">
-            Tidak ada portal e-resource yang cocok dengan kata kunci "{{ searchQuery }}". Cobalah kata kunci lain seperti Scopus, Garuda, atau Weda.
+            Tidak ada portal e-resource yang cocok dengan kata kunci "{{ searchQuery }}". Cobalah kata kunci lain seperti Scopus, Pasupati, Garuda, atau Weda.
           </p>
           <button @click="clearSearch" class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer">
             Reset Pencarian
@@ -522,6 +535,7 @@ const isSearchingArticles = ref(false);
 const articlesList = ref<any[]>([]);
 
 const popularChips = [
+  'Jurnal Pasupati STAH',
   'Pendidikan Agama Hindu',
   'Scopus',
   'Garuda Sinta',
@@ -529,7 +543,6 @@ const popularChips = [
   'Perpusnas',
   'Artificial Intelligence',
   'Data Mining',
-  'IEEE Xplore',
 ];
 
 const categories = [
@@ -608,6 +621,20 @@ const eResources = [
   {
     id: 5,
     category: 'nasional',
+    name: 'Jurnal PASUPATI (Jurnal Komunikasi & Kebudayaan STAH DNJ)',
+    shortName: 'Jurnal Pasupati',
+    publisher: 'STAH Dharma Nusantara Jakarta',
+    icon: '📜',
+    badge: 'OJS Resmi STAH DNJ',
+    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+    description: 'Jurnal ilmiah resmi STAH Dharma Nusantara Jakarta memuat hasil riset kebudayaan Hindu, komunikasi keagamaan, filsafat, pendidikan, dan keilmuan kebudayaan.',
+    accessGuide: 'Akses langsung Open Access full-text PDF.',
+    keywords: ['pasupati', 'jurnal pasupati', 'ojs stah', 'stahdnj', 'hindu', 'komunikasi', 'kebudayaan', 'agama', 'filsafat'],
+    url: 'https://ojs.stahdnj.ac.id/pasupati',
+  },
+  {
+    id: 6,
+    category: 'nasional',
     name: 'Neliti (Repositori Penelitian Indonesia)',
     shortName: 'Neliti',
     publisher: 'Neliti Indonesia',
@@ -620,7 +647,7 @@ const eResources = [
     url: 'https://www.neliti.com/id',
   },
   {
-    id: 6,
+    id: 7,
     category: 'nasional',
     name: 'E-Resources Perpustakaan Nasional RI',
     shortName: 'Perpusnas',
@@ -634,7 +661,7 @@ const eResources = [
     url: 'https://e-resources.perpusnas.go.id',
   },
   {
-    id: 7,
+    id: 8,
     category: 'hindu',
     name: 'Digital Sanskrit Library & GRETIL',
     shortName: 'GRETIL Sanskrit',
@@ -648,7 +675,7 @@ const eResources = [
     url: 'http://gretil.sub.uni-goettingen.de',
   },
   {
-    id: 8,
+    id: 9,
     category: 'hindu',
     name: 'SOAS Research Online & Indology Archive',
     shortName: 'SOAS Indology',
@@ -662,7 +689,7 @@ const eResources = [
     url: 'https://eprints.soas.ac.uk',
   },
   {
-    id: 9,
+    id: 10,
     category: 'ebook',
     name: 'DOAJ (Directory of Open Access Journals)',
     shortName: 'DOAJ',
@@ -676,7 +703,7 @@ const eResources = [
     url: 'https://doaj.org',
   },
   {
-    id: 10,
+    id: 11,
     category: 'ebook',
     name: 'Internet Archive & Open Library',
     shortName: 'Open Library',
@@ -690,7 +717,7 @@ const eResources = [
     url: 'https://openlibrary.org',
   },
   {
-    id: 11,
+    id: 12,
     category: 'ebook',
     name: 'Google Scholar / Cendekia',
     shortName: 'Google Scholar',
@@ -705,7 +732,7 @@ const eResources = [
   },
 ];
 
-// Execute Live Journal Meta-Search API (Crossref API for real scientific papers & journals)
+// Execute Live Journal Meta-Search API (OJS Jurnal Pasupati STAH DNJ & Crossref API for real scientific papers & journals)
 const executeArticleSearch = async () => {
   const q = searchQuery.value.trim();
   if (!q) return;
@@ -714,10 +741,24 @@ const executeArticleSearch = async () => {
   isSearchingArticles.value = true;
   articlesList.value = [];
 
+  const pasupatiMatches = [
+    {
+      id: `pasupati-${Date.now()}`,
+      title: `Hasil Penelusuran OJS Jurnal PASUPATI: "${q}"`,
+      author: 'Dosen & Tim Peneliti STAH DNJ',
+      journal: 'Jurnal PASUPATI (Jurnal Komunikasi & Kebudayaan STAH DNJ)',
+      publisher: 'STAH Dharma Nusantara Jakarta',
+      year: '2024',
+      abstract: `Temukan seluruh artikel ilmiah dan hasil riset kebudayaan, komunikasi, serta filsafat keagamaan Hindu terkait "${q}" di Open Journal System (OJS) Pasupati STAH DNJ.`,
+      url: `https://ojs.stahdnj.ac.id/pasupati/search/search?query=${encodeURIComponent(q)}&authors=&title=&abstract=&galleyFullText=&suppFiles=&dateFromMonth=&dateFromDay=&dateFromYear=&dateToMonth=&dateToDay=&dateToYear=&dateToHour=23&dateToMinute=59&dateToSecond=59&discipline=&subject=&type=&coverage=&indexTerms=`,
+    }
+  ];
+
   try {
-    const res = await $fetch<any>(`https://api.crossref.org/works?query=${encodeURIComponent(q)}&rows=12`).catch(() => null);
+    const res = await $fetch<any>(`https://api.crossref.org/works?query=${encodeURIComponent(q)}&rows=10`).catch(() => null);
+    let crossrefItems: any[] = [];
     if (res?.message?.items && Array.isArray(res.message.items)) {
-      articlesList.value = res.message.items.map((item: any) => {
+      crossrefItems = res.message.items.map((item: any) => {
         const title = Array.isArray(item.title) ? item.title[0] : (item.title || 'Judul Artikel Ilmiah');
         const authors = Array.isArray(item.author) 
           ? item.author.map((a: any) => `${a.given || ''} ${a.family || ''}`.trim()).join(', ') 
@@ -740,7 +781,10 @@ const executeArticleSearch = async () => {
         };
       });
     }
+
+    articlesList.value = [...pasupatiMatches, ...crossrefItems];
   } catch (e) {
+    articlesList.value = pasupatiMatches;
   } finally {
     isSearchingArticles.value = false;
   }

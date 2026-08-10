@@ -17,6 +17,7 @@
           </p>
 
           <!-- Search Source Toggle -->
+          <!-- Search Category Switcher -->
           <div class="flex flex-wrap justify-center items-center gap-2 mb-4">
             <button 
               class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
@@ -24,7 +25,15 @@
               @click="searchSource = 'katalog'"
             >
               <span class="material-symbols-outlined text-sm">menu_book</span>
-              <span>Katalog Perpustakaan</span>
+              <span>Katalog Buku</span>
+            </button>
+            <button 
+              class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+              :class="searchSource === 'pasupati' ? 'bg-amber-500 text-white shadow-md' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-xs'"
+              @click="searchSource = 'pasupati'"
+            >
+              <span class="material-symbols-outlined text-sm">article</span>
+              <span>📜 OJS Jurnal Pasupati</span>
             </button>
             <button 
               class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
@@ -32,7 +41,7 @@
               @click="searchSource = 'repository'"
             >
               <span class="material-symbols-outlined text-sm">database</span>
-              <span>Repository STAH DNJ</span>
+              <span>Repository STAH</span>
             </button>
           </div>
 
@@ -40,13 +49,17 @@
           <div class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center gap-2 max-w-2xl mx-auto border border-white/20 transition-all focus-within:ring-2 focus-within:ring-secondary">
             <div class="flex-1 flex items-center gap-2.5 px-3 sm:px-4 w-full">
               <span class="material-symbols-outlined text-slate-400 shrink-0 text-xl">
-                {{ searchSource === 'repository' ? 'travel_explore' : 'search' }}
+                {{ searchSource === 'katalog' ? 'search' : 'travel_explore' }}
               </span>
               <input 
                 v-model="searchQuery" 
                 type="text" 
                 class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium py-2 text-xs sm:text-sm outline-none placeholder:text-slate-400" 
-                :placeholder="searchSource === 'repository' ? 'Cari karya ilmiah di repository.stahdnj.ac.id...' : 'Cari judul buku, pengarang, atau ISBN...'" 
+                :placeholder="
+                  searchSource === 'pasupati' ? 'Cari artikel di OJS Jurnal Pasupati STAH DNJ...' :
+                  searchSource === 'repository' ? 'Cari karya ilmiah di repository.stahdnj.ac.id...' :
+                  'Cari judul buku, pengarang, atau ISBN...'
+                " 
                 @keyup.enter="handleSearch"
               />
             </div>
@@ -54,8 +67,16 @@
               class="bg-secondary text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl hover:bg-secondary/90 transition-all active:scale-95 flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 shadow-sm cursor-pointer"
               @click="handleSearch"
             >
-              <span class="material-symbols-outlined text-base sm:text-lg">{{ searchSource === 'repository' ? 'open_in_new' : 'search' }}</span>
-              <span>{{ searchSource === 'repository' ? 'Cari di Repository' : 'Cari Koleksi' }}</span>
+              <span class="material-symbols-outlined text-base sm:text-lg">
+                {{ searchSource === 'katalog' ? 'search' : 'open_in_new' }}
+              </span>
+              <span>
+                {{ 
+                  searchSource === 'pasupati' ? 'Cari di OJS Pasupati' :
+                  searchSource === 'repository' ? 'Cari di Repository' :
+                  'Cari Koleksi' 
+                }}
+              </span>
             </button>
           </div>
         </div>
@@ -423,27 +444,64 @@ const toggleWishlist = async (b: Book) => {
   const bookId = Number(b.id);
   if (wishlistedIds.value.has(bookId)) {
     wishlistedIds.value.delete(bookId);
-    await removeFromWishlist(bookId).catch(() => {});
+    if (process.client) {
+      localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+    }
+    const res = await removeFromWishlist(bookId).catch(() => null);
+    if (res && !res.success) {
+      wishlistedIds.value.add(bookId);
+      if (process.client) {
+        localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+      }
+    }
   } else {
     wishlistedIds.value.add(bookId);
-    await addToWishlist(bookId).catch(() => {});
+    if (process.client) {
+      localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+    }
+    const res = await addToWishlist(bookId).catch(() => null);
+    if (res && !res.success) {
+      wishlistedIds.value.delete(bookId);
+      if (process.client) {
+        localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+      }
+    }
   }
 };
 
 const loadWishlistData = async () => {
+  // 1. Instant local restore
+  if (process.client) {
+    try {
+      const saved = localStorage.getItem('pustaka_wishlist');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          wishlistedIds.value = new Set(parsed.map((id: any) => Number(id)));
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. Fetch from backend API
   if (!tokenCookie.value) return;
   try {
     const res = await getWishlist();
     if (res?.data && Array.isArray(res.data)) {
-      const ids = res.data.map((w: any) => Number(w.id || w.book_id));
-      wishlistedIds.value = new Set(ids);
+      const ids = res.data.map((w: any) => Number(w.book_id || w.id)).filter(Boolean);
+      if (ids.length > 0) {
+        wishlistedIds.value = new Set(ids);
+        if (process.client) {
+          localStorage.setItem('pustaka_wishlist', JSON.stringify(ids));
+        }
+      }
     }
   } catch (e) {}
 };
 
 const loading = ref(true);
 const searchQuery = ref('');
-const searchSource = ref<'katalog' | 'repository'>('katalog');
+const searchSource = ref<'katalog' | 'pasupati' | 'repository'>('katalog');
 
 const noImagePlaceholder = 'https://placehold.co/600x400/f1f5f9/475569?text=Tidak+Ada+Gambar';
 
@@ -455,14 +513,21 @@ const handleImgError = (e: Event) => {
 };
 
 const handleSearch = () => {
-  if (searchSource.value === 'repository') {
-    const targetUrl = `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(searchQuery.value)}`;
+  const q = searchQuery.value.trim();
+
+  if (searchSource.value === 'pasupati') {
+    const targetUrl = `https://ojs.stahdnj.ac.id/pasupati/search/search?query=${encodeURIComponent(q)}&authors=&title=&abstract=&galleyFullText=&suppFiles=&dateFromMonth=&dateFromDay=&dateFromYear=&dateToMonth=&dateToDay=&dateToYear=&dateToHour=23&dateToMinute=59&dateToSecond=59&discipline=&subject=&type=&coverage=&indexTerms=`;
+    if (process.client) {
+      window.open(targetUrl, '_blank');
+    }
+  } else if (searchSource.value === 'repository') {
+    const targetUrl = `https://repository.stahdnj.ac.id/xmlui/discover?query=${encodeURIComponent(q)}`;
     if (process.client) {
       window.open(targetUrl, '_blank');
     }
   } else {
-    if (searchQuery.value.trim()) {
-      navigateTo({ path: '/buku', query: { q: searchQuery.value.trim() } });
+    if (q) {
+      navigateTo({ path: '/buku', query: { q } });
     } else {
       navigateTo('/buku');
     }

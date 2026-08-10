@@ -39,9 +39,6 @@ const router = useRouter()
 
 const toast = ref(null)
 const list = ref([])
-let index = 0
-let fetchTimer = null
-let rotateTimer = null
 let dismissTimer = null
 
 const noImagePlaceholder = 'https://placehold.co/120x160/1e293b/cbd5e1?text=Pustaka'
@@ -94,11 +91,6 @@ const loadActivities = async () => {
       // Filter ONLY activities that happened TODAY
       const todayActivities = json.data.filter(isActivityToday)
       list.value = todayActivities
-
-      // If no activities today, hide the toast
-      if (!todayActivities.length) {
-        toast.value = null
-      }
       return
     }
   } catch (err) {
@@ -106,25 +98,26 @@ const loadActivities = async () => {
   }
 
   list.value = []
-  toast.value = null
 }
 
-const showToast = () => {
+const showToastOnce = () => {
   if (!list.value.length) {
     toast.value = null
     return
   }
   
-  toast.value = list.value[index % list.value.length]
-  index++
+  // Tampilkan item aktivitas terbaru HANYA 1 KALI
+  toast.value = list.value[0]
 
+  // Otomatis menutup & menghilang setelah 5.5 detik (Slide away)
   if (dismissTimer) clearTimeout(dismissTimer)
   dismissTimer = setTimeout(() => {
     toast.value = null
-  }, 5000)
+  }, 5500)
 }
 
 const dismissToast = () => {
+  if (dismissTimer) clearTimeout(dismissTimer)
   toast.value = null
 }
 
@@ -134,22 +127,27 @@ const handleToastClick = () => {
   } else {
     router.push('/buku')
   }
+  dismissToast()
 }
 
-onMounted(() => {
-  loadActivities()
-  fetchTimer = setInterval(loadActivities, 12000) // Poll API every 12 seconds
-  
-  // Start pop-up loop if today has activities
-  setTimeout(() => {
-    showToast()
-    rotateTimer = setInterval(showToast, 8000) // Cycle toast every 8 seconds
-  }, 2000)
+onMounted(async () => {
+  if (process.client) {
+    // Cek sessionStorage agar notifikasi hanya tampil 1x per sesi masuk pengguna
+    const alreadyShown = sessionStorage.getItem('pustaka_toast_shown')
+    if (alreadyShown) return
+
+    await loadActivities()
+    
+    if (list.value.length > 0) {
+      setTimeout(() => {
+        showToastOnce()
+        sessionStorage.setItem('pustaka_toast_shown', 'true')
+      }, 1500)
+    }
+  }
 })
 
 onUnmounted(() => {
-  if (fetchTimer) clearInterval(fetchTimer)
-  if (rotateTimer) clearInterval(rotateTimer)
   if (dismissTimer) clearTimeout(dismissTimer)
 })
 </script>

@@ -155,7 +155,12 @@ export const usePustakaApi = () => {
   const config = useRuntimeConfig();
   const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api';
   const apiKey = config.public.pustakaApiKey || config.pustakaApiKey || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b';
-  const tokenCookie = useCookie<string | null>('pustaka_token', { maxAge: 60 * 60 * 24 * 7 });
+  const tokenCookie = useCookie<string | null>('pustaka_token', { 
+    maxAge: 60 * 60 * 24 * 7, 
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  });
 
   const getHeaders = (extraHeaders?: Record<string, string>) => {
     const headers: Record<string, string> = {
@@ -163,8 +168,12 @@ export const usePustakaApi = () => {
       'x-api-key': apiKey,
       ...extraHeaders
     };
-    if (tokenCookie.value) {
-      headers['Authorization'] = `Bearer ${tokenCookie.value}`;
+    const tok = tokenCookie.value || 
+      useCookie('token').value || 
+      (process.client ? (localStorage.getItem('pustaka_token') || localStorage.getItem('token')) : null);
+
+    if (tok) {
+      headers['Authorization'] = `Bearer ${tok}`;
     }
     return headers;
   };
@@ -383,10 +392,18 @@ export const usePustakaApi = () => {
     }
   };
 
-  const getLoans = async (): Promise<{ success: boolean; data: any[] }> => {
-    return await $fetch(`${baseUrl}/loans`, {
-      headers: getHeaders()
-    });
+  const getLoans = async (status?: string): Promise<{ success: boolean; data: any[] }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/loans`, {
+        headers: getHeaders(),
+        params: status ? { status } : undefined
+      });
+      if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data };
+      if (Array.isArray(res)) return { success: true, data: res };
+      return { success: false, data: [] };
+    } catch (e) {
+      return { success: false, data: [] };
+    }
   };
 
   const extendLoan = async (loanId: number | string): Promise<{ success: boolean; message: string; data?: any }> => {
@@ -440,11 +457,15 @@ export const usePustakaApi = () => {
     }
   };
 
-  const getReservations = async (): Promise<{ success: boolean; data: any[] }> => {
+  const getReservations = async (myReservations: boolean = true): Promise<{ success: boolean; data: any[] }> => {
     try {
-      return await $fetch(`${baseUrl}/reservations`, {
-        headers: getHeaders()
+      const res = await $fetch<any>(`${baseUrl}/reservations`, {
+        headers: getHeaders(),
+        params: myReservations ? { my_reservations: 1 } : undefined
       });
+      if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data };
+      if (Array.isArray(res)) return { success: true, data: res };
+      return { success: false, data: [] };
     } catch (e) {
       return { success: false, data: [] };
     }
@@ -556,6 +577,19 @@ export const usePustakaApi = () => {
     return await $fetch(`${baseUrl}/testimonials`, {
       headers: getHeaders()
     });
+  };
+
+  const createTestimonial = async (content: string, rating: number = 5, name?: string, role?: string): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/testimonials`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: { content, rating, name, role }
+      });
+      return { success: res?.success ?? true, message: res?.message || 'Testimoni Anda berhasil dikirimkan!', data: res?.data };
+    } catch (e: any) {
+      return { success: false, message: e?.data?.message || e?.message || 'Gagal mengirimkan testimoni' };
+    }
   };
 
   const getSettings = async (): Promise<{ success: boolean; data: SiteSettings; message?: string }> => {
@@ -707,6 +741,7 @@ export const usePustakaApi = () => {
     getNewsById,
     getAnnouncements,
     getTestimonials,
+    createTestimonial,
     getSettings,
     getAttendanceToday,
     getAttendances,

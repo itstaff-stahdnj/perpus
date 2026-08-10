@@ -151,48 +151,118 @@
         <div class="flex items-center justify-between border-b border-slate-200 pb-4">
           <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary text-xl">pending_actions</span>
-            <span>Daftar Pinjaman Aktif</span>
+            <span>Daftar Pinjaman Aktif &amp; Terlambat</span>
           </h3>
-          <span class="text-xs font-bold px-3 py-1 bg-primary/10 text-primary rounded-full">
-            {{ loans.length }} Buku Dipinjam
-          </span>
+          <div class="flex items-center gap-2">
+            <button @click="loadData" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Muat Ulang Data Real-time">
+              <span class="material-symbols-outlined text-base">refresh</span>
+            </button>
+            <span class="text-xs font-bold px-3 py-1 bg-primary/10 text-primary rounded-full">
+              {{ loans.length }} Transaksi
+            </span>
+          </div>
         </div>
 
         <div v-if="loadingLoans" class="py-12 text-center text-slate-500 text-xs">
           <div class="inline-block w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-2"></div>
-          <p>Memuat daftar pinjaman aktif...</p>
+          <p>Memuat data peminjaman real-time dari server...</p>
         </div>
 
         <div v-else-if="loans.length === 0" class="py-16 text-center text-slate-500 space-y-3">
           <span class="material-symbols-outlined text-5xl text-slate-300">menu_book</span>
           <p class="font-bold text-sm text-slate-700">Belum Ada Pinjaman Aktif</p>
-          <p class="text-xs text-slate-500">Anda sedang tidak meminjam buku saat ini.</p>
+          <p class="text-xs text-slate-500">Anda tidak sedang meminjam buku saat ini.</p>
           <NuxtLink to="/buku" class="inline-block px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-container transition-colors">
             Cari &amp; Pinjam Buku
           </NuxtLink>
         </div>
 
-        <div v-else class="divide-y divide-slate-100">
+        <div v-else v-auto-animate class="divide-y divide-slate-100">
           <div v-for="loan in loans" :key="loan.id" class="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-16 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                <img v-if="loan.buku?.cover_image" :src="loan.buku.cover_image" alt="Cover" class="w-full h-full object-cover" />
-                <span v-else class="material-symbols-outlined text-2xl text-slate-400 flex items-center justify-center h-full">book</span>
+              <!-- Book Cover -->
+              <div class="w-14 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-xs">
+                <img 
+                  v-if="loan.book?.cover_image_url || loan.buku?.cover_image || loan.book?.cover_image" 
+                  :src="loan.book?.cover_image_url || loan.buku?.cover_image || loan.book?.cover_image" 
+                  alt="Cover" 
+                  class="w-full h-full object-cover" 
+                />
+                <span v-else class="material-symbols-outlined text-3xl text-slate-400 flex items-center justify-center h-full">book</span>
               </div>
-              <div class="space-y-1 text-xs">
-                <h4 class="font-bold text-slate-900 text-sm leading-snug">{{ loan.buku?.judul || loan.judul || 'Buku Perpustakaan' }}</h4>
-                <p class="text-slate-500">Pengarang: {{ loan.buku?.penulis || 'STAH DNJ' }}</p>
-                <p class="text-slate-500">Tenggat Pengembalian: <strong class="text-rose-600 font-mono">{{ formatDate(loan.tanggal_kembali || loan.due_date) }}</strong></p>
+
+              <!-- Loan Information Details -->
+              <div class="space-y-1.5 text-xs">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <!-- Real-time Loan Status Badge -->
+                  <span 
+                    v-if="loan.denda && Number(loan.denda) > 0" 
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse"
+                  >
+                    🔴 Terlambat {{ loan.hari_terlambat || 1 }} Hari (Denda: Rp {{ Number(loan.denda).toLocaleString('id-ID') }})
+                  </span>
+                  <span 
+                    v-else-if="String(loan.status).toLowerCase() === 'selesai'" 
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-300"
+                  >
+                    ✅ Sudah Dikembalikan
+                  </span>
+                  <span 
+                    v-else 
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300"
+                  >
+                    🟢 Aktif Dipinjam
+                  </span>
+
+                  <span class="text-[10px] font-mono text-slate-700 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-300 px-2 py-0.5 rounded-md border border-slate-300 dark:border-zinc-700 font-bold">
+                    📖 Kode Buku: {{ loan.barcode_qr_buku || (loan.book?.id ? `BK-${String(loan.book.id).padStart(3, '0')}` : 'BK-001') }}
+                  </span>
+                </div>
+
+                <h4 class="font-bold text-slate-900 text-sm leading-snug">
+                  {{ loan.book?.judul || loan.buku?.judul || loan.judul || 'Buku Perpustakaan' }}
+                </h4>
+
+                <p class="text-slate-500">
+                  ✍️ Pengarang: <strong class="text-slate-700">{{ loan.book?.penulis || loan.buku?.penulis || 'STAH DNJ' }}</strong>
+                </p>
+
+                <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pt-0.5">
+                  <span v-if="loan.tanggal_pinjam">📅 Pinjam: <strong class="text-slate-700 font-mono">{{ formatDate(loan.tanggal_pinjam) }}</strong></span>
+                  <span>⏳ Tenggat Kembali: <strong class="text-rose-600 font-mono">{{ formatDate(loan.tanggal_kembali_seharusnya || loan.tanggal_kembali || loan.due_date) }}</strong></span>
+                </div>
               </div>
             </div>
 
-            <div class="flex items-center gap-2 self-end sm:self-center">
+            <!-- Action Controls: Perpanjang & Return -->
+            <div v-if="String(loan.status).toLowerCase() !== 'selesai'" class="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 @click="handleExtendLoan(loan.id)"
-                class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                title="Perpanjang masa peminjaman selama 7 hari kerja"
               >
                 <span class="material-symbols-outlined text-sm">update</span>
                 <span>Perpanjang (+7 Hari)</span>
+              </button>
+
+              <button 
+                v-if="isCampusNetwork"
+                @click="handleReturnLoan(loan.id)"
+                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                title="Proses pengembalian buku"
+              >
+                <span class="material-symbols-outlined text-sm text-emerald-600">assignment_return</span>
+                <span>Kembalikan</span>
+              </button>
+
+              <button 
+                v-else
+                disabled
+                class="px-3 py-2 bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 border border-slate-300 dark:border-zinc-700 text-xs font-bold rounded-xl cursor-not-allowed flex items-center gap-1 opacity-70 transition-all duration-300"
+                title="Pengembalian buku mandiri hanya dapat dilakukan saat terhubung ke Wi-Fi Kampus STAH DNJ"
+              >
+                <span class="material-symbols-outlined text-sm text-rose-500 animate-pulse">wifi_off</span>
+                <span>Gunakan Wi-Fi Kampus untuk Mengembalikan</span>
               </button>
             </div>
           </div>
@@ -341,7 +411,116 @@
         </div>
       </div>
 
-      <!-- TAB 5: EDIT DATA DIRI (BIO & KONTAK) -->
+      <!-- TAB 5: TESTIMONI PEMUSTAKA (DIBATASI 1 KALI) -->
+      <div v-else-if="activeTab === 'testimonial'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-6 animate-in fade-in">
+        <div class="border-b border-slate-200 pb-3 flex items-center justify-between">
+          <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-500 text-xl">rate_review</span>
+            <span>Testimoni Pemustaka STAH DNJ</span>
+          </h3>
+          <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+            Dibatasi 1x Pengisian
+          </span>
+        </div>
+
+        <!-- Case 1: User Has Already Submitted a Testimonial -->
+        <div v-if="myTestimonial" class="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span class="font-bold text-slate-900 text-sm">Testimoni Anda Telah Diterbitkan</span>
+            </div>
+            <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-900 text-[10px] font-extrabold rounded-full border border-emerald-300">
+              🟢 Aktif di Beranda
+            </span>
+          </div>
+
+          <!-- Star Rating -->
+          <div class="flex items-center gap-1 text-amber-400 text-lg">
+            <span v-for="star in 5" :key="star" class="material-symbols-outlined">
+              {{ star <= (myTestimonial.rating || 5) ? 'star' : 'star_outline' }}
+            </span>
+            <span class="text-slate-500 text-xs font-bold ml-2">({{ myTestimonial.rating || 5 }}/5 Bintang)</span>
+          </div>
+
+          <!-- Testimonial Quote Box -->
+          <div class="p-4 bg-white rounded-xl border border-slate-200 italic text-slate-700 leading-relaxed shadow-inner relative">
+            <span class="text-3xl font-serif text-slate-300 absolute -top-2 left-2 pointer-events-none">“</span>
+            <p class="relative z-10 pl-4">
+              {{ myTestimonial.content || myTestimonial.isi }}
+            </p>
+          </div>
+
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] leading-relaxed flex items-start gap-2">
+            <span class="material-symbols-outlined text-base shrink-0">info</span>
+            <p>
+              Setiap akun pemustaka hanya diperkenankan mengirimkan testimoni sebanyak <strong>1 kali</strong>. Kesan &amp; pesan Anda telah tampil di halaman utama portal perpustakaan STAH Dharma Nusantara Jakarta.
+            </p>
+          </div>
+        </div>
+
+        <!-- Case 2: User Has NOT Submitted Testimonial Yet -->
+        <form v-else @submit.prevent="handleSubmitTestimonial" class="space-y-4 text-xs sm:text-sm">
+          <div class="p-4 bg-blue-50 border border-blue-200 rounded-2xl text-blue-900 space-y-1">
+            <p class="font-extrabold text-xs flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-primary text-base">campaign</span>
+              <span>Bagikan Pengalaman Layanan Perpustakaan</span>
+            </p>
+            <p class="text-[11px] text-blue-800 leading-relaxed">
+              Kesan, pesan, dan saran yang Anda sampaikan akan ditampilkan pada halaman beranda utama perpustakaan STAH DNJ. Pengisian testimoni dibatasi <strong>1 kali per akun</strong>.
+            </p>
+          </div>
+
+          <!-- Rating Picker -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">Beri Rating Layanan Perpustakaan</label>
+            <div class="flex items-center gap-2">
+              <button 
+                v-for="star in 5" 
+                :key="star"
+                type="button"
+                @click="testimonialForm.rating = star"
+                class="text-2xl transition-transform hover:scale-125 focus:outline-none cursor-pointer"
+                :class="star <= testimonialForm.rating ? 'text-amber-400' : 'text-slate-300'"
+              >
+                ★
+              </button>
+              <span class="text-xs font-extrabold text-slate-600 ml-2">({{ testimonialForm.rating }} / 5 Bintang)</span>
+            </div>
+          </div>
+
+          <!-- Content Textarea -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Pesan &amp; Kesan Testimoni Anda</label>
+            <textarea 
+              v-model="testimonialForm.content" 
+              rows="4" 
+              required
+              maxlength="2000"
+              placeholder="Tuliskan pengalaman Anda menggunakan layanan perpustakaan, keramahan pustakawan, fasilitas ruang baca, atau ketersediaan buku di STAH DNJ..."
+              class="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl text-slate-900 focus:outline-none focus:border-primary transition-colors text-xs leading-relaxed"
+            ></textarea>
+            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+              <span>Testimoni akan terbit atas nama {{ user?.name || 'Pemustaka' }}</span>
+              <span>{{ testimonialForm.content.length }}/2000 karakter</span>
+            </div>
+          </div>
+
+          <div class="pt-3 flex items-center justify-end">
+            <button 
+              type="submit" 
+              :disabled="submittingTestimonial"
+              class="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <span v-if="submittingTestimonial" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span class="material-symbols-outlined text-base" v-else>send</span>
+              <span>{{ submittingTestimonial ? 'Mengirim...' : 'Kirim Testimoni (1x Pengisian)' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 6: EDIT DATA DIRI (BIO & KONTAK) -->
       <div v-else-if="activeTab === 'profile_bio'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-6 animate-in fade-in">
         <div class="border-b border-slate-200 pb-3 flex items-center justify-between">
           <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
@@ -587,17 +766,26 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { usePustakaApi, type UserProfile, type Book } from '../../composables/usePustakaApi';
+import { useCampusNetwork } from '../../composables/useCampusNetwork';
 
-const { getProfile, updateProfile, getLoans, extendLoan, getReservations, updateReservationStatus, getWishlist, getBooks, tokenCookie } = usePustakaApi();
+const { getProfile, updateProfile, getLoans, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
+const { isCampusNetwork } = useCampusNetwork();
 
-const activeTab = ref<'card' | 'loans' | 'reservations' | 'wishlist' | 'profile_bio' | 'security'>('card');
+const activeTab = ref<'card' | 'loans' | 'reservations' | 'wishlist' | 'testimonial' | 'profile_bio' | 'security'>('card');
 const user = ref<UserProfile | null>(null);
 const loans = ref<any[]>([]);
 const reservations = ref<any[]>([]);
 const wishlistBooks = ref<Book[]>([]);
+const myTestimonial = ref<any>(null);
 const loadingLoans = ref(false);
 const savingBio = ref(false);
 const savingSecurity = ref(false);
+
+const testimonialForm = ref({
+  rating: 5,
+  content: ''
+});
+const submittingTestimonial = ref(false);
 
 // QR Scan Verification Modal States
 const selectedReservationForUserQr = ref<any>(null);
@@ -639,6 +827,7 @@ const tabs = computed(() => [
   { id: 'loans', label: 'Pinjaman Aktif', icon: 'pending_actions', badgeCount: loans.value.length },
   { id: 'reservations', label: 'Reservasi Antrean', icon: 'schedule', badgeCount: reservations.value.length },
   { id: 'wishlist', label: 'Wishlist Favorit', icon: 'favorite' },
+  { id: 'testimonial', label: 'Testimoni Saya (1x)', icon: 'rate_review' },
   { id: 'profile_bio', label: 'Data Diri', icon: 'person' },
   { id: 'security', label: 'Sekuriti & Password', icon: 'lock' }
 ]);
@@ -723,6 +912,17 @@ const handleExtendLoan = async (loanId: number | string) => {
   loadData();
 };
 
+const handleReturnLoan = async (loanId: number | string) => {
+  if (!isCampusNetwork.value) {
+    alert('Fitur Pengembalian Buku Mandiri hanya dapat diakses saat Anda terhubung ke Wi-Fi Kampus STAH DNJ.');
+    return;
+  }
+  if (!confirm('Apakah Anda yakin ingin mengembalikan buku ini?')) return;
+  const res = await returnLoan(loanId);
+  alert(res.message);
+  loadData();
+};
+
 const handleUpdateBio = async () => {
   savingBio.value = true;
   try {
@@ -762,6 +962,33 @@ const handleUpdatePassword = async () => {
   }
 };
 
+const handleSubmitTestimonial = async () => {
+  if (!testimonialForm.value.content.trim()) {
+    alert('Harap tuliskan pesan/kesan testimoni Anda terlebih dahulu.');
+    return;
+  }
+
+  submittingTestimonial.value = true;
+  try {
+    const res = await createTestimonial(
+      testimonialForm.value.content.trim(),
+      testimonialForm.value.rating,
+      user.value?.name,
+      user.value?.prodi || user.value?.role || 'Pemustaka'
+    );
+
+    alert(res.message);
+    if (res.success) {
+      if (res.data) {
+        myTestimonial.value = res.data;
+      }
+      loadData();
+    }
+  } finally {
+    submittingTestimonial.value = false;
+  }
+};
+
 const loadData = async () => {
   try {
     const profileRes = await getProfile().catch(() => null);
@@ -775,14 +1002,34 @@ const loadData = async () => {
     }
 
     loadingLoans.value = true;
-    const loansRes = await getLoans().catch(() => null);
-    if (loansRes?.data) {
-      loans.value = loansRes.data;
+    const loansRes = await getLoans('aktif').catch(() => null);
+    if (loansRes?.data && Array.isArray(loansRes.data)) {
+      const currentUserId = user.value?.id;
+      if (currentUserId) {
+        loans.value = loansRes.data.filter((l: any) => 
+          String(l.user_id) === String(currentUserId) && 
+          String(l.status).toLowerCase() !== 'selesai'
+        );
+      } else {
+        loans.value = loansRes.data;
+      }
+    } else {
+      loans.value = [];
     }
 
-    const resRes = await getReservations().catch(() => null);
-    if (resRes?.data) {
-      reservations.value = resRes.data;
+    const resRes = await getReservations(true).catch(() => null);
+    if (resRes?.data && Array.isArray(resRes.data)) {
+      const currentUserId = user.value?.id;
+      if (currentUserId) {
+        reservations.value = resRes.data.filter((r: any) => 
+          (r.user_id && String(r.user_id) === String(currentUserId)) ||
+          (r.user?.id && String(r.user.id) === String(currentUserId))
+        );
+      } else {
+        reservations.value = resRes.data;
+      }
+    } else {
+      reservations.value = [];
     }
 
     const wishlistRes = await getWishlist().catch(() => null);
@@ -790,6 +1037,17 @@ const loadData = async () => {
       wishlistBooks.value = wishlistRes.data;
     } else {
       wishlistBooks.value = [];
+    }
+
+    const testRes = await getTestimonials().catch(() => null);
+    if (testRes?.data && Array.isArray(testRes.data) && user.value) {
+      const found = testRes.data.find((t: any) => 
+        (t.user_id && String(t.user_id) === String(user.value?.id)) ||
+        (t.name && user.value?.name && t.name.toLowerCase() === user.value.name.toLowerCase())
+      );
+      if (found) {
+        myTestimonial.value = found;
+      }
     }
   } catch (e) {
     console.error('Failed to load profile data:', e);

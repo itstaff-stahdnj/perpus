@@ -48,8 +48,11 @@
                 <span class="px-3 py-1 rounded-full text-[0.68rem] font-black uppercase tracking-wider bg-blue-100 text-primary dark:bg-blue-950/60 dark:text-blue-400">
                   🏷️ {{ book.category?.nama_kategori || book.category?.nama || 'Koleksi Pustaka' }}
                 </span>
+                <span class="px-3 py-1 rounded-full text-[0.68rem] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-300">
+                  📖 Kode Buku: {{ book.barcode_qr_buku || book.kode_buku || `BK-${String(book.id).padStart(3, '0')}` }}
+                </span>
                 <span class="px-3 py-1 rounded-full text-[0.68rem] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300">
-                  🔢 {{ book.no_panggil || `D EKMA ${book.id}` }}
+                  🔢 {{ book.klasifikasi || book.no_panggil || `D EKMA ${book.id}` }}
                 </span>
               </div>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight pt-1">
@@ -57,6 +60,9 @@
               </h1>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-bold">
                 Penulis: <span class="text-slate-800 dark:text-zinc-200">{{ book.penulis || book.pengarang || 'STAH DNJ' }}</span>
+                <span v-if="book.penerbit" class="ml-2 text-slate-400">
+                  • Penerbit: <span class="text-slate-700 dark:text-zinc-300">{{ book.kota_terbit ? `${book.kota_terbit}: ` : '' }}{{ book.penerbit }}</span>
+                </span>
               </p>
             </div>
 
@@ -111,25 +117,39 @@
               </div>
             </div>
 
-            <!-- Ringkasan / Sinopsis -->
-            <div class="pt-2 border-t border-slate-100 dark:border-zinc-800">
+            <!-- Ringkasan / Sinopsis Buku (Otomatis Hidden Jika Kosong / Opsional) -->
+            <div 
+              v-if="book.deskripsi && book.deskripsi.trim() !== ''" 
+              class="pt-3 border-t border-slate-100 dark:border-zinc-800"
+            >
               <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-1">Sinopsis / Ringkasan</h3>
               <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
-                {{ book.deskripsi || 'Belum ada deskripsi untuk koleksi buku ini.' }}
+                {{ book.deskripsi }}
               </p>
             </div>
 
             <!-- TOMBOL AKSI: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (HANYA DITAMPILKAN JIKA USER SUDAH LOGIN) -->
             <div v-if="tokenCookie" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               
-              <!-- Tombol Pinjam Mandiri -->
+              <!-- Tombol Pinjam Mandiri (Kondisional: Aktif hanya saat terhubung ke Wi-Fi Kampus STAH DNJ) -->
               <button 
+                v-if="isCampusNetwork"
                 @click="openBorrowModal"
                 :disabled="availableCopiesCount === 0"
                 class="py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>📖</span>
                 <span>Pinjam Mandiri</span>
+              </button>
+
+              <button 
+                v-else
+                disabled
+                class="py-3 px-3 rounded-2xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 font-extrabold text-[11px] border border-slate-300 dark:border-zinc-700 cursor-not-allowed transition-all duration-500 flex items-center justify-center gap-1.5 shadow-none"
+                :title="currentSelfBorrowText"
+              >
+                <span class="material-symbols-outlined text-sm text-rose-500 animate-pulse shrink-0">wifi_off</span>
+                <span class="transition-all duration-300 truncate">{{ currentSelfBorrowText }}</span>
               </button>
 
               <!-- Tombol Reservasi Buku (Kondisional: Aktif saat Petugas Online, Ditiadakan saat Petugas Offline) -->
@@ -276,9 +296,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePustakaApi, type Book } from '../../composables/usePustakaApi';
 import { usePustakaCart } from '../../composables/usePustakaCart';
+import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
 
 const route = useRoute();
+const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
 const { 
   getBookById, 
   getBooks, 
@@ -365,10 +387,22 @@ const loadBookDetail = async () => {
       loadReviews(book.value.id);
     }
 
+    if (process.client) {
+      try {
+        const saved = localStorage.getItem('pustaka_wishlist');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            isWishlisted.value = parsed.map(id => String(id)).includes(String(bookId));
+          }
+        }
+      } catch (e) {}
+    }
+
     if (tokenCookie.value) {
       const wishRes = await getWishlist().catch(() => null);
       if (wishRes?.data && Array.isArray(wishRes.data)) {
-        isWishlisted.value = wishRes.data.some((wb: any) => String(wb.id || wb.book_id) === String(bookId));
+        isWishlisted.value = wishRes.data.some((wb: any) => String(wb.book_id || wb.id) === String(bookId));
       }
     }
   } finally {

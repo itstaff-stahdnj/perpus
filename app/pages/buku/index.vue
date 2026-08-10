@@ -189,7 +189,7 @@
           </div>
 
           <!-- Book Grid View -->
-          <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter mb-12">
+          <div v-else-if="viewMode === 'grid'" v-auto-animate class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter mb-12">
             <div 
               v-for="(book, index) in paginatedBooks" 
               :key="book.id" 
@@ -256,26 +256,40 @@
                     {{ (book.stok === undefined || book.stok > 0) ? `Tersedia (${book.stok ?? 1})` : 'Tidak Tersedia (Dipinjam)' }}
                   </span>
                 </div>
+                <!-- Action Buttons (JIKA SUDAH LOGIN) -->
+                <div v-if="tokenCookie" class="space-y-1.5">
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <button 
+                      v-if="isCampusNetwork"
+                      @click="openBorrowModal(book)"
+                      class="bg-[#C89B3C] text-white py-2 rounded-lg font-label-md text-[11px] hover:brightness-105 transition-all font-bold text-center flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                      title="Pinjam Buku Mandiri"
+                    >
+                      <span class="material-symbols-outlined text-xs">bookmark_add</span>
+                      <span>Pinjam</span>
+                    </button>
 
-                <div v-if="tokenCookie" class="grid grid-cols-2 gap-1.5">
-                  <button 
-                    @click="openBorrowModal(book)"
-                    class="bg-[#C89B3C] text-white py-2 rounded-lg font-label-md text-[11px] hover:brightness-105 transition-all font-bold text-center flex items-center justify-center gap-1 shadow-xs cursor-pointer"
-                    title="Pinjam Buku Mandiri"
-                  >
-                    <span class="material-symbols-outlined text-xs">bookmark_add</span>
-                    <span>Pinjam</span>
-                  </button>
+                    <button 
+                      v-else
+                      disabled
+                      class="col-span-2 py-2 px-2 rounded-lg bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 font-label-md text-[10px] font-extrabold text-center flex items-center justify-center gap-1 cursor-not-allowed border border-slate-300 dark:border-zinc-700 transition-all duration-500"
+                      :title="currentSelfBorrowText"
+                    >
+                      <span class="material-symbols-outlined text-xs shrink-0 text-rose-500 animate-pulse">block</span>
+                      <span class="truncate transition-all duration-300">{{ currentSelfBorrowText }}</span>
+                    </button>
 
-                  <button 
-                    @click="toggleCart(book)"
-                    class="py-2 rounded-lg font-label-md text-[11px] transition-colors font-bold text-center flex items-center justify-center gap-1 cursor-pointer"
-                    :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'"
-                    :title="isInCart(book.id) ? 'Hapus dari keranjang' : 'Tampung ke keranjang untuk meminjam lebih dari 1 buku sekaligus'"
-                  >
-                    <span class="material-symbols-outlined text-xs text-amber-700">shopping_cart</span>
-                    <span>{{ isInCart(book.id) ? 'Batal' : 'Tampung' }}</span>
-                  </button>
+                    <button 
+                      v-if="isCampusNetwork"
+                      @click="toggleCart(book)"
+                      class="py-2 rounded-lg font-label-md text-[11px] transition-colors font-bold text-center flex items-center justify-center gap-1 cursor-pointer"
+                      :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'"
+                      :title="isInCart(book.id) ? 'Hapus dari keranjang' : 'Tampung ke keranjang untuk meminjam lebih dari 1 buku sekaligus'"
+                    >
+                      <span class="material-symbols-outlined text-xs text-amber-700">shopping_cart</span>
+                      <span>{{ isInCart(book.id) ? 'Batal' : 'Tampung' }}</span>
+                    </button>
+                  </div>
                 </div>
 
                 <a 
@@ -297,7 +311,7 @@
           </div>
 
           <!-- Book List View -->
-          <div v-else class="space-y-4 mb-12">
+          <div v-else v-auto-animate class="space-y-4 mb-12">
             <div 
               v-for="(book, index) in paginatedBooks" 
               :key="book.id" 
@@ -334,6 +348,7 @@
                 <div class="flex items-center gap-2">
                   <template v-if="tokenCookie">
                     <button 
+                      v-if="isCampusNetwork"
                       @click="openBorrowModal(book)"
                       class="bg-[#C89B3C] text-white px-3 py-2 rounded-lg font-label-md text-xs hover:brightness-105 transition-all font-bold flex items-center gap-1 shadow-xs cursor-pointer"
                     >
@@ -342,6 +357,17 @@
                     </button>
 
                     <button 
+                      v-else
+                      disabled
+                      class="px-3 py-2 rounded-lg bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 font-label-md text-[11px] font-extrabold flex items-center gap-1.5 cursor-not-allowed border border-slate-300 dark:border-zinc-700 transition-all duration-500"
+                      :title="currentSelfBorrowText"
+                    >
+                      <span class="material-symbols-outlined text-sm shrink-0 text-rose-500 animate-pulse">wifi_off</span>
+                      <span class="transition-all duration-300">{{ currentSelfBorrowText }}</span>
+                    </button>
+
+                    <button 
+                      v-if="isCampusNetwork"
                       @click="toggleCart(book)"
                       class="px-3 py-2 rounded-lg font-label-md text-xs transition-colors font-bold flex items-center gap-1 cursor-pointer border"
                       :class="isInCart(book.id) ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'"
@@ -535,6 +561,7 @@ import {
 } from '../../composables/usePustakaApi';
 
 import { usePustakaCart } from '../../composables/usePustakaCart';
+import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
 
 const route = useRoute();
@@ -542,6 +569,7 @@ const router = useRouter();
 
 const { getBooks, getCategories, selfBorrow, createReservation, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
+const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
 
 const wishlistedIds = ref<Set<number>>(new Set());
 
@@ -555,20 +583,57 @@ const toggleWishlist = async (b: Book) => {
   const bookId = Number(b.id);
   if (wishlistedIds.value.has(bookId)) {
     wishlistedIds.value.delete(bookId);
-    await removeFromWishlist(bookId).catch(() => {});
+    if (process.client) {
+      localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+    }
+    const res = await removeFromWishlist(bookId).catch(() => null);
+    if (res && !res.success) {
+      wishlistedIds.value.add(bookId);
+      if (process.client) {
+        localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+      }
+    }
   } else {
     wishlistedIds.value.add(bookId);
-    await addToWishlist(bookId).catch(() => {});
+    if (process.client) {
+      localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+    }
+    const res = await addToWishlist(bookId).catch(() => null);
+    if (res && !res.success) {
+      wishlistedIds.value.delete(bookId);
+      if (process.client) {
+        localStorage.setItem('pustaka_wishlist', JSON.stringify(Array.from(wishlistedIds.value)));
+      }
+    }
   }
 };
 
 const loadWishlistData = async () => {
+  // 1. Instant local restore
+  if (process.client) {
+    try {
+      const saved = localStorage.getItem('pustaka_wishlist');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          wishlistedIds.value = new Set(parsed.map((id: any) => Number(id)));
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. Fetch from backend API
   if (!tokenCookie.value) return;
   try {
     const res = await getWishlist();
     if (res?.data && Array.isArray(res.data)) {
-      const ids = res.data.map((w: any) => Number(w.id || w.book_id));
-      wishlistedIds.value = new Set(ids);
+      const ids = res.data.map((w: any) => Number(w.book_id || w.id)).filter(Boolean);
+      if (ids.length > 0) {
+        wishlistedIds.value = new Set(ids);
+        if (process.client) {
+          localStorage.setItem('pustaka_wishlist', JSON.stringify(ids));
+        }
+      }
     }
   } catch (e) {}
 };
