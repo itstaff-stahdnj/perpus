@@ -25,7 +25,16 @@ export default defineEventHandler(async (event) => {
     headersToSend['content-type'] = incomingHeaders['content-type'];
   }
 
-  return proxyRequest(event, targetUrl, {
-    headers: headersToSend
-  });
+  try {
+    return await proxyRequest(event, targetUrl, {
+      headers: headersToSend
+    });
+  } catch (err: any) {
+    console.error('API Proxy Error:', err?.message || err);
+    return {
+      success: false,
+      message: err?.message || 'Gagal terhubung ke server backend Portal Perpus.',
+      data: null
+    };
+  }
 });

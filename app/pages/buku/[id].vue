@@ -27,8 +27,8 @@
           <!-- Sampul Buku dengan Bayangan & Lencana Wishlist -->
           <div class="relative w-48 sm:w-56 h-68 sm:h-80 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-800 shadow-2xl bg-slate-100 dark:bg-zinc-800 mx-auto md:mx-0 flex items-center justify-center">
             <img 
-              :src="book.cover_image || book.cover_image_url || book.sampul || fallbackCover" 
-              :alt="book.judul"
+              :src="book?.cover_image || book?.cover_image_url || (book as any)?.sampul || fallbackCover" 
+              :alt="book?.judul || 'Cover Buku'"
               @error="handleImageError"
               class="w-full h-full object-cover" 
             />
@@ -47,22 +47,19 @@
             <div class="space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="px-3 py-1 rounded-full text-[0.68rem] font-black uppercase tracking-wider bg-blue-100 text-primary dark:bg-blue-950/60 dark:text-blue-400">
-                  🏷️ {{ book.category?.nama_kategori || book.category?.nama || 'Koleksi Pustaka' }}
-                </span>
-                <span class="px-3 py-1 rounded-full text-[0.68rem] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-300">
-                  📖 Kode Buku: {{ book.barcode_qr_buku || book.kode_buku || `BK-${String(book.id).padStart(3, '0')}` }}
+                  🏷️ {{ book?.category?.nama_kategori || (book?.category as any)?.nama || 'Koleksi Pustaka' }}
                 </span>
                 <span class="px-3 py-1 rounded-full text-[0.68rem] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300">
-                  🔢 {{ book.klasifikasi || book.no_panggil || `D EKMA ${book.id}` }}
+                  🔢 {{ (book as any)?.klasifikasi || (book as any)?.no_panggil || (book?.id ? `D EKMA ${book.id}` : 'D EKMA') }}
                 </span>
               </div>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight pt-1">
-                {{ book.judul }}
+                {{ book?.judul }}
               </h1>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-bold">
-                Penulis: <span class="text-slate-800 dark:text-zinc-200">{{ book.penulis || book.pengarang || 'STAH DNJ' }}</span>
-                <span v-if="book.penerbit" class="ml-2 text-slate-400">
-                  • Penerbit: <span class="text-slate-700 dark:text-zinc-300">{{ book.kota_terbit ? `${book.kota_terbit}: ` : '' }}{{ book.penerbit }}</span>
+                Penulis: <span class="text-slate-800 dark:text-zinc-200">{{ book?.penulis || (book as any)?.pengarang || 'STAH DNJ' }}</span>
+                <span v-if="book?.penerbit" class="ml-2 text-slate-400">
+                  • Penerbit: <span class="text-slate-700 dark:text-zinc-300">{{ (book as any)?.kota_terbit ? `${(book as any).kota_terbit}: ` : '' }}{{ book.penerbit }}</span>
                 </span>
               </p>
             </div>
@@ -100,59 +97,43 @@
                 </span>
               </div>
 
-              <div class="grid grid-cols-1" :class="hasBranchData ? 'sm:grid-cols-2 gap-2' : 'gap-2'">
-                <!-- Card Utama Perpustakaan STAH DNJ -->
-                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1.5 text-[11px]">
-                  <div class="flex items-center justify-between font-bold">
-                    <span>🏢 Perpustakaan STAH DNJ</span>
-                    <span :class="availableCopiesCount > 0 ? 'text-emerald-600 font-extrabold' : 'text-rose-600 font-extrabold'">
-                      {{ availableCopiesCount > 0 ? `${availableCopiesCount} Eksemplar Tersedia` : 'Sedang Dipinjam' }}
-                    </span>
-                  </div>
-
-                  <div class="grid grid-cols-3 gap-1 py-1 px-2 bg-slate-50 dark:bg-zinc-800/60 rounded-lg text-center text-[10px]">
-                    <div>
-                      <span class="block text-slate-400">Total Stok</span>
-                      <strong class="font-bold text-slate-800 dark:text-zinc-200">{{ totalCopiesCount }}</strong>
-                    </div>
-                    <div>
-                      <span class="block text-slate-400">Tersedia</span>
-                      <strong class="font-bold text-emerald-600">{{ availableCopiesCount }}</strong>
-                    </div>
-                    <div>
-                      <span class="block text-slate-400">Dipinjam</span>
-                      <strong class="font-bold text-rose-500">{{ borrowedCopiesCount }}</strong>
-                    </div>
-                  </div>
-
-                  <p class="text-slate-500 dark:text-zinc-400 text-[11px] pt-0.5">
-                    📍 Lokasi Rak: <strong class="text-slate-700 dark:text-zinc-200 font-semibold">{{ book.lokasi_rak || (book as any).lokasi || 'Koleksi Perpustakaan STAH DNJ' }}</strong>
-                  </p>
+              <div class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1.5 text-[11px]">
+                <div class="flex items-center justify-between font-bold">
+                  <span>🏢 Perpustakaan STAH DNJ</span>
+                  <span :class="availableCopiesCount > 0 ? 'text-emerald-600 font-extrabold' : 'text-rose-600 font-extrabold'">
+                    {{ availableCopiesCount > 0 ? `${availableCopiesCount} Eksemplar Tersedia` : 'Sedang Dipinjam' }}
+                  </span>
                 </div>
 
-                <!-- Card Cabang (HANYA DITAMPILKAN JIKA DITAMBAHKAN PADA DATABASE) -->
-                <div v-if="hasBranchData" class="p-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/60 rounded-xl space-y-1.5 text-[11px]">
-                  <div class="flex items-center justify-between font-bold">
-                    <span>🏛️ Cabang Perpustakaan</span>
-                    <span :class="((book as any)?.stok_cabang ?? 0) > 0 ? 'text-emerald-600 font-extrabold' : 'text-rose-600 font-extrabold'">
-                      {{ ((book as any)?.stok_cabang ?? 0) > 0 ? `${(book as any)?.stok_cabang} Eksemplar` : 'Tidak Tersedia' }}
-                    </span>
+                <div class="grid grid-cols-3 gap-1 py-1 px-2 bg-slate-50 dark:bg-zinc-800/60 rounded-lg text-center text-[10px]">
+                  <div>
+                    <span class="block text-slate-400">Total Stok</span>
+                    <strong class="font-bold text-slate-800 dark:text-zinc-200">{{ totalCopiesCount }}</strong>
                   </div>
-                  <p class="text-slate-500 dark:text-zinc-400 text-[11px]">
-                    📍 {{ (book as any)?.lokasi_cabang || (book as any)?.cabang || 'Cabang Kampus' }}
-                  </p>
+                  <div>
+                    <span class="block text-slate-400">Tersedia</span>
+                    <strong class="font-bold text-emerald-600">{{ availableCopiesCount }}</strong>
+                  </div>
+                  <div>
+                    <span class="block text-slate-400">Dipinjam</span>
+                    <strong class="font-bold text-rose-500">{{ borrowedCopiesCount }}</strong>
+                  </div>
                 </div>
+
+                <p class="text-slate-500 dark:text-zinc-400 text-[11px] pt-0.5">
+                  📍 Lokasi Rak: <strong class="text-slate-700 dark:text-zinc-200 font-semibold">{{ book?.lokasi_rak || (book as any)?.lokasi || 'Koleksi Perpustakaan STAH DNJ' }}</strong>
+                </p>
               </div>
             </div>
 
             <!-- Ringkasan / Sinopsis Buku (Otomatis Hidden Jika Kosong / Opsional) -->
             <div 
-              v-if="book.deskripsi && book.deskripsi.trim() !== ''" 
+              v-if="book?.deskripsi && book.deskripsi.trim() !== ''" 
               class="pt-3 border-t border-slate-100 dark:border-zinc-800"
             >
               <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-1">Sinopsis / Ringkasan</h3>
               <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
-                {{ book.deskripsi }}
+                {{ book?.deskripsi }}
               </p>
             </div>
 
@@ -409,12 +390,6 @@ const totalCopiesCount = computed(() => {
 const borrowedCopiesCount = computed(() => {
   const diff = totalCopiesCount.value - availableCopiesCount.value;
   return diff > 0 ? diff : 0;
-});
-
-const hasBranchData = computed(() => {
-  if (!book.value) return false;
-  const b = book.value as any;
-  return (b.stok_cabang !== undefined && b.stok_cabang !== null) || b.cabang !== undefined || b.lokasi_cabang !== undefined;
 });
 
 const inCart = computed(() => {
