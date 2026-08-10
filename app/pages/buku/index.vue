@@ -766,8 +766,8 @@ const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);
 const bookmarkedIds = ref<Set<number>>(new Set());
 
-const itemsPerPage = 8;
-const displayedCount = ref(8);
+const itemsPerPage = 24;
+const displayedCount = ref(500);
 
 // Modals State
 const showBorrowModal = ref(false);
@@ -1149,7 +1149,7 @@ const resetFilters = () => {
   searchQuery.value = '';
   statusFilter.value = 'all';
   sortBy.value = 'default';
-  displayedCount.value = 8;
+  displayedCount.value = books.value.length || 500;
   updateRouteQuery();
 };
 
@@ -1190,7 +1190,7 @@ const loadData = async () => {
   loading.value = true;
   try {
     const [resBooks, resCat] = await Promise.all([
-      getBooks(),
+      getBooks({ per_page: 1000, limit: 1000, all: 1 }),
       getCategories()
     ]);
 
@@ -1198,6 +1198,10 @@ const loadData = async () => {
       books.value = resBooks.data;
     } else if (Array.isArray(resBooks)) {
       books.value = resBooks;
+    }
+
+    if (books.value.length > 0) {
+      displayedCount.value = Math.max(500, books.value.length);
     }
 
     if (resCat?.data && Array.isArray(resCat.data) && resCat.data.length > 0) {
