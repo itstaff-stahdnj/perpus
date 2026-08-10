@@ -204,7 +204,7 @@
           <div class="flex items-center justify-between">
             <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
               <span>⭐ Ulasan & Rating Pemustaka</span>
-              <span class="text-xs font-normal text-slate-500 dark:text-zinc-400">({{ reviewsList.length }} Ulasan)</span>
+              <span class="text-xs font-normal text-slate-500 dark:text-zinc-400">({{ reviewsList?.length || 0 }} Ulasan)</span>
             </h3>
             <button @click="showReviewForm = !showReviewForm" class="text-xs font-extrabold text-primary hover:underline cursor-pointer">
               {{ showReviewForm ? 'Batal' : '+ Beri Ulasan Buku' }}
@@ -241,7 +241,7 @@
           </div>
 
           <!-- Daftar Ulasan Pemustaka -->
-          <div v-if="reviewsList.length > 0" class="space-y-3">
+          <div v-if="reviewsList && reviewsList.length > 0" class="space-y-3">
             <div v-for="rev in reviewsList" :key="rev.id" class="p-3.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 space-y-1">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-slate-800 dark:text-zinc-200">{{ rev.user?.name || rev.user_name || 'Pemustaka' }}</span>

@@ -586,12 +586,13 @@ const isHeadLibrarian = computed(() => {
 
 // Metrics Calculation
 const metrics = computed(() => {
-  const total = reservationsList.value.length;
-  const pending = reservationsList.value.filter(r => isPendingStatus(r.status)).length;
-  const inProgress = reservationsList.value.filter(r => isInProgressStatus(r.status)).length;
-  const ready = reservationsList.value.filter(r => isReadyStatus(r.status)).length;
-  const completed = reservationsList.value.filter(r => isCompletedStatus(r.status)).length;
-  const cancelled = reservationsList.value.filter(r => isCancelledStatus(r.status)).length;
+  const list = Array.isArray(reservationsList.value) ? reservationsList.value : [];
+  const total = list.length;
+  const pending = list.filter(r => isPendingStatus(r?.status)).length;
+  const inProgress = list.filter(r => isInProgressStatus(r?.status)).length;
+  const ready = list.filter(r => isReadyStatus(r?.status)).length;
+  const completed = list.filter(r => isCompletedStatus(r?.status)).length;
+  const cancelled = list.filter(r => isCancelledStatus(r?.status)).length;
   return { total, pending, inProgress, ready, completed, cancelled };
 });
 
@@ -605,16 +606,16 @@ const filterTabs = computed(() => [
 ]);
 
 const filteredReservations = computed(() => {
-  let list = reservationsList.value;
+  let list = Array.isArray(reservationsList.value) ? reservationsList.value : [];
 
   // Filter by status tab
   if (activeStatusFilter.value !== 'all') {
     const f = activeStatusFilter.value;
-    if (f === 'pending') list = list.filter(r => isPendingStatus(r.status));
-    else if (f === 'proses_pengambilan') list = list.filter(r => isInProgressStatus(r.status));
-    else if (f === 'siap_diambil') list = list.filter(r => isReadyStatus(r.status));
-    else if (f === 'selesai') list = list.filter(r => isCompletedStatus(r.status));
-    else if (f === 'dibatalkan') list = list.filter(r => isCancelledStatus(r.status));
+    if (f === 'pending') list = list.filter(r => isPendingStatus(r?.status));
+    else if (f === 'proses_pengambilan') list = list.filter(r => isInProgressStatus(r?.status));
+    else if (f === 'siap_diambil') list = list.filter(r => isReadyStatus(r?.status));
+    else if (f === 'selesai') list = list.filter(r => isCompletedStatus(r?.status));
+    else if (f === 'dibatalkan') list = list.filter(r => isCancelledStatus(r?.status));
   }
 
   // Filter by search query
