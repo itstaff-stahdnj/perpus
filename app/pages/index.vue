@@ -90,7 +90,7 @@
               <span class="material-symbols-outlined text-2xl sm:text-3xl">menu_book</span>
             </div>
             <h3 class="font-bold text-xs sm:text-sm md:text-base text-primary mb-0.5">Katalog Buku</h3>
-            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">{{ books.length }} Buku Terdaftar</p>
+            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">{{ books?.length || 0 }} Buku Terdaftar</p>
           </NuxtLink>
 
           <NuxtLink to="/buku" class="bg-white p-3.5 sm:p-5 md:p-6 rounded-2xl shadow-[0px_4px_16px_rgba(10,58,90,0.06)] border border-outline-variant/60 hover:shadow-xl transition-all group cursor-pointer block">
@@ -98,7 +98,7 @@
               <span class="material-symbols-outlined text-2xl sm:text-3xl">category</span>
             </div>
             <h3 class="font-bold text-xs sm:text-sm md:text-base text-primary mb-0.5">Kategori Pustaka</h3>
-            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">{{ categories.length }} Kategori Aktif</p>
+            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">{{ categories?.length || 0 }} Kategori Aktif</p>
           </NuxtLink>
 
           <NuxtLink to="/layanan" class="bg-white p-3.5 sm:p-5 md:p-6 rounded-2xl shadow-[0px_4px_16px_rgba(10,58,90,0.06)] border border-outline-variant/60 hover:shadow-xl transition-all group cursor-pointer block">
@@ -259,11 +259,11 @@
         <div class="max-w-container-max mx-auto px-4 md:px-margin-desktop">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12 text-center">
             <div class="flex flex-col items-center">
-              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ books.length > 0 ? books.length + ' Total' : '10 Total' }}</span>
+              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ (books?.length || 0) > 0 ? books.length + ' Total' : '10 Total' }}</span>
               <p class="text-xs sm:text-sm text-primary-fixed uppercase tracking-wider font-semibold">Koleksi Buku Fisik Terdata</p>
             </div>
             <div class="flex flex-col items-center border-y sm:border-y-0 sm:border-x border-primary-fixed-dim/20 py-4 sm:py-0">
-              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ categories.length > 0 ? categories.length + ' Kategori' : '5 Kategori' }}</span>
+              <span class="text-secondary-fixed text-2xl sm:text-4xl md:text-5xl font-extrabold mb-1 sm:mb-2">{{ (categories?.length || 0) > 0 ? categories.length + ' Kategori' : '5 Kategori' }}</span>
               <p class="text-xs sm:text-sm text-primary-fixed uppercase tracking-wider font-semibold">Kelompok Bidang Ilmu</p>
             </div>
             <div class="flex flex-col items-center">
@@ -275,7 +275,7 @@
       </section>
 
       <!-- Dynamic Announcements Banner -->
-      <section v-if="announcementsList.length > 0" class="max-w-container-max mx-auto pt-12 px-4 md:px-margin-desktop">
+      <section v-if="announcementsList && announcementsList.length > 0" class="max-w-container-max mx-auto pt-12 px-4 md:px-margin-desktop">
         <NuxtLink 
           v-for="ann in announcementsList" 
           :key="ann.id" 
@@ -313,7 +313,7 @@
         </div>
 
         <!-- Empty State for News -->
-        <div v-if="displayedNews.length === 0" class="bg-surface-container-low border border-outline-variant p-8 sm:p-12 rounded-2xl text-center">
+        <div v-if="!displayedNews || displayedNews.length === 0" class="bg-surface-container-low border border-outline-variant p-8 sm:p-12 rounded-2xl text-center">
           <span class="material-symbols-outlined text-4xl text-outline mb-2">newspaper</span>
           <p class="text-on-surface-variant text-sm font-medium">Belum ada data berita publikasi perpustakaan.</p>
         </div>
@@ -375,7 +375,7 @@
             <p class="text-xs sm:text-sm text-on-surface-variant mt-1.5">Pengalaman mahasiswa dan sivitas akademika menggunakan layanan Perpustakaan STAH DNJ.</p>
           </div>
 
-          <div v-if="displayedTestimonials.length === 0" class="bg-white p-8 rounded-3xl text-center border border-outline-variant max-w-xl mx-auto shadow-sm">
+          <div v-if="!displayedTestimonials || displayedTestimonials.length === 0" class="bg-white p-8 rounded-3xl text-center border border-outline-variant max-w-xl mx-auto shadow-sm">
             <span class="material-symbols-outlined text-5xl text-outline mb-3">rate_review</span>
             <h3 class="text-base font-bold text-primary mb-2">Belum Ada Data Testimoni</h3>
             <p class="text-xs sm:text-sm text-on-surface-variant">Belum ada ulasan atau testimoni publikasi dari sivitas akademika.</p>
@@ -432,6 +432,14 @@ import {
 
 const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile, getTestimonials, getSettings, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
 
+const books = ref<Book[]>([]);
+const categories = ref<Category[]>([]);
+const newsList = ref<NewsItem[]>([]);
+const rssNewsList = ref<any[]>([]);
+const announcementsList = ref<AnnouncementItem[]>([]);
+const loansList = ref<any[]>([]);
+const userProfile = ref<UserProfile | null>(null);
+const testimonialsList = ref<TestimonialItem[]>([]);
 const wishlistedIds = ref<Set<number>>(new Set());
 
 const isWishlisted = (id: number | string): boolean => {
@@ -515,16 +523,21 @@ const getBookUrl = (b: Book) => {
 };
 
 const getCategoryCount = (cat: Category): number => {
-  if (!books.value || books.value.length === 0) {
-    return cat.books_count ?? 0;
+  if (!cat || !books.value || !Array.isArray(books.value) || books.value.length === 0) {
+    return cat?.books_count ?? 0;
   }
   const count = books.value.filter(b => {
+    if (!b) return false;
     const catObj = b.category || b.kategori;
     if (!catObj) return false;
     if (typeof catObj === 'object') {
-      return catObj.id === cat.id || catObj.nama_kategori?.toLowerCase() === cat.nama_kategori.toLowerCase() || (cat.slug && catObj.slug?.toLowerCase() === cat.slug.toLowerCase());
+      const catName = cat.nama_kategori || (cat as any).nama || '';
+      const catObjName = catObj.nama_kategori || (catObj as any).nama || '';
+      return (catObj.id && cat.id && catObj.id === cat.id) ||
+        (catName && catObjName && catObjName.toLowerCase() === catName.toLowerCase()) ||
+        (cat.slug && catObj.slug && catObj.slug.toLowerCase() === cat.slug.toLowerCase());
     }
-    if (typeof catObj === 'string') {
+    if (typeof catObj === 'string' && cat.nama_kategori) {
       return catObj.toLowerCase() === cat.nama_kategori.toLowerCase();
     }
     return false;
@@ -627,12 +640,13 @@ const displayedNews = computed(() => {
 });
 
 const filteredBooks = computed(() => {
-  if (!searchQuery.value.trim()) return books.value;
+  const list = Array.isArray(books.value) ? books.value : [];
+  if (!searchQuery.value.trim()) return list;
   const q = searchQuery.value.toLowerCase();
-  return books.value.filter(b => 
-    (b.judul && b.judul.toLowerCase().includes(q)) ||
-    (b.penulis && b.penulis.toLowerCase().includes(q)) ||
-    (b.isbn && b.isbn.toLowerCase().includes(q))
+  return list.filter(b => 
+    (b?.judul && b.judul.toLowerCase().includes(q)) ||
+    (b?.penulis && b.penulis.toLowerCase().includes(q)) ||
+    (b?.isbn && b.isbn.toLowerCase().includes(q))
   );
 });
 
@@ -800,7 +814,7 @@ const loadData = async () => {
       categories.value = resCat;
     }
 
-    if (categories.value.length === 0 && books.value.length > 0) {
+    if ((categories.value?.length || 0) === 0 && (books.value?.length || 0) > 0) {
       categories.value = deriveCategoriesFromBooks(books.value);
     }
 
