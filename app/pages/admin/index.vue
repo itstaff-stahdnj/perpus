@@ -50,13 +50,21 @@
           <span class="font-label-md text-label-md">Member Management</span>
         </button>
 
+        <NuxtLink 
+          to="/reservasi" 
+          class="w-full flex items-center gap-3 rounded-xl px-4 py-3 mx-2 text-left transition-all text-amber-900 bg-amber-100/80 font-bold hover:bg-amber-200/80"
+        >
+          <span class="material-symbols-outlined text-amber-800">collections_bookmark</span>
+          <span class="font-label-md text-label-md">Manajemen Reservasi</span>
+        </NuxtLink>
+
         <button 
           @click="activeTab = 'reports'; showMobileSidebar = false"
           class="w-full flex items-center gap-3 rounded-xl px-4 py-3 mx-2 text-left transition-all cursor-pointer"
           :class="activeTab === 'reports' ? 'bg-secondary-container text-on-secondary-container font-semibold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-highest'"
         >
           <span class="material-symbols-outlined">assessment</span>
-          <span class="font-label-md text-label-md">Reports</span>
+          <span class="font-label-md text-label-md font-bold">Reports</span>
         </button>
       </nav>
 
@@ -109,7 +117,12 @@
         </div>
 
         <div class="flex items-center gap-3 sm:gap-6">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <NuxtLink to="/reservasi" class="p-1.5 sm:p-2 text-amber-900 hover:bg-amber-100 transition-colors flex items-center gap-1.5 text-xs font-extrabold bg-amber-50 border border-amber-300 px-2.5 sm:px-3 rounded-full" title="Buka Halaman Reservasi Petugas">
+              <span class="material-symbols-outlined text-base">collections_bookmark</span>
+              <span class="hidden sm:inline">Portal Reservasi</span>
+            </NuxtLink>
+
             <NuxtLink to="/absensi" target="_blank" class="p-1.5 sm:p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 text-xs font-bold bg-surface-container-high px-2.5 sm:px-3 rounded-full" title="Buka Display Kiosk">
               <span class="material-symbols-outlined text-base">tv</span>
               <span class="hidden sm:inline">Kiosk Absensi</span>
