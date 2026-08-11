@@ -113,26 +113,34 @@
       class="flex-1 relative flex items-center justify-center p-2 sm:p-6 overflow-hidden bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950"
     >
       
-      <!-- Loading Overlay & Render Progress Bar -->
+      <!-- Loading Overlay & Live Percentage Progress Bar -->
       <div 
         v-if="loading" 
-        class="absolute inset-0 z-30 bg-zinc-950/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 text-zinc-200"
+        class="absolute inset-0 z-30 bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center gap-5 text-zinc-200"
       >
-        <div class="relative w-14 h-14 flex items-center justify-center">
+        <div class="relative w-20 h-20 flex items-center justify-center">
           <div class="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin"></div>
-          <span class="text-xl">📖</span>
+          <div class="text-base sm:text-lg font-black text-blue-400 font-mono">
+            {{ downloadProgress > 0 ? `${downloadProgress}%` : '📖' }}
+          </div>
         </div>
-        <div class="text-center space-y-1.5">
-          <p class="text-sm font-bold tracking-wide">Menyiapkan Flipbook 3D...</p>
-          <p class="text-xs text-zinc-400 font-mono">{{ loadingStatusText }}</p>
+
+        <div class="text-center space-y-1.5 max-w-xs mx-auto">
+          <p class="text-base font-black tracking-wide text-white">Menyiapkan Flipbook 3D</p>
+          <p class="text-xs text-zinc-300 font-mono font-semibold">{{ loadingStatusText }}</p>
+          <p v-if="fileSizeText" class="text-[11px] text-blue-400 font-mono bg-blue-950/60 px-3 py-1 rounded-full border border-blue-800/60 inline-block">
+            📦 Ukuran File: {{ fileSizeText }}
+          </p>
         </div>
         
-        <!-- Render Progress Bar -->
-        <div v-if="renderProgress > 0" class="w-64 bg-zinc-800 h-1.5 rounded-full overflow-hidden border border-zinc-700">
+        <!-- Live Loading Progress Bar -->
+        <div class="w-64 sm:w-80 bg-zinc-900 h-2.5 rounded-full overflow-hidden border border-zinc-800 p-0.5 shadow-inner">
           <div 
-            class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full transition-all duration-200 rounded-full"
-            :style="{ width: `${renderProgress}%` }"
-          ></div>
+            class="bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 h-full transition-all duration-300 rounded-full shadow-lg shadow-blue-500/50 relative overflow-hidden"
+            :style="{ width: `${Math.max(downloadProgress, renderProgress, 5)}%` }"
+          >
+            <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+          </div>
         </div>
       </div>
 
@@ -250,6 +258,8 @@ const loading = ref(true);
 const loadingStatusText = ref('Mengunduh berkas PDF...');
 const errorMessage = ref('');
 const renderProgress = ref(0);
+const downloadProgress = ref(0);
+const fileSizeText = ref('');
 
 const pageCount = ref(0);
 const currentPage = ref(1);
@@ -299,6 +309,8 @@ const loadAndRenderPdf = async () => {
   loading.value = true;
   errorMessage.value = '';
   renderProgress.value = 0;
+  downloadProgress.value = 0;
+  fileSizeText.value = 'Menghubungkan server...';
   thumbnailList.value = [];
   loadingStatusText.value = 'Membuka dokumen PDF...';
 
@@ -306,7 +318,7 @@ const loadAndRenderPdf = async () => {
     const pdfjsLib = await import('pdfjs-dist');
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-    // Fast PDF loading
+    // Fast PDF loading with Live Download Progress
     const loadingTask = pdfjsLib.getDocument({
       url: props.pdfUrl,
       cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
@@ -315,6 +327,22 @@ const loadAndRenderPdf = async () => {
       disableAutoFetch: true,
       disableStream: false
     });
+
+    loadingTask.onProgress = (progressData: { loaded: number; total: number }) => {
+      if (progressData.total > 0) {
+        const percent = Math.min(99, Math.floor((progressData.loaded / progressData.total) * 100));
+        const loadedMb = (progressData.loaded / (1024 * 1024)).toFixed(1);
+        const totalMb = (progressData.total / (1024 * 1024)).toFixed(1);
+        downloadProgress.value = percent;
+        fileSizeText.value = `${loadedMb} MB dari ${totalMb} MB`;
+        loadingStatusText.value = `Mengunduh Berkas PDF (${percent}%)`;
+      } else if (progressData.loaded > 0) {
+        const loadedMb = (progressData.loaded / (1024 * 1024)).toFixed(1);
+        downloadProgress.value = Math.min(90, Math.floor((progressData.loaded / (5 * 1024 * 1024)) * 100));
+        fileSizeText.value = `${loadedMb} MB dimuat...`;
+        loadingStatusText.value = `Mengunduh Berkas PDF (${loadedMb} MB)...`;
+      }
+    };
 
     const pdfDoc = await loadingTask.promise;
     pageCount.value = pdfDoc.numPages;
