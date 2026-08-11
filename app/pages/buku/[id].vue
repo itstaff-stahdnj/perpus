@@ -27,9 +27,9 @@
           <!-- Sampul Buku dengan Bayangan & Lencana Wishlist -->
           <div class="relative w-48 sm:w-56 h-68 sm:h-80 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-800 shadow-2xl bg-slate-100 dark:bg-zinc-800 mx-auto md:mx-0 flex items-center justify-center">
             <img 
-              :src="book?.cover_image || book?.cover_image_url || (book as any)?.sampul || fallbackCover" 
+              :src="getBookCoverUrl(book)" 
               :alt="book?.judul || 'Cover Buku'"
-              @error="handleImageError"
+              @error="(e) => handleImageError(e, book)"
               class="w-full h-full object-cover" 
             />
             <button 
@@ -62,11 +62,10 @@
                   • Penerbit: <span class="text-slate-700 dark:text-zinc-300">{{ (book as any)?.kota_terbit ? `${(book as any).kota_terbit}: ` : '' }}{{ book.penerbit }}</span>
                 </span>
               </p>
-            </div>
-
-            <!-- Status Ketersediaan Stok & Pustakawan Aktif -->
+               <!-- Status Ketersediaan Stok & Pustakawan Aktif -->
             <div class="flex items-center gap-3 flex-wrap pt-1">
               <span 
+                v-if="!isEbook"
                 class="px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5"
                 :class="availableCopiesCount > 0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300'"
               >
@@ -74,8 +73,17 @@
                 <span>Stok Tersedia: {{ availableCopiesCount }} Eksemplar</span>
               </span>
 
+              <span 
+                v-else
+                class="px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+              >
+                <span>⚡</span>
+                <span>Akses Digital / E-Book Online</span>
+              </span>
+
               <!-- Status Pustakawan / Kepala Pustaka Online (Facebook-Style) -->
               <span 
+                v-if="!isEbook"
                 class="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 shadow-2xs transition-colors"
                 :class="isStaffOnline ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' : 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'"
                 :title="isStaffOnline ? 'Pustakawan / Kepala Pustaka sedang Online & siap memproses reservasi' : 'Pustakawan sedang Offline / Logout. Gunakan Pinjam Mandiri.'"
@@ -85,8 +93,19 @@
               </span>
             </div>
 
-            <!-- Pemantauan Stok Sesuai Database -->
-            <div class="p-3.5 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 rounded-2xl space-y-2 text-xs">
+            <!-- Jika E-Book Digital: Info Akses Langsung Online -->
+            <div v-if="isEbook" class="p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl space-y-2 text-xs">
+              <div class="flex items-center gap-2 text-blue-900 dark:text-blue-200 font-extrabold text-sm">
+                <span>⚡</span>
+                <span>Koleksi E-Book Digital (Bisa Langsung Dibaca)</span>
+              </div>
+              <p class="text-blue-700 dark:text-blue-300 text-xs leading-relaxed">
+                Buku ini merupakan koleksi digital. Tidak memerlukan peminjaman fisik maupun reservasi stok. Anda dapat membaca secara online kapan saja.
+              </p>
+            </div>
+
+            <!-- Pemantauan Stok Sesuai Database (Buku Fisik) -->
+            <div v-else class="p-3.5 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 rounded-2xl space-y-2 text-xs">
               <div class="flex items-center justify-between">
                 <p class="font-bold text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
                   <span class="material-symbols-outlined text-primary text-base">inventory_2</span>
@@ -137,8 +156,20 @@
               </p>
             </div>
 
-            <!-- TOMBOL AKSI: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (HANYA DITAMPILKAN JIKA USER SUDAH LOGIN) -->
-            <div v-if="tokenCookie" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <!-- JIKA BUKU DIGITAL (E-BOOK): HANYA ADA TOMBOL BACA BUKU ONLINE (TANPA PINJAM / RESERVASI) -->
+            <div v-if="isEbook" class="pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <button 
+                @click="showPdfReader = true"
+                class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-blue-600/25 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>📖</span>
+                <span>Baca Buku Online</span>
+                <span class="material-symbols-outlined text-base">chrome_reader_mode</span>
+              </button>
+            </div>
+
+            <!-- TOMBOL AKSI BUKU FISIK: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (JIKA USER LOGIN) -->
+            <div v-else-if="tokenCookie" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               
               <!-- Tombol Pinjam Mandiri (Kondisional: Aktif hanya saat terhubung ke Wi-Fi Kampus STAH DNJ) -->
               <button 
@@ -185,14 +216,14 @@
 
             </div>
 
-            <!-- JIKA USER BELUM LOGIN: TAMPILKAN TOMBOL LOGIN SSO -->
+            <!-- JIKA USER BELUM LOGIN (BUKU FISIK): TAMPILKAN TOMBOL LOGIN SSO -->
             <div v-else class="pt-4 border-t border-slate-100 dark:border-zinc-800">
               <a 
                 href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>🔑</span>
-                <span>Login untuk Meminjam & Reservasi Buku</span>
+                <span>Login untuk Meminjam &amp; Reservasi Buku</span>
                 <span class="material-symbols-outlined text-base">arrow_forward</span>
               </a>
             </div>
@@ -296,6 +327,13 @@
       <!-- Multi-Book Cart Borrowing Modal -->
       <CartBorrowModal v-model="showCartModal" @borrowed-success="loadBookDetail" />
 
+      <!-- PDF Reader Modal for E-Book Digital -->
+      <PdfReaderModal 
+        v-model="showPdfReader" 
+        :pdf-url="(book as any)?.file_pdf || (book as any)?.pdf_url || (book as any)?.ebook_url || (book as any)?.link_baca" 
+        :title="book?.judul" 
+      />
+
     </div>
   </div>
 </template>
@@ -307,9 +345,13 @@ import { usePustakaApi, type Book } from '../../composables/usePustakaApi';
 import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
+import PdfReaderModal from '../../components/PdfReaderModal.vue';
+
+import { useBookCover } from '../../composables/useBookCover';
 
 const route = useRoute();
 const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
+const { fallbackCover, getBookCoverUrl, handleImageError } = useBookCover();
 const { 
   getBookById, 
   getBooks, 
@@ -326,20 +368,28 @@ const {
 
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
 
-const fallbackCover = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400" fill="none"><rect width="300" height="400" fill="#0f172a"/><rect x="15" y="15" width="270" height="370" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/><path d="M150 140 C130 130 90 130 70 140 V240 C90 230 130 230 150 240 C170 230 210 230 230 240 V140 C210 130 170 130 150 140 Z" fill="#475569"/><path d="M150 140 V240" stroke="#1e293b" stroke-width="3"/><text x="150" y="285" font-family="sans-serif" font-size="16" font-weight="bold" fill="#94a3b8" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  if (img) {
-    img.src = fallbackCover;
-  }
-};
-
 const loading = ref(true);
 const book = ref<Book | null>(null);
 const isWishlisted = ref(false);
 const isStaffOnline = ref(true);
 const togglingWishlist = ref(false);
+const showPdfReader = ref(false);
+
+const isEbook = computed(() => {
+  if (!book.value) return false;
+  const b = book.value as any;
+  if (b.is_ebook || b.is_digital) return true;
+  
+  const catObj = b.category || b.kategori;
+  let catName = '';
+  if (catObj && typeof catObj === 'object') {
+    catName = catObj.nama_kategori || catObj.name || '';
+  } else if (typeof catObj === 'string') {
+    catName = catObj;
+  }
+
+  return /e-?book|digital|elektronik/i.test(catName);
+});
 
 const showBorrowModal = ref(false);
 const borrowDuration = ref(7);
@@ -353,14 +403,39 @@ const newReviewText = ref('');
 const submittingReview = ref(false);
 const reviewsList = ref<any[]>([]);
 
+const slugifyTitle = (text: string): string => {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
+const getBookUrl = (b: any): string => {
+  if (!b) return '/buku';
+  const titleSlug = slugifyTitle(b.judul || b.title || 'buku');
+  return `/buku/${titleSlug}-${b.id}`;
+};
+
 const parseBookIdFromParam = (param: string): string => {
   if (!param) return '1';
-  const match = param.match(/(\d+)$/);
+  const match = param.match(/(?:^|-)(\d+)$/);
   if (match) return match[1];
   return param;
 };
 
 const bookId = parseBookIdFromParam(route.params.id as string);
+
+useHead({
+  title: computed(() => book.value ? `${book.value.judul} - Perpustakaan STAH DNJ` : 'Detail Buku - Perpustakaan STAH DNJ'),
+  meta: [
+    { 
+      name: 'description', 
+      content: computed(() => book.value ? `Detail dan ketersediaan buku "${book.value.judul}" karya ${book.value.penulis || 'STAH DNJ'}.` : 'Detail koleksi buku perpustakaan.') 
+    }
+  ]
+});
 
 const availableCopiesCount = computed(() => {
   if (!book.value) return 0;
@@ -421,6 +496,12 @@ const loadBookDetail = async () => {
 
     if (book.value) {
       loadReviews(book.value.id);
+      if (process.client) {
+        const canonicalUrl = getBookUrl(book.value);
+        if (route.path !== canonicalUrl) {
+          window.history.replaceState(null, '', canonicalUrl);
+        }
+      }
     }
 
     if (process.client) {

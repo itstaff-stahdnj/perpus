@@ -521,9 +521,18 @@ const fallbackCovers = [
   noImagePlaceholder
 ];
 
+const slugifyBookTitle = (text: string): string => {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
 const getBookUrl = (b: Book) => {
-  const slug = b.slug || b.judul.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-  return `/buku/${slug}-${b.id}`;
+  const titleSlug = slugifyBookTitle(b.judul);
+  return `/buku/${titleSlug}-${b.id}`;
 };
 
 const getCategoryCount = (cat: Category): number => {

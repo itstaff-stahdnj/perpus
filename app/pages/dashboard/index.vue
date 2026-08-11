@@ -226,7 +226,7 @@
                 <p class="text-[11px] text-on-surface-variant mb-4">Koleksi terpopuler di perpustakaan STAH DNJ.</p>
 
                 <div class="space-y-4">
-                  <NuxtLink v-for="book in recommendedBooks" :key="book.id" :to="`/buku/${book.id}`" class="flex gap-4 group cursor-pointer">
+                  <NuxtLink v-for="book in recommendedBooks" :key="book.id" :to="getBookUrl(book)" class="flex gap-4 group cursor-pointer">
                     <div class="w-14 h-20 shrink-0 rounded bg-primary-container/10 flex items-center justify-center text-primary font-bold overflow-hidden shadow-xs">
                       <img v-if="book.cover_image" :src="book.cover_image" alt="Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
                       <span v-else class="material-symbols-outlined text-2xl">book</span>
@@ -267,6 +267,21 @@ const userProfile = ref(null);
 const activeLoans = ref([]);
 const booksList = ref([]);
 const announcements = ref([]);
+
+const slugifyTitle = (text) => {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
+const getBookUrl = (b) => {
+  if (!b) return '/buku';
+  const titleSlug = slugifyTitle(b.judul);
+  return `/buku/${titleSlug}-${b.id}`;
+};
 
 const totalBooksAvailable = computed(() => {
   return booksList.value.filter(b => (b.stok ?? 1) > 0).length || booksList.value.length;
