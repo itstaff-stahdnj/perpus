@@ -708,6 +708,7 @@ import {
 import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import { useBookCover } from '../../composables/useBookCover';
+import { usePdfCache } from '../../composables/usePdfCache';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
 
 const route = useRoute();
@@ -716,7 +717,8 @@ const router = useRouter();
 const { getBooks, getCategories, selfBorrow, createReservation, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
 const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
-const { fallbackCover, getBookCoverUrl, handleImageError: handleCoverImageError } = useBookCover();
+const { fallbackCover, getBookCoverUrl, handleImageError: handleCoverImageError, isEbookBook } = useBookCover();
+const { prefetchCatalogPdfList } = usePdfCache();
 
 const wishlistedIds = ref<Set<number>>(new Set());
 
@@ -1264,6 +1266,11 @@ const loadData = async () => {
 
     if (categories.value.length === 0 && books.value.length > 0) {
       categories.value = deriveCategoriesFromBooks(books.value);
+    }
+
+    // Pre-fetch E-Books into temporary session cache for instant reading
+    if (books.value.length > 0) {
+      prefetchCatalogPdfList(books.value);
     }
   } catch (err) {
     console.error('Error fetching catalog data:', err);
