@@ -548,7 +548,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePustakaApi, type UserProfile } from '../../composables/usePustakaApi';
 
-const { getProfile, getReservations, updateReservationStatus, tokenCookie } = usePustakaApi();
+const { getProfile, getReservations, updateReservationStatus, tokenCookie, recordStaffHeartbeat } = usePustakaApi();
 
 const loadingRole = ref(true);
 const refreshing = ref(false);
@@ -777,6 +777,7 @@ const refreshData = async (showToast = false) => {
   if (!tokenCookie.value) return;
   refreshing.value = true;
   try {
+    recordStaffHeartbeat();
     const resRes = await getReservations().catch(() => null);
     if (resRes?.data && Array.isArray(resRes.data)) {
       reservationsList.value = resRes.data;

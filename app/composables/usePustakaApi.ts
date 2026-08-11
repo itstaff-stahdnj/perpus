@@ -362,21 +362,81 @@ export const usePustakaApi = () => {
     }
   };
 
-  // Get Staff Online Status (Facebook-style Presence)
-  const getStaffStatus = async (): Promise<{ success: boolean; is_online: boolean; online_count: number; message: string; online_staff: any[] }> => {
+  // Record Staff Activity Heartbeat
+  const recordStaffHeartbeat = async () => {
+    if (!process.client) return;
+    const now = Date.now();
+    try {
+      localStorage.setItem('pustaka_staff_last_active', String(now));
+      await $fetch<any>(`${baseUrl}/staff-status/heartbeat`, {
+        method: 'POST',
+        headers: getHeaders()
+      }).catch(() => null);
+    } catch (e) {}
+  };
+
+  // Get Staff Online Status (30-Minute Inactivity Timeout)
+  const getStaffStatus = async (): Promise<{ success: boolean; is_online: boolean; online_count: number; message: string; online_staff: any[]; last_active_minutes?: number }> => {
+    // Inactivity Threshold: 30 Minutes (1,800,000 ms)
+    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+
+    let localLastActive = 0;
+    if (process.client) {
+      const stored = localStorage.getItem('pustaka_staff_last_active');
+      if (stored) localLastActive = parseInt(stored, 10) || 0;
+    }
+
     try {
       const res = await $fetch<any>(`${baseUrl}/staff-status`, {
         headers: getHeaders()
       });
+
+      let backendOnline = res?.is_online ?? true;
+      let lastActiveTime = res?.last_active_at ? new Date(res.last_active_at).getTime() : localLastActive;
+      
+      if (!lastActiveTime && localLastActive) {
+        lastActiveTime = localLastActive;
+      }
+
+      let isOnline = backendOnline;
+
+      // If last activity is older than 30 minutes, automatically mark OFFLINE
+      if (lastActiveTime > 0) {
+        const timeDiff = Date.now() - lastActiveTime;
+        if (timeDiff > INACTIVITY_TIMEOUT_MS) {
+          isOnline = false;
+        }
+      }
+
+      const minutesAgo = lastActiveTime > 0 ? Math.floor((Date.now() - lastActiveTime) / 60000) : 0;
+
       return {
         success: res?.success ?? true,
-        is_online: res?.is_online ?? true,
-        online_count: res?.online_count ?? 0,
-        message: res?.message || '',
-        online_staff: res?.online_staff || []
+        is_online: isOnline,
+        online_count: isOnline ? (res?.online_count || 1) : 0,
+        message: isOnline ? 'Petugas Pustaka Online (Siap Olah Reservasi)' : 'Petugas Pustaka Offline (Tidak aktif > 30 menit)',
+        online_staff: res?.online_staff || [],
+        last_active_minutes: minutesAgo
       };
     } catch (e) {
-      return { success: false, is_online: true, online_count: 1, message: 'Petugas online', online_staff: [] };
+      // Fallback check using local activity timestamp
+      let isOnline = true;
+      let minutesAgo = 0;
+      if (localLastActive > 0) {
+        const diff = Date.now() - localLastActive;
+        if (diff > INACTIVITY_TIMEOUT_MS) {
+          isOnline = false;
+        }
+        minutesAgo = Math.floor(diff / 60000);
+      }
+      return { 
+        success: true, 
+        is_online: isOnline, 
+        online_count: isOnline ? 1 : 0, 
+        message: isOnline ? 'Petugas Pustaka Online' : 'Petugas Pustaka Offline', 
+        online_staff: [],
+        last_active_minutes: minutesAgo
+      };
     }
   };
 
@@ -773,6 +833,7 @@ export const usePustakaApi = () => {
     getUsers,
     getPublicStats,
     submitAttendance,
-    getStaffStatus
+    getStaffStatus,
+    recordStaffHeartbeat
   };
 };
