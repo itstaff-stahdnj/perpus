@@ -279,6 +279,10 @@ const flipBookRef = ref<HTMLElement | null>(null);
 
 let pageFlipInstance: any = null;
 let autoPlayTimer: any = null;
+let pdfDocInstance: any = null;
+let currentPdfScale = 1;
+const renderedPagesMap = new Map<number, string>();
+const renderingPagesSet = new Set<number>();
 
 // Sound synthesizer disabled (silent mode)
 const playPageFlipSound = () => {
@@ -286,7 +290,68 @@ const playPageFlipSound = () => {
   return;
 };
 
-// Render PDF Pages progressively (Instant initial load + background rendering)
+// Render single PDF page on demand (Lazy Loading)
+const renderSinglePage = async (pageNum: number): Promise<string | null> => {
+  if (!pdfDocInstance) return null;
+  if (renderedPagesMap.has(pageNum)) {
+    return renderedPagesMap.get(pageNum)!;
+  }
+  if (renderingPagesSet.has(pageNum)) return null;
+
+  try {
+    renderingPagesSet.add(pageNum);
+    const page = await pdfDocInstance.getPage(pageNum);
+    const viewport = page.getViewport({ scale: currentPdfScale });
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    if (context) {
+      await page.render({ canvasContext: context, viewport }).promise;
+      const imgDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      renderedPagesMap.set(pageNum, imgDataUrl);
+
+      const imgEl = document.getElementById(`flip-page-img-${pageNum}`) as HTMLImageElement;
+      const loaderEl = document.getElementById(`flip-page-loader-${pageNum}`);
+
+      if (imgEl) {
+        imgEl.src = imgDataUrl;
+        imgEl.classList.remove('hidden');
+      }
+      if (loaderEl) {
+        loaderEl.classList.add('hidden');
+      }
+
+      if (thumbnailList.value.length < pageNum) {
+        thumbnailList.value[pageNum - 1] = imgDataUrl;
+      }
+
+      return imgDataUrl;
+    }
+  } catch (e) {
+    console.warn(`Lazy render error on page ${pageNum}:`, e);
+  } finally {
+    renderingPagesSet.delete(pageNum);
+  }
+  return null;
+};
+
+// Lazy render surrounding pages window
+const lazyRenderSurroundingPages = async (centerPageNum: number) => {
+  if (!pdfDocInstance) return;
+  const start = Math.max(1, centerPageNum - 2);
+  const end = Math.min(pageCount.value, centerPageNum + 4);
+
+  for (let p = start; p <= end; p++) {
+    if (!renderedPagesMap.has(p)) {
+      renderSinglePage(p);
+    }
+  }
+};
+
+// Render PDF Pages progressively with Lazy Loading
 const loadAndRenderPdf = async () => {
   if (!props.pdfUrl || !process.client) return;
 
@@ -296,6 +361,9 @@ const loadAndRenderPdf = async () => {
   downloadProgress.value = 0;
   fileSizeText.value = 'Menghubungkan server...';
   thumbnailList.value = [];
+  renderedPagesMap.clear();
+  renderingPagesSet.clear();
+  pdfDocInstance = null;
   loadingStatusText.value = 'Membuka dokumen PDF...';
 
   try {
@@ -330,6 +398,7 @@ const loadAndRenderPdf = async () => {
     };
 
     const pdfDoc = await loadingTask.promise;
+    pdfDocInstance = pdfDoc;
     pageCount.value = pdfDoc.numPages;
 
     if (pageCount.value === 0) {
@@ -340,44 +409,42 @@ const loadAndRenderPdf = async () => {
       flipBookRef.value.innerHTML = '';
     }
 
-    const scale = Math.min(window.devicePixelRatio || 1, 1.25);
-    const initialPagesToRender = Math.min(4, pageCount.value);
-    const pageImages: string[] = [];
+    currentPdfScale = Math.min(window.devicePixelRatio || 1, 1.25);
+    thumbnailList.value = new Array(pageCount.value).fill('');
 
-    // Step 1: Render initial pages (1 to 4) INSTANTLY so user sees the book in < 200ms
-    loadingStatusText.value = 'Menyiapkan halaman pertama...';
-    for (let pageNum = 1; pageNum <= initialPagesToRender; pageNum++) {
-      const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale });
+    // Step 1: Create HTML Skeleton Containers for ALL pages
+    loadingStatusText.value = 'Menyiapkan struktur buku...';
+    for (let pageNum = 1; pageNum <= pageCount.value; pageNum++) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'page-element bg-white shadow-md relative flex items-center justify-center overflow-hidden border-r border-zinc-200';
+      pageDiv.id = `flip-page-container-${pageNum}`;
 
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+      // Lazy Loading Placeholder Loader
+      const loaderDiv = document.createElement('div');
+      loaderDiv.id = `flip-page-loader-${pageNum}`;
+      loaderDiv.className = 'absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-50 text-zinc-400 text-xs font-semibold select-none p-4 text-center';
+      loaderDiv.innerHTML = `<span class="text-xl animate-pulse">📖</span><span>Halaman ${pageNum}</span><span class="text-[10px] text-zinc-400">Memuat tampilan...</span>`;
+      pageDiv.appendChild(loaderDiv);
 
-      if (context) {
-        await page.render({ canvasContext: context, viewport }).promise;
-        const imgDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        pageImages.push(imgDataUrl);
+      // Lazy Image Element
+      const imgEl = document.createElement('img');
+      imgEl.id = `flip-page-img-${pageNum}`;
+      imgEl.className = 'hidden w-full h-full object-contain select-none pointer-events-none';
+      pageDiv.appendChild(imgEl);
 
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'page-element bg-white shadow-md relative flex items-center justify-center overflow-hidden border-r border-zinc-200';
-        
-        const imgEl = document.createElement('img');
-        imgEl.src = imgDataUrl;
-        imgEl.className = 'w-full h-full object-contain select-none pointer-events-none';
-        imgEl.id = `flip-page-img-${pageNum}`;
-        pageDiv.appendChild(imgEl);
-
-        if (flipBookRef.value) {
-          flipBookRef.value.appendChild(pageDiv);
-        }
+      if (flipBookRef.value) {
+        flipBookRef.value.appendChild(pageDiv);
       }
     }
 
-    thumbnailList.value = [...pageImages];
+    // Step 2: Render initial 4 pages IMMEDIATELY
+    loadingStatusText.value = 'Menyiapkan halaman pertama...';
+    const initialCount = Math.min(4, pageCount.value);
+    for (let p = 1; p <= initialCount; p++) {
+      await renderSinglePage(p);
+    }
 
-    // Initialize PageFlip with initial pages immediately
+    // Step 3: Initialize PageFlip with all DOM elements at once
     await nextTick();
     const { PageFlip } = await import('page-flip');
 
@@ -403,58 +470,22 @@ const loadAndRenderPdf = async () => {
         currentPage.value = e.data + 1;
         pageInput.value = currentPage.value;
         playPageFlipSound();
+
+        // Lazy render surrounding pages as user flips
+        lazyRenderSurroundingPages(currentPage.value);
       });
 
       currentPage.value = 1;
       pageInput.value = 1;
     }
 
-    // Hide loader immediately! User can start reading now!
+    // Hide loader immediately!
     loading.value = false;
 
-    // Step 2: Render remaining pages in background idle tasks (Non-blocking & Light)
-    if (pageCount.value > initialPagesToRender) {
-      setTimeout(async () => {
-        for (let pageNum = initialPagesToRender + 1; pageNum <= pdfDoc.numPages; pageNum++) {
-          try {
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale });
-
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-
-            if (context) {
-              await page.render({ canvasContext: context, viewport }).promise;
-              const imgDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-              thumbnailList.value.push(imgDataUrl);
-
-              const pageDiv = document.createElement('div');
-              pageDiv.className = 'page-element bg-white shadow-md relative flex items-center justify-center overflow-hidden border-r border-zinc-200';
-              
-              const imgEl = document.createElement('img');
-              imgEl.src = imgDataUrl;
-              imgEl.className = 'w-full h-full object-contain select-none pointer-events-none';
-              imgEl.id = `flip-page-img-${pageNum}`;
-              pageDiv.appendChild(imgEl);
-
-              if (flipBookRef.value) {
-                flipBookRef.value.appendChild(pageDiv);
-                if (pageFlipInstance) {
-                  try {
-                    pageFlipInstance.updateFromHtml(flipBookRef.value.querySelectorAll('.page-element'));
-                  } catch (e) {}
-                }
-              }
-            }
-          } catch (e) {}
-
-          // Yield main thread every page
-          await new Promise(r => setTimeout(r, 60));
-        }
-      }, 300);
-    }
+    // Background pre-render next window (pages 5..8)
+    setTimeout(() => {
+      lazyRenderSurroundingPages(1);
+    }, 200);
 
   } catch (err: any) {
     console.error('Flipbook Render Error:', err);
@@ -483,8 +514,9 @@ const jumpToPage = () => {
   jumpToPageNum(target);
 };
 
-const jumpToPageNum = (pageNum: number) => {
+const jumpToPageNum = async (pageNum: number) => {
   if (pageFlipInstance && pageNum >= 1 && pageNum <= pageCount.value) {
+    await lazyRenderSurroundingPages(pageNum);
     pageFlipInstance.flip(pageNum - 1);
   }
 };
