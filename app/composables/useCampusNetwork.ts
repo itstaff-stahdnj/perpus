@@ -25,6 +25,7 @@ export const useCampusNetwork = () => {
   const isInsideCampusGeo = ref<boolean | null>(null);
   const userDistanceKm = ref<number | null>(null);
   const geoError = ref<string | null>(null);
+  const showGpsModal = ref<boolean>(false);
   const selfBorrowTextIndex = ref<number>(0);
   
   const selfBorrowTexts = [
@@ -33,6 +34,14 @@ export const useCampusNetwork = () => {
   ];
 
   let timer: any = null;
+
+  const openGpsModal = () => {
+    showGpsModal.value = true;
+  };
+
+  const closeGpsModal = () => {
+    showGpsModal.value = false;
+  };
 
   // Check Geolocation GPS
   const checkGeolocation = () => {
@@ -61,10 +70,15 @@ export const useCampusNetwork = () => {
           isInsideCampusGeo.value = false;
           geoError.value = `Anda berada ${userDistanceKm.value} km di luar area kampus STAH DNJ.`;
         }
+        showGpsModal.value = false;
       },
       (err) => {
         console.warn('Geolocation access warning:', err.message);
         geoError.value = 'Akses lokasi tidak diizinkan. Menggunakan verifikasi jaringan Wi-Fi.';
+        // If mandatory GPS modal is required, show modal
+        if (err.code === err.PERMISSION_DENIED || err.code === err.POSITION_UNAVAILABLE) {
+          showGpsModal.value = true;
+        }
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
     );
@@ -138,6 +152,9 @@ export const useCampusNetwork = () => {
     isOutsideCampus,
     userDistanceKm,
     geoError,
+    showGpsModal,
+    openGpsModal,
+    closeGpsModal,
     checkGeolocation,
     checkNetworkStatus,
     currentSelfBorrowText,

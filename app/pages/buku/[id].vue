@@ -184,15 +184,15 @@
                 <span>Pinjam Mandiri (Di Kampus)</span>
               </button>
 
-              <!-- JIKA DI LUAR KAMPUS: PINJAM MANDIRI DISABLED (Gunakan Reservasi) -->
+              <!-- JIKA DI LUAR KAMPUS: PINJAM MANDIRI DISABLED (Klik untuk buka Pop-up GPS) -->
               <button 
                 v-else
-                disabled
-                class="py-3 px-3 rounded-2xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 font-extrabold text-[11px] border border-slate-300 dark:border-zinc-700 cursor-not-allowed transition-all duration-500 flex items-center justify-center gap-1.5 shadow-none"
-                :title="`Anda berada ${userDistanceKm ? userDistanceKm + ' km ' : ''}di luar area kampus STAH DNJ. Silakan gunakan fitur Reservasi di sebelah.`"
+                @click="openGpsModal"
+                class="py-3 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 font-extrabold text-[11px] border border-slate-300 dark:border-zinc-700 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
+                :title="`Anda berada ${userDistanceKm ? userDistanceKm + ' km ' : ''}di luar area kampus STAH DNJ. Klik untuk perbarui lokasi GPS.`"
               >
                 <span class="material-symbols-outlined text-sm text-rose-500 shrink-0">location_off</span>
-                <span class="transition-all duration-300 truncate">🚫 Di Luar Kampus (Gunakan Reservasi)</span>
+                <span class="transition-all duration-300 truncate">🚫 Di Luar Kampus (Cek GPS)</span>
               </button>
 
               <!-- Tombol Reservasi Buku (Tersedia dari luar kampus / dalam kampus) -->
@@ -339,6 +339,13 @@
         :title="book?.judul" 
       />
 
+      <!-- Mandatory GPS Permission Activation Modal -->
+      <GpsPermissionModal 
+        :is-open="showGpsModal" 
+        @close="closeGpsModal" 
+        @granted="checkGeolocation" 
+      />
+
     </div>
   </div>
 </template>
@@ -351,11 +358,22 @@ import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
 import PdfReaderModal from '../../components/PdfReaderModal.vue';
+import GpsPermissionModal from '../../components/GpsPermissionModal.vue';
 
 import { useBookCover } from '../../composables/useBookCover';
 
 const route = useRoute();
-const { isCampusNetwork, isInsideCampus, isOutsideCampus, userDistanceKm, currentSelfBorrowText } = useCampusNetwork();
+const { 
+  isCampusNetwork, 
+  isInsideCampus, 
+  isOutsideCampus, 
+  userDistanceKm, 
+  currentSelfBorrowText,
+  showGpsModal,
+  openGpsModal,
+  closeGpsModal,
+  checkGeolocation
+} = useCampusNetwork();
 const { fallbackCover, getBookCoverUrl, handleImageError, extractPdfUrl, isEbookBook } = useBookCover();
 const { 
   getBookById, 
