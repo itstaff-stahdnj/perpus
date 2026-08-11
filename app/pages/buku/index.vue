@@ -290,14 +290,29 @@
               </div>
 
               <div class="p-5 pt-0 space-y-2">
-                <div class="flex items-center gap-1.5 mb-2">
+                <div v-if="isEbook(book)" class="flex items-center gap-1.5 mb-2 text-xs text-blue-700 dark:text-blue-300 font-extrabold bg-blue-50 dark:bg-blue-950/50 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800">
+                  <span>⚡</span>
+                  <span>Akses Digital (Online)</span>
+                </div>
+                <div v-else class="flex items-center gap-1.5 mb-2">
                   <span class="w-2 h-2 rounded-full" :class="(book.stok === undefined || book.stok > 0) ? 'bg-emerald-500' : 'bg-rose-500'"></span>
                   <span class="text-caption font-label-md font-semibold" :class="(book.stok === undefined || book.stok > 0) ? 'text-emerald-700' : 'text-rose-700'">
                     {{ (book.stok === undefined || book.stok > 0) ? `Tersedia (${book.stok ?? 1})` : 'Tidak Tersedia (Dipinjam)' }}
                   </span>
                 </div>
-                <!-- Action Buttons (JIKA SUDAH LOGIN) -->
-                <div v-if="tokenCookie" class="space-y-1.5">
+
+                <!-- JIKA BUKU E-BOOK DIGITAL -->
+                <div v-if="isEbook(book)" class="space-y-1.5">
+                  <NuxtLink 
+                    :to="getBookUrl(book)"
+                    class="block w-full py-2 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>📖 Baca Online</span>
+                  </NuxtLink>
+                </div>
+
+                <!-- Action Buttons Buku Fisik (JIKA SUDAH LOGIN) -->
+                <div v-else-if="tokenCookie" class="space-y-1.5">
                   <div class="grid grid-cols-2 gap-1.5">
                     <button 
                       v-if="isCampusNetwork"
@@ -383,7 +398,11 @@
               </div>
 
               <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0">
-                <div class="flex items-center gap-1.5">
+                <div v-if="isEbook(book)" class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300 font-extrabold bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <span>⚡</span>
+                  <span>Akses Digital (Online)</span>
+                </div>
+                <div v-else class="flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full" :class="(book.stok === undefined || book.stok > 0) ? 'bg-emerald-500' : 'bg-rose-500'"></span>
                   <span class="text-xs font-semibold" :class="(book.stok === undefined || book.stok > 0) ? 'text-emerald-700' : 'text-rose-700'">
                     {{ (book.stok === undefined || book.stok > 0) ? `Tersedia (${book.stok ?? 1})` : 'Sedang Dipinjam' }}
@@ -391,7 +410,18 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <template v-if="tokenCookie">
+                  <!-- JIKA BUKU E-BOOK DIGITAL -->
+                  <template v-if="isEbook(book)">
+                    <NuxtLink 
+                      :to="getBookUrl(book)"
+                      class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>📖 Baca Online</span>
+                    </NuxtLink>
+                  </template>
+
+                  <!-- BUKU FISIK (JIKA USER LOGIN) -->
+                  <template v-else-if="tokenCookie">
                     <button 
                       v-if="isCampusNetwork"
                       @click="openBorrowModal(book)"
@@ -423,6 +453,7 @@
                     </button>
                   </template>
 
+                  <!-- BUKU FISIK (BELUM LOGIN) -->
                   <a 
                     v-else
                     href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
@@ -676,6 +707,7 @@ import {
 
 import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
+import { useBookCover } from '../../composables/useBookCover';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
 
 const route = useRoute();
@@ -684,6 +716,7 @@ const router = useRouter();
 const { getBooks, getCategories, selfBorrow, createReservation, tokenCookie, getWishlist, addToWishlist, removeFromWishlist } = usePustakaApi();
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
 const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
+const { fallbackCover, getBookCoverUrl, handleImageError: handleCoverImageError } = useBookCover();
 
 const wishlistedIds = ref<Set<number>>(new Set());
 
@@ -846,11 +879,14 @@ const sortLabels: Record<string, string> = {
 
 const fallbackCover = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400" fill="none"><rect width="300" height="400" fill="#0f172a"/><rect x="15" y="15" width="270" height="370" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/><path d="M150 140 C130 130 90 130 70 140 V240 C90 230 130 230 150 240 C170 230 210 230 230 240 V140 C210 130 170 130 150 140 Z" fill="#475569"/><path d="M150 140 V240" stroke="#1e293b" stroke-width="3"/><text x="150" y="285" font-family="sans-serif" font-size="16" font-weight="bold" fill="#94a3b8" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  if (img) {
-    img.src = fallbackCover;
+const handleImageError = (event: Event, bookOrIndex?: any) => {
+  let b: any = null;
+  if (typeof bookOrIndex === 'object') {
+    b = bookOrIndex;
+  } else if (typeof bookOrIndex === 'number' && paginatedBooks.value[bookOrIndex]) {
+    b = paginatedBooks.value[bookOrIndex];
   }
+  handleCoverImageError(event, b);
 };
 
 const isBookMatchingCategory = (b: Book, targetCategory: string): boolean => {
@@ -1036,11 +1072,29 @@ const availableDdcOptions = computed(() => {
 });
 
 const getBookCover = (b: Book) => {
-  return b.cover_image || b.cover_image_url || fallbackCover;
+  return getBookCoverUrl(b);
+};
+
+const slugifyTitle = (text: string): string => {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
+const isEbook = (b: Book): boolean => {
+  if (!b) return false;
+  const bAny = b as any;
+  if (bAny.is_ebook || bAny.is_digital) return true;
+  const catName = getBookCategoryName(b);
+  return /e-?book|digital|elektronik/i.test(catName);
 };
 
 const getBookUrl = (b: Book) => {
-  return `/buku/${b.id}`;
+  const titleSlug = slugifyTitle(b.judul);
+  return `/buku/${titleSlug}-${b.id}`;
 };
 
 const repositorySearchUrl = computed(() => {

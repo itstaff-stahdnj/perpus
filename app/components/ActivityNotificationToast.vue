@@ -130,7 +130,8 @@ const handleToastClick = () => {
       router.push('/reservasi')
     }
   } else if (toast.value?.book_id) {
-    router.push(`/buku/${toast.value.book_id}`)
+    const slug = (toast.value.book_title || 'buku').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    router.push(`/buku/${slug}-${toast.value.book_id}`)
   } else {
     router.push('/buku')
   }

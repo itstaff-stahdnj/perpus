@@ -392,7 +392,7 @@
           <NuxtLink 
             v-for="book in wishlistBooks" 
             :key="book.id" 
-            :to="`/buku/${book.book_id || book.id}`"
+            :to="getBookUrl(book)"
             class="p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-200 transition-all flex gap-3 group"
           >
             <div class="w-14 h-20 bg-slate-200 rounded-lg overflow-hidden shrink-0 border border-slate-300">
@@ -770,6 +770,22 @@ import { useCampusNetwork } from '../../composables/useCampusNetwork';
 
 const { getProfile, updateProfile, getLoans, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
 const { isCampusNetwork } = useCampusNetwork();
+
+const slugifyTitle = (text: string): string => {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
+const getBookUrl = (b: any): string => {
+  if (!b) return '/buku';
+  const titleSlug = slugifyTitle(b.judul || b.title || 'buku');
+  const id = b.book_id || b.id || '1';
+  return `/buku/${titleSlug}-${id}`;
+};
 
 const activeTab = ref<'card' | 'loans' | 'reservations' | 'wishlist' | 'testimonial' | 'profile_bio' | 'security'>('card');
 const user = ref<UserProfile | null>(null);
