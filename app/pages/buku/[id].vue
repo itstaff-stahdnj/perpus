@@ -331,7 +331,7 @@
       <!-- PDF Reader Modal for E-Book Digital -->
       <PdfReaderModal 
         v-model="showPdfReader" 
-        :pdf-url="(book as any)?.file_pdf || (book as any)?.pdf_url || (book as any)?.ebook_url || (book as any)?.link_baca" 
+        :pdf-url="currentPdfUrl" 
         :title="book?.judul" 
       />
 
@@ -352,7 +352,7 @@ import { useBookCover } from '../../composables/useBookCover';
 
 const route = useRoute();
 const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
-const { fallbackCover, getBookCoverUrl, handleImageError } = useBookCover();
+const { fallbackCover, getBookCoverUrl, handleImageError, extractPdfUrl, isEbookBook } = useBookCover();
 const { 
   getBookById, 
   getBooks, 
@@ -377,22 +377,11 @@ const togglingWishlist = ref(false);
 const showPdfReader = ref(false);
 
 const isEbook = computed(() => {
-  if (!book.value) return false;
-  const b = book.value as any;
-  if (b.is_ebook || b.is_digital || b.tipe_koleksi === 'digital' || b.pdf_file || b.file_pdf || b.pdf_url || b.ebook_url || b.link_baca) return true;
+  return isEbookBook(book.value);
+});
 
-  const catObj = b.category || b.kategori;
-  let catName = '';
-  if (catObj && typeof catObj === 'object') {
-    catName = catObj.nama_kategori || catObj.name || catObj.title || '';
-  } else if (typeof catObj === 'string') {
-    catName = catObj;
-  }
-
-  if (/e-?book|digital|elektronik|pdf|jurnal/i.test(catName)) return true;
-
-  const klas = (b.no_panggil || b.klasifikasi || '') + '';
-  return /e-?book|digital|elektronik/i.test(klas);
+const currentPdfUrl = computed(() => {
+  return extractPdfUrl(book.value);
 });
 
 const showBorrowModal = ref(false);

@@ -26,6 +26,7 @@
           <div class="flex items-center gap-2 shrink-0">
             <!-- Open in New Tab Button -->
             <a 
+              v-if="activePdfUrl"
               :href="activePdfUrl" 
               target="_blank" 
               rel="noopener noreferrer"
@@ -50,25 +51,46 @@
         <!-- Reader Main Viewer Body -->
         <div class="flex-1 bg-zinc-900 relative overflow-hidden flex flex-col items-center justify-center">
           
-          <!-- Loading State -->
-          <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-10 text-zinc-300">
-            <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-            <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital...</p>
+          <template v-if="activePdfUrl">
+            <!-- Loading State -->
+            <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-10 text-zinc-300">
+              <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+              <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital...</p>
+            </div>
+
+            <!-- Embedded PDF Viewer -->
+            <iframe 
+              :src="viewerSrc" 
+              class="w-full h-full border-0"
+              @load="loading = false"
+              title="E-Book Reader"
+            ></iframe>
+          </template>
+
+          <div v-else class="flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-3xl">
+              📄
+            </div>
+            <div class="space-y-1">
+              <h4 class="text-lg font-bold text-white">Berkas PDF Belum Tersedia</h4>
+              <p class="text-xs text-zinc-400 leading-relaxed">
+                Buku digital ini belum memiliki berkas dokumen PDF yang terunggah di server perpustakaan. Silakan hubungi petugas pustakawan untuk pengunggahan file.
+              </p>
+            </div>
+            <button 
+              @click="close"
+              class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white rounded-xl transition-colors cursor-pointer"
+            >
+              Tutup Pembaca
+            </button>
           </div>
 
-          <!-- Embedded PDF Viewer -->
-          <iframe 
-            :src="viewerSrc" 
-            class="w-full h-full border-0"
-            @load="loading = false"
-            title="E-Book Reader"
-          ></iframe>
         </div>
 
         <!-- Reader Footer Status -->
         <div class="bg-zinc-950 px-4 py-2 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400 shrink-0">
           <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full" :class="activePdfUrl ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
             <span>Hak Cipta Dilindungi • Koleksi Digital STAH DNJ</span>
           </div>
           <span class="font-mono text-zinc-500 text-[10px]">Akses Semua Perangkat</span>
@@ -94,15 +116,17 @@ const emit = defineEmits<{
 
 const loading = ref(true);
 
-// Fallback demo PDF if no PDF file URL is provided
-const samplePdf = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
-
 const activePdfUrl = computed(() => {
-  return props.pdfUrl && props.pdfUrl.trim() !== '' ? props.pdfUrl : samplePdf;
+  if (!props.pdfUrl || props.pdfUrl.trim() === '') return '';
+  if (props.pdfUrl.startsWith('http://') || props.pdfUrl.startsWith('https://') || props.pdfUrl.startsWith('data:')) {
+    return props.pdfUrl;
+  }
+  const cleanPath = props.pdfUrl.startsWith('/') ? props.pdfUrl : `/${props.pdfUrl}`;
+  return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
 });
 
 const viewerSrc = computed(() => {
-  // Use browser embed or Google Drive PDF viewer fallback for online viewing
+  if (!activePdfUrl.value) return '';
   return `https://docs.google.com/viewer?url=${encodeURIComponent(activePdfUrl.value)}&embedded=true`;
 });
 
