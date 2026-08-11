@@ -172,37 +172,41 @@
             <!-- TOMBOL AKSI BUKU FISIK: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (JIKA USER LOGIN) -->
             <div v-else-if="tokenCookie" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               
-              <!-- Tombol Pinjam Mandiri (Kondisional: Aktif hanya saat terhubung ke Wi-Fi Kampus STAH DNJ) -->
+              <!-- Tombol Pinjam Mandiri (Kondisional: Aktif hanya jika user berada DI DALAM KAMPUS via GPS / Wi-Fi) -->
               <button 
-                v-if="isCampusNetwork"
+                v-if="isInsideCampus"
                 @click="openBorrowModal"
                 :disabled="availableCopiesCount === 0"
                 class="py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                title="Peminjaman Mandiri fisik langsung di rak perpustakaan STAH DNJ"
               >
                 <span>📖</span>
-                <span>Pinjam Mandiri</span>
+                <span>Pinjam Mandiri (Di Kampus)</span>
               </button>
 
+              <!-- JIKA DI LUAR KAMPUS: PINJAM MANDIRI DISABLED (Gunakan Reservasi) -->
               <button 
                 v-else
                 disabled
                 class="py-3 px-3 rounded-2xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 font-extrabold text-[11px] border border-slate-300 dark:border-zinc-700 cursor-not-allowed transition-all duration-500 flex items-center justify-center gap-1.5 shadow-none"
-                :title="currentSelfBorrowText"
+                :title="`Anda berada ${userDistanceKm ? userDistanceKm + ' km ' : ''}di luar area kampus STAH DNJ. Silakan gunakan fitur Reservasi di sebelah.`"
               >
-                <span class="material-symbols-outlined text-sm text-rose-500 animate-pulse shrink-0">wifi_off</span>
-                <span class="transition-all duration-300 truncate">{{ currentSelfBorrowText }}</span>
+                <span class="material-symbols-outlined text-sm text-rose-500 shrink-0">location_off</span>
+                <span class="transition-all duration-300 truncate">🚫 Di Luar Kampus (Gunakan Reservasi)</span>
               </button>
 
-              <!-- Tombol Reservasi Buku (Kondisional: Aktif saat Petugas Online, Ditiadakan saat Petugas Offline) -->
+              <!-- Tombol Reservasi Buku (Tersedia dari luar kampus / dalam kampus) -->
               <button 
                 @click="handleReservation"
                 :disabled="submittingReservation || !isStaffOnline"
                 class="py-3 px-4 rounded-2xl font-extrabold text-xs shadow-lg active:scale-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 :class="isStaffOnline ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-amber-500/20' : 'bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed shadow-none'"
-                :title="isStaffOnline ? 'Ajukan reservasi antrean buku ke Petugas Pustaka' : 'Reservasi ditiadakan sementara karena tidak ada petugas online. Silakan gunakan Pinjam Mandiri.'"
+                :title="isStaffOnline ? (isOutsideCampus ? 'Ajukan reservasi dari rumah/luar kampus agar ditarikkan petugas' : 'Ajukan reservasi ke Petugas Pustaka') : 'Petugas offline. Reservasi ditiadakan sementara.'"
               >
                 <span>{{ isStaffOnline ? '⏳' : '🚫' }}</span>
-                <span>{{ submittingReservation ? 'Memproses...' : (isStaffOnline ? 'Ajukan Reservasi' : 'Reservasi Ditiadakan') }}</span>
+                <span>
+                  {{ submittingReservation ? 'Memproses...' : (isStaffOnline ? (isOutsideCampus ? 'Ajukan Reservasi (Luar Kampus)' : 'Ajukan Reservasi') : 'Reservasi Ditiadakan') }}
+                </span>
               </button>
 
               <!-- Tombol Tampung ke Keranjang (Multi-Buku) -->
@@ -351,7 +355,7 @@ import PdfReaderModal from '../../components/PdfReaderModal.vue';
 import { useBookCover } from '../../composables/useBookCover';
 
 const route = useRoute();
-const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
+const { isCampusNetwork, isInsideCampus, isOutsideCampus, userDistanceKm, currentSelfBorrowText } = useCampusNetwork();
 const { fallbackCover, getBookCoverUrl, handleImageError, extractPdfUrl, isEbookBook } = useBookCover();
 const { 
   getBookById, 

@@ -139,7 +139,11 @@ export default defineNuxtConfig({
     pustakaApiKey: process.env.PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b',
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://portal-perpus.stahdnj.ac.id/api',
-      pustakaApiKey: process.env.NUXT_PUBLIC_PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b'
+      pustakaApiKey: process.env.NUXT_PUBLIC_PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b',
+      campusLat: process.env.NUXT_PUBLIC_CAMPUS_LAT || '-6.255432',
+      campusLng: process.env.NUXT_PUBLIC_CAMPUS_LNG || '106.90898',
+      campusRadiusKm: process.env.NUXT_PUBLIC_CAMPUS_RADIUS_KM || '0.35',
+      staffInactivityMinutes: process.env.NUXT_PUBLIC_STAFF_INACTIVITY_MINUTES || '30'
     }
   },
 
@@ -150,7 +154,7 @@ export default defineNuxtConfig({
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
         'X-XSS-Protection': '1; mode=block',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)'
       }
     }
   },
