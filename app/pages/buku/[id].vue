@@ -49,8 +49,11 @@
                 <span class="px-3 py-1 rounded-full text-[0.68rem] font-black uppercase tracking-wider bg-blue-100 text-primary dark:bg-blue-950/60 dark:text-blue-400">
                   🏷️ {{ book?.category?.nama_kategori || (book?.category as any)?.nama || 'Koleksi Pustaka' }}
                 </span>
-                <span class="px-3 py-1 rounded-full text-[0.68rem] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300">
-                  🔢 {{ (book as any)?.klasifikasi || (book as any)?.no_panggil || (book?.id ? `D EKMA ${book.id}` : 'D EKMA') }}
+                <span 
+                  v-if="bookClassification"
+                  class="px-3 py-1 rounded-full text-[0.68rem] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"
+                >
+                  🔢 {{ bookClassification }}
                 </span>
               </div>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight pt-1">
@@ -404,6 +407,16 @@ const isEbook = computed(() => {
 
 const currentPdfUrl = computed(() => {
   return extractPdfUrl(book.value);
+});
+
+const bookClassification = computed(() => {
+  const b = book.value as any;
+  if (!b) return null;
+  const val = b.klasifikasi || b.no_panggil || b.ddc || b.kode_klasifikasi;
+  if (!val || typeof val !== 'string' || val.trim() === '' || val.trim() === '-' || val.trim() === '0') {
+    return null;
+  }
+  return val.trim();
 });
 
 const showBorrowModal = ref(false);
