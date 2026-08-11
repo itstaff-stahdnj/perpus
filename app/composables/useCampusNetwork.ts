@@ -21,7 +21,6 @@ const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: num
 };
 
 export const useCampusNetwork = () => {
-  const isCampusNetwork = ref<boolean>(true);
   const isInsideCampusGeo = ref<boolean | null>(null);
   const userDistanceKm = ref<number | null>(null);
   const geoError = ref<string | null>(null);
@@ -29,8 +28,8 @@ export const useCampusNetwork = () => {
   const selfBorrowTextIndex = ref<number>(0);
   
   const selfBorrowTexts = [
-    'Pinjam Mandiri Khusus di Area Kampus',
-    'Gunakan Wi-Fi Kampus / Lokasi STAH DNJ'
+    'Pinjam Mandiri Khusus di Area Kampus STAH DNJ',
+    'Aktifkan Lokasi GPS untuk Pinjam Mandiri'
   ];
 
   let timer: any = null;
@@ -43,10 +42,12 @@ export const useCampusNetwork = () => {
     showGpsModal.value = false;
   };
 
-  // Check Geolocation GPS
+  // Check Geolocation GPS Exclusively
   const checkGeolocation = () => {
     if (!process.client || !navigator.geolocation) {
-      isInsideCampusGeo.value = true; // Fallback
+      isInsideCampusGeo.value = false;
+      geoError.value = 'Browser tidak mendukung GPS Geolocation.';
+      showGpsModal.value = true;
       return;
     }
 
@@ -64,7 +65,6 @@ export const useCampusNetwork = () => {
 
         if (dist <= radiusKm) {
           isInsideCampusGeo.value = true;
-          isCampusNetwork.value = true;
           geoError.value = null;
         } else {
           isInsideCampusGeo.value = false;
@@ -74,8 +74,8 @@ export const useCampusNetwork = () => {
       },
       (err) => {
         console.warn('Geolocation access warning:', err.message);
-        geoError.value = 'Akses lokasi tidak diizinkan. Menggunakan verifikasi jaringan Wi-Fi.';
-        // If mandatory GPS modal is required, show modal
+        isInsideCampusGeo.value = false;
+        geoError.value = 'Akses lokasi GPS tidak diizinkan.';
         if (err.code === err.PERMISSION_DENIED || err.code === err.POSITION_UNAVAILABLE) {
           showGpsModal.value = true;
         }
@@ -84,47 +84,22 @@ export const useCampusNetwork = () => {
     );
   };
 
-  const checkNetworkStatus = async () => {
-    try {
-      let res = await $fetch<any>('/api/pustaka/network/check').catch(() => null);
-      if (!res || res.is_campus_network === undefined) {
-        const config = useRuntimeConfig();
-        const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api';
-        res = await $fetch<any>(`${baseUrl}/network/check`).catch(() => null);
-      }
-      if (res && res.is_campus_network !== undefined) {
-        if (Boolean(res.is_campus_network) === true) {
-          isCampusNetwork.value = true;
-        } else if (process.client) {
-          const host = window.location.hostname;
-          if (host.includes('stahdnj') || host.includes('192.168.') || host === 'localhost') {
-            isCampusNetwork.value = true;
-          } else {
-            isCampusNetwork.value = false;
-          }
-        }
-      } else {
-        isCampusNetwork.value = true;
-      }
-    } catch (e) {
-      isCampusNetwork.value = true;
-    }
-  };
-
-  // Final check: User is inside campus if either Wi-Fi or GPS confirms it
+  // User is inside campus ONLY if GPS confirms it
   const isInsideCampus = computed(() => {
-    if (isInsideCampusGeo.value === true) return true;
-    if (isInsideCampusGeo.value === false && !isCampusNetwork.value) return false;
-    return isCampusNetwork.value;
+    return isInsideCampusGeo.value === true;
   });
 
   const isOutsideCampus = computed(() => {
     return !isInsideCampus.value;
   });
 
+  // Backward compatibility alias for isCampusNetwork
+  const isCampusNetwork = computed(() => {
+    return isInsideCampus.value;
+  });
+
   onMounted(() => {
     if (process.client) {
-      checkNetworkStatus();
       checkGeolocation();
       timer = setInterval(() => {
         selfBorrowTextIndex.value = (selfBorrowTextIndex.value + 1) % selfBorrowTexts.length;
@@ -156,7 +131,6 @@ export const useCampusNetwork = () => {
     openGpsModal,
     closeGpsModal,
     checkGeolocation,
-    checkNetworkStatus,
     currentSelfBorrowText,
     selfBorrowTexts,
     selfBorrowTextIndex
