@@ -41,27 +41,12 @@ export const useBookCover = () => {
       return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
     }
 
-    // If PDF file exists (E-Book Digital), fallback to Google Docs viewer pagenumber 1 cover image
-    const fullPdfUrl = extractPdfUrl(b);
-    if (fullPdfUrl) {
-      return `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&a=bi&pagenumber=1&w=600`;
-    }
-
     return fallbackCover;
   };
 
   const handleImageError = (event: Event, book?: Book | any) => {
     const img = event.target as HTMLImageElement;
     if (!img) return;
-
-    if (book) {
-      const fullPdfUrl = extractPdfUrl(book);
-      if (fullPdfUrl && !img.dataset.pdfTried) {
-        img.dataset.pdfTried = 'true';
-        img.src = `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&a=bi&pagenumber=1&w=600`;
-        return;
-      }
-    }
 
     img.src = fallbackCover;
   };

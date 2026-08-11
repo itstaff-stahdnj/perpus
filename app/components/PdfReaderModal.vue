@@ -130,7 +130,7 @@ const activePdfUrl = computed(() => {
 
 const viewerSrc = computed(() => {
   if (!activePdfUrl.value) return '';
-  return `https://docs.google.com/viewer?url=${encodeURIComponent(activePdfUrl.value)}&embedded=true#toolbar=0&navpanes=0`;
+  return `${activePdfUrl.value}#toolbar=0&navpanes=0&scrollbar=0`;
 });
 
 const close = () => {
