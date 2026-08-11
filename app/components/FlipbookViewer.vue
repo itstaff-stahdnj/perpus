@@ -58,20 +58,8 @@
         </button>
       </div>
 
-      <!-- Right: Action Buttons (Thumbnails, Sound, Fullscreen) -->
+      <!-- Right: Action Buttons (Thumbnails, Fullscreen) -->
       <div class="flex items-center gap-1.5 shrink-0">
-        <!-- Sound Toggle -->
-        <button 
-          @click="soundEnabled = !soundEnabled"
-          class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center transition cursor-pointer"
-          :class="{ 'text-blue-400 bg-blue-950/50 border border-blue-800/50': soundEnabled }"
-          :title="soundEnabled ? 'Matikan Suara Flip' : 'Aktifkan Suara Flip'"
-        >
-          <span class="material-symbols-outlined text-sm">
-            {{ soundEnabled ? 'volume_up' : 'volume_off' }}
-          </span>
-        </button>
-
         <!-- Thumbnail Panel Toggle -->
         <button 
           @click="showThumbnails = !showThumbnails"
