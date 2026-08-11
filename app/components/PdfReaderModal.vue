@@ -130,7 +130,7 @@ const activePdfUrl = computed(() => {
 
 const viewerSrc = computed(() => {
   if (!activePdfUrl.value) return '';
-  return `${activePdfUrl.value}#toolbar=0&navpanes=0&scrollbar=0`;
+  return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}#toolbar=0&navpanes=0&scrollbar=0`;
 });
 
 const close = () => {
