@@ -121,10 +121,24 @@ const loading = ref(true);
 
 const activePdfUrl = computed(() => {
   if (!props.pdfUrl || props.pdfUrl.trim() === '') return '';
-  if (props.pdfUrl.startsWith('http://') || props.pdfUrl.startsWith('https://') || props.pdfUrl.startsWith('data:')) {
-    return props.pdfUrl;
+  let url = props.pdfUrl.trim();
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const parsed = new URL(url);
+      if (!parsed.pathname.startsWith('/storage/')) {
+        parsed.pathname = `/storage${parsed.pathname.startsWith('/') ? '' : '/'}${parsed.pathname}`;
+      }
+      return parsed.toString();
+    } catch {
+      return url;
+    }
   }
-  const cleanPath = props.pdfUrl.startsWith('/') ? props.pdfUrl : `/${props.pdfUrl}`;
+
+  let cleanPath = url.startsWith('/') ? url : `/${url}`;
+  if (!cleanPath.startsWith('/storage/')) {
+    cleanPath = `/storage${cleanPath}`;
+  }
   return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
 });
 
