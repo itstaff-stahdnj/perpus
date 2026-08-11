@@ -62,6 +62,7 @@
                   • Penerbit: <span class="text-slate-700 dark:text-zinc-300">{{ (book as any)?.kota_terbit ? `${(book as any).kota_terbit}: ` : '' }}{{ book.penerbit }}</span>
                 </span>
               </p>
+            </div>
                <!-- Status Ketersediaan Stok & Pustakawan Aktif -->
             <div class="flex items-center gap-3 flex-wrap pt-1">
               <span 

@@ -877,8 +877,6 @@ const sortLabels: Record<string, string> = {
   'tahun-asc': 'Tahun (Terlama)'
 };
 
-const fallbackCover = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400" fill="none"><rect width="300" height="400" fill="#0f172a"/><rect x="15" y="15" width="270" height="370" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/><path d="M150 140 C130 130 90 130 70 140 V240 C90 230 130 230 150 240 C170 230 210 230 230 240 V140 C210 130 170 130 150 140 Z" fill="#475569"/><path d="M150 140 V240" stroke="#1e293b" stroke-width="3"/><text x="150" y="285" font-family="sans-serif" font-size="16" font-weight="bold" fill="#94a3b8" text-anchor="middle">Tidak Ada Cover</text></svg>')}`;
-
 const handleImageError = (event: Event, bookOrIndex?: any) => {
   let b: any = null;
   if (typeof bookOrIndex === 'object') {
