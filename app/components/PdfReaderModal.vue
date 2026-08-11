@@ -2,24 +2,24 @@
   <Teleport to="body">
     <div 
       v-if="modelValue" 
-      class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 select-none"
+      class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-3 select-none"
       @click.self="close"
       @contextmenu.prevent
     >
-      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-5xl h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div class="bg-zinc-950 border border-zinc-800 rounded-none sm:rounded-2xl w-full h-full sm:h-[95vh] sm:max-w-6xl flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         
-        <!-- Reader Header & Toolbar -->
-        <div class="bg-zinc-950 px-4 py-3 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0 text-white">
+        <!-- Header & Toolbar -->
+        <div class="bg-zinc-900 px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0 text-white z-20">
           <div class="flex items-center gap-2.5 min-w-0">
             <span class="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-base shrink-0">
               📖
             </span>
             <div class="min-w-0">
-              <h3 class="font-extrabold text-sm sm:text-base text-zinc-100 truncate leading-tight">
-                {{ title || 'Pembaca E-Book Digital' }}
+              <h3 class="font-extrabold text-xs sm:text-sm text-zinc-100 truncate leading-tight">
+                {{ title || 'Pembaca E-Book Digital Flipbook' }}
               </h3>
-              <p class="text-[11px] text-zinc-400 truncate flex items-center gap-1">
-                <span>⚡ Mode Baca Online Saja</span>
+              <p class="text-[10px] text-zinc-400 truncate flex items-center gap-1.5">
+                <span>⚡ Mode FlipHTML5 3D</span>
                 <span>•</span>
                 <span class="text-rose-400 font-bold flex items-center gap-0.5">
                   <span class="material-symbols-outlined text-[12px]">lock</span>
@@ -30,14 +30,22 @@
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
-            <!-- Protected Badge (Download Disabled) -->
-            <div 
-              v-if="activePdfUrl"
-              class="px-3 py-1.5 bg-rose-950/60 border border-rose-800/60 text-rose-300 rounded-xl text-xs font-bold flex items-center gap-1.5"
-              title="Fitur download dan cetak dinonaktifkan untuk melindungi hak cipta"
-            >
-              <span class="material-symbols-outlined text-sm text-rose-400">lock</span>
-              <span class="hidden sm:inline">Tidak Dapat Di-download</span>
+            <!-- View Mode Switcher: 3D Flipbook vs Scroll PDF -->
+            <div class="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
+              <button 
+                @click="readerMode = 'flipbook'"
+                class="px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                :class="readerMode === 'flipbook' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'"
+              >
+                <span>📖 3D Flipbook</span>
+              </button>
+              <button 
+                @click="readerMode = 'scroll'"
+                class="px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                :class="readerMode === 'scroll' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'"
+              >
+                <span>📜 Scroll Mode</span>
+              </button>
             </div>
 
             <!-- Close Reader Button -->
@@ -51,26 +59,36 @@
           </div>
         </div>
 
-        <!-- Reader Main Viewer Body -->
-        <div class="flex-1 bg-zinc-900 relative overflow-hidden flex flex-col items-center justify-center">
+        <!-- Main Body: 3D Flipbook Viewer vs Scroll Viewer -->
+        <div class="flex-1 bg-zinc-950 relative overflow-hidden flex flex-col">
           
           <template v-if="activePdfUrl">
-            <!-- Loading State -->
-            <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-10 text-zinc-300">
-              <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-              <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital (Mode Proteksi)...</p>
-            </div>
+            <!-- Mode 1: FlipHTML5 Style 3D Flipbook -->
+            <FlipbookViewer 
+              v-if="readerMode === 'flipbook'" 
+              :pdf-url="streamPdfUrl" 
+              :title="title"
+              class="w-full h-full"
+            />
 
-            <!-- Embedded PDF Viewer -->
-            <iframe 
-              :src="viewerSrc" 
-              class="w-full h-full border-0 pointer-events-auto"
-              @load="loading = false"
-              title="E-Book Reader"
-            ></iframe>
+            <!-- Mode 2: Standard PDF Scroll Viewer -->
+            <div v-else class="w-full h-full relative">
+              <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-10 text-zinc-300">
+                <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital (Scroll Mode)...</p>
+              </div>
+
+              <iframe 
+                :src="viewerSrc" 
+                class="w-full h-full border-0 pointer-events-auto"
+                @load="loading = false"
+                title="E-Book Scroll Reader"
+              ></iframe>
+            </div>
           </template>
 
-          <div v-else class="flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md">
+          <!-- Empty / Error State -->
+          <div v-else class="flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto my-auto">
             <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-3xl">
               📄
             </div>
@@ -90,15 +108,6 @@
 
         </div>
 
-        <!-- Reader Footer Status -->
-        <div class="bg-zinc-950 px-4 py-2 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400 shrink-0">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full" :class="activePdfUrl ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
-            <span>🔒 Hak Cipta Dilindungi • Proteksi Unduhan PDF Aktif • STAH DNJ</span>
-          </div>
-          <span class="font-mono text-zinc-500 text-[10px]">Read-Only Mode</span>
-        </div>
-
       </div>
     </div>
   </Teleport>
@@ -106,6 +115,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import FlipbookViewer from './FlipbookViewer.vue';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -118,6 +128,7 @@ const emit = defineEmits<{
 }>();
 
 const loading = ref(true);
+const readerMode = ref<'flipbook' | 'scroll'>('flipbook');
 
 const activePdfUrl = computed(() => {
   if (!props.pdfUrl || props.pdfUrl.trim() === '') return '';
@@ -142,9 +153,14 @@ const activePdfUrl = computed(() => {
   return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
 });
 
+const streamPdfUrl = computed(() => {
+  if (!activePdfUrl.value) return '';
+  return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}`;
+});
+
 const viewerSrc = computed(() => {
   if (!activePdfUrl.value) return '';
-  return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}#toolbar=0&navpanes=0&scrollbar=0`;
+  return `${streamPdfUrl.value}#toolbar=0&navpanes=0&scrollbar=0`;
 });
 
 const close = () => {
