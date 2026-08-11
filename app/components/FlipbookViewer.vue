@@ -292,7 +292,7 @@ const playPageFlipSound = () => {
   } catch (e) {}
 };
 
-// Render PDF Pages into Canvas and Initialize PageFlip
+// Render PDF Pages progressively (Instant initial load + background rendering)
 const loadAndRenderPdf = async () => {
   if (!props.pdfUrl || !process.client) return;
 
@@ -300,19 +300,20 @@ const loadAndRenderPdf = async () => {
   errorMessage.value = '';
   renderProgress.value = 0;
   thumbnailList.value = [];
-  loadingStatusText.value = 'Memuat modul penampil PDF...';
+  loadingStatusText.value = 'Membuka dokumen PDF...';
 
   try {
     const pdfjsLib = await import('pdfjs-dist');
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-    loadingStatusText.value = 'Mengunduh dokumen PDF dari server...';
-    
-    // Fetch PDF stream
+    // Fast PDF loading
     const loadingTask = pdfjsLib.getDocument({
       url: props.pdfUrl,
       cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
       cMapPacked: true,
+      rangeChunkSize: 65536,
+      disableAutoFetch: true,
+      disableStream: false
     });
 
     const pdfDoc = await loadingTask.promise;
@@ -322,19 +323,19 @@ const loadAndRenderPdf = async () => {
       throw new Error('Dokumen PDF tidak berisi halaman.');
     }
 
-    loadingStatusText.value = `Merender ${pageCount.value} halaman...`;
-
-    // Clear previous elements
     if (flipBookRef.value) {
       flipBookRef.value.innerHTML = '';
     }
 
+    const scale = Math.min(window.devicePixelRatio || 1, 1.25);
+    const initialPagesToRender = Math.min(4, pageCount.value);
     const pageImages: string[] = [];
 
-    // Render each PDF page to Canvas -> Image
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+    // Step 1: Render initial pages (1 to 4) INSTANTLY so user sees the book in < 200ms
+    loadingStatusText.value = 'Menyiapkan halaman pertama...';
+    for (let pageNum = 1; pageNum <= initialPagesToRender; pageNum++) {
       const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 1.5 });
+      const viewport = page.getViewport({ scale });
 
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -342,37 +343,29 @@ const loadAndRenderPdf = async () => {
       canvas.height = viewport.height;
 
       if (context) {
-        await page.render({
-          canvasContext: context,
-          viewport: viewport
-        }).promise;
-
-        const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        await page.render({ canvasContext: context, viewport }).promise;
+        const imgDataUrl = canvas.toDataURL('image/jpeg', 0.8);
         pageImages.push(imgDataUrl);
 
-        // Create HTML element page for FlipBook
         const pageDiv = document.createElement('div');
         pageDiv.className = 'page-element bg-white shadow-md relative flex items-center justify-center overflow-hidden border-r border-zinc-200';
         
         const imgEl = document.createElement('img');
         imgEl.src = imgDataUrl;
         imgEl.className = 'w-full h-full object-contain select-none pointer-events-none';
+        imgEl.id = `flip-page-img-${pageNum}`;
         pageDiv.appendChild(imgEl);
 
         if (flipBookRef.value) {
           flipBookRef.value.appendChild(pageDiv);
         }
       }
-
-      renderProgress.value = Math.round((pageNum / pdfDoc.numPages) * 100);
     }
 
-    thumbnailList.value = pageImages;
+    thumbnailList.value = [...pageImages];
 
-    // Initialize PageFlip
-    loadingStatusText.value = 'Menyiapkan animasi 3D flipbook...';
+    // Initialize PageFlip with initial pages immediately
     await nextTick();
-
     const { PageFlip } = await import('page-flip');
 
     if (flipBookRef.value) {
@@ -384,7 +377,7 @@ const loadAndRenderPdf = async () => {
         maxWidth: 900,
         minHeight: 400,
         maxHeight: 1200,
-        maxShadowOpacity: 0.6,
+        maxShadowOpacity: 0.5,
         showCover: true,
         mobileScrollSupport: true,
         usePortrait: true
@@ -393,7 +386,6 @@ const loadAndRenderPdf = async () => {
       const pageElements = flipBookRef.value.querySelectorAll('.page-element');
       pageFlipInstance.loadFromHTML(pageElements);
 
-      // Listen for page flip events
       pageFlipInstance.on('flip', (e: any) => {
         currentPage.value = e.data + 1;
         pageInput.value = currentPage.value;
@@ -404,7 +396,52 @@ const loadAndRenderPdf = async () => {
       pageInput.value = 1;
     }
 
+    // Hide loader immediately! User can start reading now!
     loading.value = false;
+
+    // Step 2: Render remaining pages in background idle tasks (Non-blocking & Light)
+    if (pageCount.value > initialPagesToRender) {
+      setTimeout(async () => {
+        for (let pageNum = initialPagesToRender + 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          try {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale });
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            if (context) {
+              await page.render({ canvasContext: context, viewport }).promise;
+              const imgDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+              thumbnailList.value.push(imgDataUrl);
+
+              const pageDiv = document.createElement('div');
+              pageDiv.className = 'page-element bg-white shadow-md relative flex items-center justify-center overflow-hidden border-r border-zinc-200';
+              
+              const imgEl = document.createElement('img');
+              imgEl.src = imgDataUrl;
+              imgEl.className = 'w-full h-full object-contain select-none pointer-events-none';
+              imgEl.id = `flip-page-img-${pageNum}`;
+              pageDiv.appendChild(imgEl);
+
+              if (flipBookRef.value) {
+                flipBookRef.value.appendChild(pageDiv);
+                if (pageFlipInstance) {
+                  try {
+                    pageFlipInstance.updateFromHtml(flipBookRef.value.querySelectorAll('.page-element'));
+                  } catch (e) {}
+                }
+              }
+            }
+          } catch (e) {}
+
+          // Yield main thread every page
+          await new Promise(r => setTimeout(r, 60));
+        }
+      }, 300);
+    }
 
   } catch (err: any) {
     console.error('Flipbook Render Error:', err);
