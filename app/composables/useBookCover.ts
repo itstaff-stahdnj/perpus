@@ -5,15 +5,17 @@ export const useBookCover = () => {
 
   const isEbookBook = (b: Book | any): boolean => {
     if (!b) return false;
-    if (b.is_ebook || b.is_digital || b.tipe_koleksi === 'digital') return true;
+    if (b.is_ebook || b.is_digital || b.tipe_koleksi === 'digital' || b.pdf_file || b.file_pdf || b.pdf_url || b.ebook_url || b.link_baca) return true;
     const catObj = b.category || b.kategori;
     let catName = '';
     if (catObj && typeof catObj === 'object') {
-      catName = catObj.nama_kategori || catObj.name || '';
+      catName = catObj.nama_kategori || catObj.name || catObj.title || '';
     } else if (typeof catObj === 'string') {
       catName = catObj;
     }
-    return /e-?book|digital|elektronik/i.test(catName);
+    if (/e-?book|digital|elektronik|pdf|jurnal/i.test(catName)) return true;
+    const klas = (b.no_panggil || b.klasifikasi || '') + '';
+    return /e-?book|digital|elektronik/i.test(klas);
   };
 
   const getBookCoverUrl = (b: Book | any): string => {
