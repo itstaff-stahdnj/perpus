@@ -266,7 +266,7 @@ const currentPage = ref(1);
 const pageInput = ref(1);
 
 const zoomLevel = ref(1);
-const soundEnabled = ref(true);
+const soundEnabled = ref(false);
 const showThumbnails = ref(false);
 const isFullscreen = ref(false);
 const isAutoPlaying = ref(false);
@@ -280,26 +280,10 @@ const flipBookRef = ref<HTMLElement | null>(null);
 let pageFlipInstance: any = null;
 let autoPlayTimer: any = null;
 
-// Sound synthesizer for realistic paper page flip sound
+// Sound synthesizer disabled (silent mode)
 const playPageFlipSound = () => {
-  if (!soundEnabled.value || !process.client) return;
-  try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const bufferSize = audioCtx.sampleRate * 0.12;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
-    }
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 1200;
-    noise.connect(filter);
-    filter.connect(audioCtx.destination);
-    noise.start();
-  } catch (e) {}
+  // Audio playback completely disabled for silent reading experience
+  return;
 };
 
 // Render PDF Pages progressively (Instant initial load + background rendering)

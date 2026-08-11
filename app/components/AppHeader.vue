@@ -61,16 +61,6 @@
         >
           Tentang Kami
         </NuxtLink>
-        <NuxtLink 
-          v-if="isAdminUser"
-          to="/reservasi" 
-          class="font-label-md text-xs lg:text-sm font-semibold hover:bg-surface-container-high transition-colors px-2.5 lg:px-3.5 py-2 rounded-xl whitespace-nowrap text-amber-700 bg-amber-50/80 border border-amber-300 flex items-center gap-1.5"
-          :class="route.path.startsWith('/reservasi') ? 'text-amber-900 font-extrabold bg-amber-200/80' : ''"
-          title="Halaman Khusus Kepala Pustaka & Pustakawan"
-        >
-          <span class="material-symbols-outlined text-base">collections_bookmark</span>
-          <span>Kelola Reservasi</span>
-        </NuxtLink>
       </nav>
 
       <!-- Right Action Area (SSO Portal / User Account) -->
@@ -143,8 +133,8 @@
           <span class="material-symbols-outlined text-base animate-bounce shrink-0">notifications_active</span>
           <span class="truncate">🚨 PERHATIAN PUSTAKAWAN: Ada {{ pendingReservationCount }} reservasi buku baru yang perlu diambil dari rak!</span>
         </div>
-        <NuxtLink to="/reservasi" class="underline hover:text-slate-800 font-extrabold shrink-0">
-          Proses Pengambilan Buku &rarr;
+        <NuxtLink to="/profil?tab=reservations" class="underline hover:text-slate-800 font-extrabold shrink-0">
+          Kelola Reservasi di Profil &rarr;
         </NuxtLink>
       </div>
     </div>

@@ -765,9 +765,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { usePustakaApi, type UserProfile, type Book } from '../../composables/usePustakaApi';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 
+const route = useRoute();
 const { getProfile, updateProfile, getLoans, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
 const { isCampusNetwork } = useCampusNetwork();
 
@@ -841,7 +843,7 @@ const securityForm = ref({
 const tabs = computed(() => [
   { id: 'card', label: 'Kartu Anggota & QR', icon: 'badge' },
   { id: 'loans', label: 'Pinjaman Aktif', icon: 'pending_actions', badgeCount: loans.value.length },
-  { id: 'reservations', label: 'Reservasi Antrean', icon: 'schedule', badgeCount: reservations.value.length },
+  { id: 'reservations', label: isStaffUser.value ? 'Kelola Reservasi' : 'Reservasi Antrean', icon: 'collections_bookmark', badgeCount: reservations.value.length },
   { id: 'wishlist', label: 'Wishlist Favorit', icon: 'favorite' },
   { id: 'testimonial', label: 'Testimoni Saya (1x)', icon: 'rate_review' },
   { id: 'profile_bio', label: 'Data Diri', icon: 'person' },
@@ -1073,6 +1075,10 @@ const loadData = async () => {
 };
 
 onMounted(() => {
+  if (route.query.tab && typeof route.query.tab === 'string') {
+    activeTab.value = route.query.tab as any;
+  }
+
   if (!tokenCookie.value) {
     if (process.client) {
       window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
