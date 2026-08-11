@@ -302,11 +302,12 @@ const loadAndRenderPdf = async () => {
     const pdfjsLib = await import('pdfjs-dist');
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-    // Fast PDF loading with Live Download Progress
+    // Fast PDF loading with Live Download Progress & Cookie credentials enabled
     const loadingTask = pdfjsLib.getDocument({
       url: props.pdfUrl,
       cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
       cMapPacked: true,
+      withCredentials: true,
       rangeChunkSize: 65536,
       disableAutoFetch: true,
       disableStream: false

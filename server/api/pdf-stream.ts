@@ -1,8 +1,18 @@
-import { defineEventHandler, getQuery, setHeader, removeResponseHeader } from 'h3';
+import { defineEventHandler, getQuery, getCookie, getHeader, setHeader, removeResponseHeader } from 'h3';
 import fs from 'node:fs';
 import path from 'node:path';
 
 export default defineEventHandler(async (event) => {
+  // Security Authentication Check: Restrict digital E-Book PDF access to logged-in users only
+  const token = getCookie(event, 'token') || getCookie(event, 'auth_token') || getCookie(event, 'pustaka_token') || getHeader(event, 'authorization');
+  if (!token) {
+    return serveError(
+      event, 
+      '🔑 Login SSO Diperlukan', 
+      'Akses membaca e-book digital ini hanya diperuntukkan bagi pengguna yang telah masuk (login SSO). Silakan masuk ke akun portal perpustakaan Anda terlebih dahulu.'
+    );
+  }
+
   const query = getQuery(event);
   const rawUrl = (query.url as string) || '';
 
@@ -33,7 +43,8 @@ export default defineEventHandler(async (event) => {
         const fileBuffer = fs.readFileSync(localPath);
         setHeader(event, 'Content-Type', 'application/pdf');
         setHeader(event, 'Content-Disposition', 'inline');
-        setHeader(event, 'Cache-Control', 'public, max-age=3600');
+        setHeader(event, 'Cache-Control', 'private, max-age=3600');
+        setHeader(event, 'Access-Control-Allow-Credentials', 'true');
         removeResponseHeader(event, 'x-frame-options');
         setHeader(event, 'X-Frame-Options', 'ALLOWALL');
         return fileBuffer;
@@ -79,7 +90,8 @@ export default defineEventHandler(async (event) => {
 
       setHeader(event, 'Content-Type', contentType);
       setHeader(event, 'Content-Disposition', 'inline');
-      setHeader(event, 'Cache-Control', 'public, max-age=3600');
+      setHeader(event, 'Cache-Control', 'private, max-age=3600');
+      setHeader(event, 'Access-Control-Allow-Credentials', 'true');
       removeResponseHeader(event, 'x-frame-options');
       setHeader(event, 'X-Frame-Options', 'ALLOWALL');
 

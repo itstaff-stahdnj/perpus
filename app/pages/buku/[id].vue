@@ -160,16 +160,26 @@
               </p>
             </div>
 
-            <!-- JIKA BUKU DIGITAL (E-BOOK): HANYA ADA TOMBOL BACA BUKU ONLINE (TANPA PINJAM / RESERVASI) -->
+            <!-- JIKA BUKU DIGITAL (E-BOOK): HANYA DAPAT DIBACA JIKA SUDAH LOGIN -->
             <div v-if="isEbook" class="pt-4 border-t border-slate-100 dark:border-zinc-800">
               <button 
-                @click="showPdfReader = true"
+                v-if="tokenCookie"
+                @click="openPdfReader"
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-blue-600/25 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>📖</span>
                 <span>Baca Buku Online</span>
                 <span class="material-symbols-outlined text-base">chrome_reader_mode</span>
               </button>
+              <a 
+                v-else
+                href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>🔑</span>
+                <span>Login untuk Membaca E-Book Digital</span>
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+              </a>
             </div>
 
             <!-- TOMBOL AKSI BUKU FISIK: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (JIKA USER LOGIN) -->
@@ -400,6 +410,16 @@ const isWishlisted = ref(false);
 const isStaffOnline = ref(true);
 const togglingWishlist = ref(false);
 const showPdfReader = ref(false);
+
+const openPdfReader = () => {
+  if (!tokenCookie.value) {
+    if (process.client) {
+      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+    }
+    return;
+  }
+  showPdfReader.value = true;
+};
 
 const isEbook = computed(() => {
   return isEbookBook(book.value);

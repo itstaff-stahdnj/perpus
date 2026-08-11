@@ -24,10 +24,11 @@ export const usePdfCache = () => {
     try {
       prefetchingCount.value++;
       
-      // 1. Warm-up browser cache using fetch (low priority / idle)
+      // 1. Warm-up browser cache using fetch (with credentials cookie enabled)
       const res = await fetch(pdfUrl, {
         method: 'GET',
         cache: 'default',
+        credentials: 'include',
         headers: {
           'X-Prefetch': '1'
         }
@@ -57,6 +58,10 @@ export const usePdfCache = () => {
   // Pre-fetch list of E-Books on catalog page entry
   const prefetchCatalogPdfList = async (bookList: Book[]) => {
     if (!process.client || !bookList || !Array.isArray(bookList)) return;
+
+    // Security check: Bypassed for unauthenticated guest users
+    const hasToken = document.cookie.split('; ').some(row => row.startsWith('token=') || row.startsWith('auth_token=') || row.startsWith('pustaka_token='));
+    if (!hasToken) return;
 
     // Filter E-Book items
     const ebooks = bookList.filter(b => isEbookBook(b));
