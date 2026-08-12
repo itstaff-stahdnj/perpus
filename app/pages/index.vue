@@ -667,13 +667,13 @@ const displayedNews = computed(() => {
 
 const filteredBooks = computed(() => {
   const list = Array.isArray(books.value) ? books.value : [];
-  if (!searchQuery.value.trim()) return list;
+  if (!searchQuery.value.trim()) return list.slice(0, 6);
   const q = searchQuery.value.toLowerCase();
   return list.filter(b => 
     (b?.judul && b.judul.toLowerCase().includes(q)) ||
     (b?.penulis && b.penulis.toLowerCase().includes(q)) ||
     (b?.isbn && b.isbn.toLowerCase().includes(q))
-  );
+  ).slice(0, 6);
 });
 
 const heroDefaultBg = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBnVEAU9hxewbpcL-zJBF-VYMfF9CYqeW4AdHNxhEAB7Q8lh7P-fhGTZJNNjLXaT1jnxBawGh951FGVimE_UXcGwmJi08H0XshoFxacv0x7DN5jiS-pKOYNENJvSxE4ErBEzXShmq-QIXhlPqBKpwLEOxNpTDkenvskzHDUTZgyqFhcROoKoJNxdFYk7M38BxAB5EJEYZI7pITbaTm1RB6XNBO4_fsoU6GUqk959h722b2tabSqCO_A_g';
