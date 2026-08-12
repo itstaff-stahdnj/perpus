@@ -16,13 +16,13 @@
             </span>
             <div class="min-w-0">
               <h3 class="font-extrabold text-xs sm:text-sm text-zinc-100 truncate leading-tight">
-                {{ title || 'Pembaca E-Book Digital Flipbook' }}
+                {{ title || 'Pembaca E-Book Digital (Fast Reader)' }}
               </h3>
               <p class="text-[10px] text-zinc-400 truncate flex items-center gap-1.5">
-                <span>⚡ {{ isSlowConnection ? 'Auto Compress (Hemat Data)' : 'Mode FlipHTML5 3D' }}</span>
+                <span>⚡ Mode Membaca Ringan &amp; Hemat Data</span>
                 <span>•</span>
                 <span class="text-rose-400 font-bold flex items-center gap-0.5">
-                  <span class="material-symbols-outlined text-[12px]">lock</span>
+                  <Icon name="material-symbols:lock" class="text-[12px]" />
                   <span>Dokumen Dilindungi</span>
                 </span>
               </p>
@@ -49,22 +49,12 @@
               </select>
             </div>
 
-            <!-- View Mode Switcher: 3D Flipbook vs Scroll PDF -->
-            <div class="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
-              <button 
-                @click="readerMode = 'flipbook'"
-                class="px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
-                :class="readerMode === 'flipbook' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'"
-              >
-                <span>📖 3D Flipbook</span>
-              </button>
-              <button 
-                @click="readerMode = 'scroll'"
-                class="px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
-                :class="readerMode === 'scroll' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'"
-              >
-                <span>📜 Scroll Mode</span>
-              </button>
+            <!-- View Mode Indicator: Fast Light Reader -->
+            <div class="flex items-center bg-zinc-950 px-3 py-1 rounded-xl border border-zinc-800 text-xs">
+              <span class="text-blue-400 font-bold text-[11px] flex items-center gap-1">
+                <Icon name="material-symbols:chrome-reader-mode" class="text-sm" />
+                <span>Mode Membaca Ringan</span>
+              </span>
             </div>
 
             <!-- Close Reader Button -->
@@ -73,28 +63,19 @@
               class="w-9 h-9 bg-zinc-800 hover:bg-rose-900/80 hover:text-rose-200 text-zinc-300 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
               title="Tutup Reader"
             >
-              <span class="material-symbols-outlined text-lg">close</span>
+              <Icon name="material-symbols:close" class="text-lg" />
             </button>
           </div>
         </div>
 
-        <!-- Main Body: 3D Flipbook Viewer vs Scroll Viewer -->
+        <!-- Main Body: Ultra-Light Fast Reader -->
         <div class="flex-1 bg-zinc-950 relative overflow-hidden flex flex-col">
           
           <template v-if="activePdfUrl">
-            <!-- Mode 1: FlipHTML5 Style 3D Flipbook -->
-            <FlipbookViewer 
-              v-if="readerMode === 'flipbook'" 
-              :pdf-url="streamPdfUrl" 
-              :title="title"
-              class="w-full h-full"
-            />
-
-            <!-- Mode 2: Standard PDF Scroll Viewer -->
-            <div v-else class="w-full h-full relative">
+            <div class="w-full h-full relative">
               <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-10 text-zinc-300">
                 <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital (Scroll Mode)...</p>
+                <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital (Fast Reader)...</p>
               </div>
 
               <iframe 
@@ -134,7 +115,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import FlipbookViewer from './FlipbookViewer.vue';
 import { useNetworkQuality } from '~/composables/useNetworkQuality';
 
 const { effectivePdfQuality, networkLabel, manualQualityOverride, setManualQuality, isSlowConnection } = useNetworkQuality();
@@ -150,7 +130,7 @@ const emit = defineEmits<{
 }>();
 
 const loading = ref(true);
-const readerMode = ref<'flipbook' | 'scroll'>('flipbook');
+const readerMode = ref<'scroll' | 'flipbook'>('scroll');
 
 const activePdfUrl = computed(() => {
   if (!props.pdfUrl || props.pdfUrl.trim() === '') return '';

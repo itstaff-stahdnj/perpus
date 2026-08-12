@@ -6,12 +6,18 @@ export const useBookCover = () => {
   const extractPdfUrl = (b: Book | any): string => {
     if (!b) return '';
     const rawPdf = b.pdf_file_url || b.pdf_file || b.file_pdf || b.pdf_url || b.ebook_url || b.link_baca || b.file || b.pdf || b.filepath || b.file_path || b.digital_file || b.url_pdf;
-    if (!rawPdf || typeof rawPdf !== 'string' || rawPdf.trim() === '') return '';
-    if (rawPdf.startsWith('http://') || rawPdf.startsWith('https://') || rawPdf.startsWith('data:')) {
+    
+    if (rawPdf && typeof rawPdf === 'string' && rawPdf.includes('/api/pdf-stream')) {
       return rawPdf;
     }
-    const cleanPath = rawPdf.startsWith('/') ? rawPdf : `/${rawPdf}`;
-    return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
+
+    if (b.id && (!rawPdf || typeof rawPdf !== 'string' || rawPdf.trim() === '')) {
+      return `/api/pdf-stream?id=${b.id}&quality=low`;
+    }
+
+    if (!rawPdf || typeof rawPdf !== 'string' || rawPdf.trim() === '') return '';
+
+    return `/api/pdf-stream?url=${encodeURIComponent(rawPdf)}&quality=low`;
   };
 
   const isEbookBook = (b: Book | any): boolean => {

@@ -14,8 +14,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event);
-  const rawUrl = (query.url as string) || '';
-  const quality = (query.quality as string) || 'auto'; // 'low' | 'medium' | 'high' | 'auto'
+  const bookId = query.id as string;
+  let rawUrl = (query.url as string) || '';
+  const quality = (query.quality as string) || 'low'; // 'low' | 'medium' | 'high' | 'auto'
+
+  if (!rawUrl && bookId) {
+    rawUrl = `https://portal-perpus.stahdnj.ac.id/api/books/${bookId}/pdf-stream?quality=${quality}`;
+  }
 
   if (!rawUrl || rawUrl.trim() === '') {
     return serveError(event, 'PDF Belum Disediakan', 'URL berkas PDF kosong atau belum diunggah.');
