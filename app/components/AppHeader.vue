@@ -74,7 +74,7 @@
             class="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
             title="Buka Profil &amp; Kartu Member"
           >
-            <span class="material-symbols-outlined text-base">account_circle</span>
+            <Icon name="material-symbols:account-circle" class="text-base" />
             <span class="hidden sm:inline">Profil Member</span>
           </NuxtLink>
 
@@ -86,7 +86,7 @@
             class="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
             title="Buka Panel Admin Filament"
           >
-            <span class="material-symbols-outlined text-base">admin_panel_settings</span>
+            <Icon name="material-symbols:admin-panel-settings" class="text-base" />
             <span class="hidden sm:inline">Panel Admin</span>
           </a>
 
@@ -107,7 +107,7 @@
           </NuxtLink>
 
           <button @click="handleLogout" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer shrink-0" title="Keluar (Logout)">
-            <span class="material-symbols-outlined text-lg">logout</span>
+            <Icon name="material-symbols:logout" class="text-lg" />
           </button>
         </div>
 
@@ -118,7 +118,7 @@
             class="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
             title="Masuk menggunakan SSO Portal STAH DNJ"
           >
-            <span class="material-symbols-outlined text-base">vpn_key</span>
+            <Icon name="material-symbols:vpn-key" class="text-base" />
             <span>Masuk</span>
           </a>
         </div>

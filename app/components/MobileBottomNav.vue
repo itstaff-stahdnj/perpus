@@ -14,10 +14,10 @@
           class="flex items-center justify-center w-10 h-7 rounded-full transition-all duration-300"
           :class="isActive(item.to) ? 'bg-secondary-fixed scale-110' : ''"
         >
-          <span 
-            class="material-symbols-outlined text-[20px] transition-all"
-            :style="isActive(item.to) ? 'font-variation-settings: \'FILL\' 1;' : ''"
-          >{{ item.icon }}</span>
+          <Icon 
+            :name="isActive(item.to) ? item.activeIcon : item.icon"
+            class="text-[20px] transition-all"
+          />
         </div>
         <span class="text-[10px] font-semibold leading-tight text-center">{{ item.label }}</span>
       </NuxtLink>
@@ -31,10 +31,10 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 
 const navItems = [
-  { to: '/', icon: 'home', label: 'Beranda' },
-  { to: '/buku', icon: 'menu_book', label: 'Katalog' },
-  { to: '/layanan', icon: 'room_service', label: 'Layanan' },
-  { to: '/berita', icon: 'newspaper', label: 'Berita' },
+  { to: '/', icon: 'material-symbols:home-outline', activeIcon: 'material-symbols:home', label: 'Beranda' },
+  { to: '/buku', icon: 'material-symbols:menu-book-outline', activeIcon: 'material-symbols:menu-book', label: 'Katalog' },
+  { to: '/layanan', icon: 'material-symbols:room-service-outline', activeIcon: 'material-symbols:room-service', label: 'Layanan' },
+  { to: '/berita', icon: 'material-symbols:newspaper-outline', activeIcon: 'material-symbols:newspaper', label: 'Berita' },
 ];
 
 const isActive = (to: string) => {

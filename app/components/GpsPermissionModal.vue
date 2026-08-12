@@ -10,7 +10,7 @@
         <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
           <div class="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
           <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white flex items-center justify-center text-4xl shadow-lg shadow-blue-500/30">
-            <span class="material-symbols-outlined text-4xl">location_on</span>
+            <Icon name="material-symbols:location-on" class="text-4xl" />
           </div>
         </div>
 
@@ -34,16 +34,18 @@
             :disabled="requesting"
             class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white font-black text-xs sm:text-sm shadow-xl shadow-blue-600/30 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span class="material-symbols-outlined text-lg" :class="requesting ? 'animate-spin' : ''">
-              {{ requesting ? 'sync' : 'my_location' }}
-            </span>
+            <Icon 
+              :name="requesting ? 'material-symbols:sync' : 'material-symbols:my-location'" 
+              class="text-lg" 
+              :class="requesting ? 'animate-spin' : ''" 
+            />
             <span>{{ requesting ? 'Mendeteksi Lokasi GPS...' : '📍 Izinkan & Aktifkan GPS Sekarang' }}</span>
           </button>
 
           <!-- Error / Permission Denied Helper -->
           <div v-if="errorMessage" class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-2xl text-[11px] text-rose-800 dark:text-rose-300 text-left space-y-1">
             <p class="font-bold flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">warning</span>
+              <Icon name="material-symbols:warning" class="text-sm" />
               <span>Akses Lokasi Diblokir di Browser</span>
             </p>
             <p class="leading-normal">
@@ -54,7 +56,7 @@
 
         <!-- Security Footer Badge -->
         <div class="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500">
-          <span class="material-symbols-outlined text-sm text-emerald-500">verified_user</span>
+          <Icon name="material-symbols:verified-user" class="text-sm text-emerald-500" />
           <span>Privasi dijamin: Lokasi hanya dipakai untuk verifikasi area kampus STAH DNJ.</span>
         </div>
 

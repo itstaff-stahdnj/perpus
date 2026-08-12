@@ -10,7 +10,7 @@
         <!-- Animated Icon Container -->
         <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-400 mt-0.5 relative">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-400 absolute top-1 right-1 animate-ping"></span>
-          <span class="material-symbols-outlined text-xl">cloud_off</span>
+          <Icon name="material-symbols:cloud-off" class="text-xl" />
         </div>
 
         <!-- Notification Content -->
@@ -40,12 +40,11 @@
               :disabled="isChecking"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              <span 
-                class="material-symbols-outlined text-sm"
+              <Icon 
+                name="material-symbols:refresh" 
+                class="text-sm"
                 :class="{ 'animate-spin': isChecking }"
-              >
-                refresh
-              </span>
+              />
               <span>{{ isChecking ? 'Menghubungkan...' : 'Coba Hubungkan Kembali' }}</span>
             </button>
 
@@ -65,7 +64,7 @@
           title="Tutup Notifikasi"
           aria-label="Tutup Notifikasi"
         >
-          <span class="material-symbols-outlined text-sm">close</span>
+          <Icon name="material-symbols:close" class="text-sm" />
         </button>
       </div>
     </div>

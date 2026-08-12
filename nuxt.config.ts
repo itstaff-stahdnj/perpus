@@ -172,6 +172,5 @@ export default defineNuxtConfig({
     transpile: ['@formkit/auto-animate']
   },
 
-  modules: ["nitro-cloudflare-dev"]
+  modules: ["nitro-cloudflare-dev", "@nuxt/icon"]
 })
-

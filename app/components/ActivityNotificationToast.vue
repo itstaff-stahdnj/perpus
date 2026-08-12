@@ -25,7 +25,7 @@
         class="absolute top-2 right-2 text-slate-400 hover:text-white p-1 rounded-full transition-colors cursor-pointer"
         title="Tutup"
       >
-        <span class="material-symbols-outlined text-xs">close</span>
+        <Icon name="material-symbols:close" class="text-xs" />
       </button>
     </div>
   </Transition>

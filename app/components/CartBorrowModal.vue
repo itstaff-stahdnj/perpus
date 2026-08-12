@@ -10,7 +10,7 @@
         <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-              <span class="material-symbols-outlined text-xl">shopping_cart</span>
+              <Icon name="material-symbols:shopping-cart" class="text-xl" />
             </div>
             <div>
               <h3 class="font-extrabold text-slate-900 text-base">Keranjang Tampungan Buku</h3>
@@ -18,13 +18,13 @@
             </div>
           </div>
           <button class="text-slate-400 hover:text-slate-700 transition-colors p-1" @click="close">
-            <span class="material-symbols-outlined text-xl">close</span>
+            <Icon name="material-symbols:close" class="text-xl" />
           </button>
         </div>
 
         <!-- Empty State -->
         <div v-if="cart.length === 0" class="py-12 text-center text-slate-500 space-y-3">
-          <span class="material-symbols-outlined text-5xl text-slate-300">remove_shopping_cart</span>
+          <Icon name="material-symbols:remove-shopping-cart" class="text-5xl text-slate-300" />
           <p class="font-bold text-sm text-slate-700">Keranjang Tampungan Masih Kosong</p>
           <p class="text-xs text-slate-500 max-w-xs mx-auto">
             Tambahkan beberapa buku dari katalog atau detail buku dengan mengklik tombol "Tampung" untuk meminjam lebih dari 1 buku sekaligus.

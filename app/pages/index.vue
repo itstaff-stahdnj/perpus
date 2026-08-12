@@ -128,7 +128,7 @@
           </div>
           <div class="flex items-center gap-3 shrink-0">
             <NuxtLink to="/buku" class="text-secondary text-xs sm:text-sm font-semibold flex items-center gap-1 hover:underline">
-              Semua Katalog Buku <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              Semua Katalog Buku <Icon name="material-symbols:arrow-forward" class="text-sm" />
             </NuxtLink>
           </div>
         </div>
