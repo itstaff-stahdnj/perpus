@@ -235,12 +235,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { useNetworkQuality } from '~/composables/useNetworkQuality';
 
 const props = defineProps<{
   pdfUrl: string;
   title?: string;
 }>();
+
+const { effectivePdfQuality } = useNetworkQuality();
+
+const activePdfUrlWithCompression = computed(() => {
+  if (!props.pdfUrl) return '';
+  if (props.pdfUrl.includes('quality=')) return props.pdfUrl;
+  const sep = props.pdfUrl.includes('?') ? '&' : '?';
+  return `${props.pdfUrl}${sep}quality=${effectivePdfQuality.value || 'low'}`;
+});
 
 const loading = ref(true);
 const loadingStatusText = ref('Mengunduh berkas PDF...');
@@ -298,7 +308,7 @@ const renderSinglePage = async (pageNum: number): Promise<string | null> => {
 
     if (context) {
       await page.render({ canvasContext: context, viewport }).promise;
-      const imgDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      const imgDataUrl = canvas.toDataURL('image/jpeg', 0.7);
       renderedPagesMap.set(pageNum, imgDataUrl);
 
       const imgEl = document.getElementById(`flip-page-img-${pageNum}`) as HTMLImageElement;
@@ -326,7 +336,7 @@ const renderSinglePage = async (pageNum: number): Promise<string | null> => {
   return null;
 };
 
-// Lazy render surrounding pages window
+// Lazy render surrounding pages window & prune distant pages from RAM
 const lazyRenderSurroundingPages = async (centerPageNum: number) => {
   if (!pdfDocInstance) return;
   const start = Math.max(1, centerPageNum - 2);
@@ -337,11 +347,29 @@ const lazyRenderSurroundingPages = async (centerPageNum: number) => {
       renderSinglePage(p);
     }
   }
+
+  // Memory Pruning: Release GPU/RAM memory for pages far from active viewport
+  for (const [p] of renderedPagesMap.entries()) {
+    if (Math.abs(p - centerPageNum) > 10) {
+      renderedPagesMap.delete(p);
+      const imgEl = document.getElementById(`flip-page-img-${p}`) as HTMLImageElement;
+      const loaderEl = document.getElementById(`flip-page-loader-${p}`);
+      if (imgEl) {
+        imgEl.src = '';
+        imgEl.classList.add('hidden');
+      }
+      if (loaderEl) {
+        loaderEl.classList.remove('hidden');
+      }
+    }
+  }
 };
 
 // Render PDF Pages progressively with Lazy Loading
 const loadAndRenderPdf = async () => {
   if (!props.pdfUrl || !process.client) return;
+
+  const targetPdfUrl = activePdfUrlWithCompression.value || props.pdfUrl;
 
   loading.value = true;
   errorMessage.value = '';
@@ -352,7 +380,7 @@ const loadAndRenderPdf = async () => {
   renderedPagesMap.clear();
   renderingPagesSet.clear();
   pdfDocInstance = null;
-  loadingStatusText.value = 'Membuka dokumen PDF...';
+  loadingStatusText.value = 'Membuka dokumen PDF (Compress Mode)...';
 
   try {
     const pdfjsLib = await import('pdfjs-dist');
@@ -360,11 +388,11 @@ const loadAndRenderPdf = async () => {
 
     // Fast PDF loading with Live Download Progress & Cookie credentials enabled
     const loadingTask = pdfjsLib.getDocument({
-      url: props.pdfUrl,
+      url: targetPdfUrl,
       cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
       cMapPacked: true,
       withCredentials: true,
-      rangeChunkSize: 65536,
+      rangeChunkSize: 131072,
       disableAutoFetch: true,
       disableStream: false
     });
@@ -397,7 +425,7 @@ const loadAndRenderPdf = async () => {
       flipBookRef.value.innerHTML = '';
     }
 
-    currentPdfScale = Math.min(window.devicePixelRatio || 1, 1.25);
+    currentPdfScale = Math.min(window.devicePixelRatio || 1, 1.05);
     thumbnailList.value = new Array(pageCount.value).fill('');
 
     // Step 1: Create HTML Skeleton Containers for ALL pages
@@ -425,9 +453,9 @@ const loadAndRenderPdf = async () => {
       }
     }
 
-    // Step 2: Render initial 4 pages IMMEDIATELY
+    // Step 2: Render initial 2 pages IMMEDIATELY for instant launch
     loadingStatusText.value = 'Menyiapkan halaman pertama...';
-    const initialCount = Math.min(4, pageCount.value);
+    const initialCount = Math.min(2, pageCount.value);
     for (let p = 1; p <= initialCount; p++) {
       await renderSinglePage(p);
     }
@@ -445,7 +473,8 @@ const loadAndRenderPdf = async () => {
         maxWidth: 900,
         minHeight: 400,
         maxHeight: 1200,
-        maxShadowOpacity: 0.5,
+        flippingTime: 400,
+        maxShadowOpacity: 0.25,
         showCover: true,
         mobileScrollSupport: true,
         usePortrait: true
