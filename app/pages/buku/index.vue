@@ -308,14 +308,14 @@
                     :to="getBookUrl(book)"
                     class="block w-full py-2 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    <span>📖 Baca Online</span>
+                    <span>📖 Baca E-Book Digital</span>
                   </NuxtLink>
                   <a 
                     v-else
                     href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
                     class="block w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    <span>🔑 Login untuk Membaca</span>
+                    <span>🔑 Login untuk Membaca E-Book Digital</span>
                   </a>
                 </div>
 
@@ -425,14 +425,14 @@
                       :to="getBookUrl(book)"
                       class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                     >
-                      <span>📖 Baca Online</span>
+                      <span>📖 Baca E-Book Digital</span>
                     </NuxtLink>
                     <a 
                       v-else
                       href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
                       class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                     >
-                      <span>🔑 Login untuk Membaca</span>
+                      <span>🔑 Login untuk Membaca E-Book Digital</span>
                     </a>
                   </template>
 

@@ -168,7 +168,7 @@
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-blue-600/25 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>📖</span>
-                <span>Baca Buku Online</span>
+                <span>Baca E-Book Digital</span>
                 <span class="material-symbols-outlined text-base">chrome_reader_mode</span>
               </button>
               <a 
