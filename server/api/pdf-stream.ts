@@ -45,25 +45,39 @@ export default defineEventHandler(async (event) => {
 
   // 1. Direct Local Filesystem Read (Fastest & 100% Reliable for Local NAS)
   let cleanRelative = rawUrl
-    .replace(/^https?:\/\/[^\/]+/, '') // strip domain
-    .replace(/^\/storage\//, '')       // strip leading /storage/
+    .replace(/^https?:\/\/[^\/]+/, '') // strip domain if present
+    .replace(/^\/?storage\//i, '')      // strip leading /storage/ or storage/
     .replace(/^\//, '');               // strip leading slash
 
   try {
     cleanRelative = decodeURIComponent(cleanRelative);
   } catch {}
 
-  const possibleLocalPaths = [
-    path.join('\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app\\public', cleanRelative),
-    path.join('\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app\\private', cleanRelative),
-    path.join('\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app', cleanRelative),
-    path.join('/volume1/Web/perpustakaan/storage/app/public', cleanRelative),
-    path.join('/volume1/Web/perpustakaan/storage/app/private', cleanRelative),
-    path.resolve(process.cwd(), '..', 'perpustakaan', 'storage', 'app', 'public', cleanRelative),
-    path.resolve(process.cwd(), '..', 'perpustakaan', 'storage', 'app', 'private', cleanRelative),
-    path.resolve(process.cwd(), '..', 'Web', 'perpustakaan', 'storage', 'app', 'public', cleanRelative),
-    path.resolve(process.cwd(), '..', 'Web', 'perpustakaan', 'storage', 'app', 'private', cleanRelative),
+  const cleanNoStorage = cleanRelative.replace(/^storage\//i, '');
+
+  const relativeCandidates = Array.from(new Set([cleanRelative, cleanNoStorage]));
+
+  const baseDirectories = [
+    '\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app\\public',
+    '\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app\\private',
+    '\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app',
+    '/volume1/Web/perpustakaan/storage/app/public',
+    '/volume1/Web/perpustakaan/storage/app/private',
+    '/volume1/Web/perpustakaan/storage/app',
+    path.resolve(process.cwd(), '..', 'perpustakaan', 'storage', 'app', 'public'),
+    path.resolve(process.cwd(), '..', 'perpustakaan', 'storage', 'app', 'private'),
+    path.resolve(process.cwd(), '..', 'perpustakaan', 'storage', 'app'),
+    path.resolve(process.cwd(), '..', 'Web', 'perpustakaan', 'storage', 'app', 'public'),
+    path.resolve(process.cwd(), '..', 'Web', 'perpustakaan', 'storage', 'app', 'private'),
+    path.resolve(process.cwd(), '..', 'Web', 'perpustakaan', 'storage', 'app'),
   ];
+
+  const possibleLocalPaths: string[] = [];
+  for (const baseDir of baseDirectories) {
+    for (const rel of relativeCandidates) {
+      possibleLocalPaths.push(path.join(baseDir, rel));
+    }
+  }
 
   let fileBuffer: Buffer | null = null;
 
