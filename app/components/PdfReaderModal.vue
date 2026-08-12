@@ -68,34 +68,39 @@
           </div>
         </div>
 
-        <!-- Main Body: Ultra-Light Fast Reader -->
+        <!-- Main Body: Ultra-Light Fast Reader via Blob URL Stream -->
         <div class="flex-1 bg-zinc-950 relative overflow-hidden flex flex-col">
           
-          <template v-if="activePdfUrl">
-            <div class="w-full h-full relative">
-              <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-10 text-zinc-300">
-                <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital (Fast Reader)...</p>
-              </div>
+          <div v-if="loading" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-3 z-20 text-zinc-300">
+            <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+            <p class="text-xs font-bold animate-pulse">Memuat E-Book Digital (Fast Reader)...</p>
+          </div>
 
-              <iframe 
-                :src="viewerSrc" 
-                class="w-full h-full border-0 pointer-events-auto"
-                @load="loading = false"
-                title="E-Book Scroll Reader"
-              ></iframe>
+          <template v-if="pdfBlobUrl">
+            <div class="w-full h-full relative">
+              <object 
+                :data="`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=0`" 
+                type="application/pdf"
+                class="w-full h-full"
+              >
+                <iframe 
+                  :src="`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=0`" 
+                  class="w-full h-full border-0 pointer-events-auto"
+                  title="E-Book Reader"
+                ></iframe>
+              </object>
             </div>
           </template>
 
-          <!-- Empty / Error State -->
-          <div v-else class="flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto my-auto">
-            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-3xl">
-              📄
+          <!-- Error / Missing PDF State -->
+          <div v-else-if="!loading && (errorMessage || !activePdfUrl)" class="flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto my-auto text-zinc-200">
+            <div class="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-3xl">
+              <Icon name="material-symbols:warning" />
             </div>
             <div class="space-y-1">
-              <h4 class="text-lg font-bold text-white">Berkas PDF Belum Tersedia</h4>
+              <h4 class="text-base font-bold text-white">Tidak Dapat Membuka E-Book</h4>
               <p class="text-xs text-zinc-400 leading-relaxed">
-                Buku digital ini belum memiliki berkas dokumen PDF yang terunggah di server perpustakaan. Silakan hubungi petugas pustakawan untuk pengunggahan file.
+                {{ errorMessage || 'Dokumen PDF belum terunggah atau lokasi berkas di server backend perpustakaan tidak ditemukan.' }}
               </p>
             </div>
             <button 
@@ -117,7 +122,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useNetworkQuality } from '~/composables/useNetworkQuality';
 
-const { effectivePdfQuality, networkLabel, manualQualityOverride, setManualQuality, isSlowConnection } = useNetworkQuality();
+const { effectivePdfQuality, networkLabel, manualQualityOverride, setManualQuality } = useNetworkQuality();
 
 const props = defineProps<{
   modelValue: boolean;
@@ -130,6 +135,8 @@ const emit = defineEmits<{
 }>();
 
 const loading = ref(true);
+const errorMessage = ref('');
+const pdfBlobUrl = ref('');
 const readerMode = ref<'scroll' | 'flipbook'>('scroll');
 
 const activePdfUrl = computed(() => {
@@ -163,12 +170,64 @@ const streamPdfUrl = computed(() => {
   return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}&quality=${effectivePdfQuality.value}`;
 });
 
-const viewerSrc = computed(() => {
-  if (!activePdfUrl.value) return '';
-  return `${streamPdfUrl.value}#toolbar=0&navpanes=0&scrollbar=0`;
-});
+const cleanupBlob = () => {
+  if (pdfBlobUrl.value) {
+    URL.revokeObjectURL(pdfBlobUrl.value);
+    pdfBlobUrl.value = '';
+  }
+};
+
+const loadPdfStream = async () => {
+  if (!props.pdfUrl || !props.modelValue) return;
+
+  cleanupBlob();
+  loading.value = true;
+  errorMessage.value = '';
+
+  try {
+    const targetUrl = streamPdfUrl.value;
+    const response = await fetch(targetUrl, {
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/pdf, */*'
+      }
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      if (text.includes('Login SSO') || response.status === 401 || response.status === 403) {
+        errorMessage.value = '🔑 Login SSO Diperlukan. Silakan masuk ke akun portal perpustakaan Anda terlebih dahulu.';
+      } else {
+        errorMessage.value = 'Dokumen PDF belum terunggah atau lokasi berkas di server backend perpustakaan tidak ditemukan.';
+      }
+      loading.value = false;
+      return;
+    }
+
+    const blob = await response.blob();
+    if (blob.type.includes('text/html')) {
+      const htmlText = await blob.text();
+      if (htmlText.includes('Login SSO')) {
+        errorMessage.value = '🔑 Login SSO Diperlukan. Silakan masuk ke akun portal perpustakaan Anda terlebih dahulu.';
+      } else {
+        errorMessage.value = 'Format berkas tidak valid atau lokasi file PDF tidak ditemukan.';
+      }
+      loading.value = false;
+      return;
+    }
+
+    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+    pdfBlobUrl.value = URL.createObjectURL(pdfBlob);
+  } catch (err: any) {
+    console.error('Failed to fetch PDF blob:', err);
+    errorMessage.value = 'Terjadi kendala koneksi saat memuat dokumen e-book.';
+  } finally {
+    loading.value = false;
+  }
+};
 
 const close = () => {
+  cleanupBlob();
   emit('update:modelValue', false);
 };
 
@@ -188,6 +247,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  cleanupBlob();
   if (process.client) {
     window.removeEventListener('keydown', handleKeyDown);
   }
@@ -195,7 +255,15 @@ onUnmounted(() => {
 
 watch(() => props.modelValue, (val) => {
   if (val) {
-    loading.value = true;
+    loadPdfStream();
+  } else {
+    cleanupBlob();
+  }
+});
+
+watch([effectivePdfQuality, () => props.pdfUrl], () => {
+  if (props.modelValue) {
+    loadPdfStream();
   }
 });
 </script>
