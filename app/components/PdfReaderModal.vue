@@ -143,20 +143,17 @@ const activePdfUrl = computed(() => {
   if (!props.pdfUrl || props.pdfUrl.trim() === '') return '';
   let url = props.pdfUrl.trim();
 
+  // If already a relative or full Nuxt proxy endpoint (/api/pdf-stream)
+  if (url.includes('api/pdf-stream')) {
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    try {
-      const parsed = new URL(url);
-      if (!parsed.pathname.startsWith('/storage/')) {
-        parsed.pathname = `/storage${parsed.pathname.startsWith('/') ? '' : '/'}${parsed.pathname}`;
-      }
-      return parsed.toString();
-    } catch {
-      return url;
-    }
+    return url;
   }
 
   let cleanPath = url.startsWith('/') ? url : `/${url}`;
-  if (!cleanPath.startsWith('/storage/')) {
+  if (!cleanPath.startsWith('/storage/') && !cleanPath.startsWith('/api/')) {
     cleanPath = `/storage${cleanPath}`;
   }
   return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
@@ -164,9 +161,15 @@ const activePdfUrl = computed(() => {
 
 const streamPdfUrl = computed(() => {
   if (!activePdfUrl.value) return '';
-  if (activePdfUrl.value.includes('/api/pdf-stream')) {
-    return activePdfUrl.value;
+  
+  if (activePdfUrl.value.includes('api/pdf-stream')) {
+    let cleanStream = activePdfUrl.value.startsWith('/') ? activePdfUrl.value : `/${activePdfUrl.value}`;
+    if (!cleanStream.includes('quality=')) {
+      cleanStream += `${cleanStream.includes('?') ? '&' : '?'}quality=${effectivePdfQuality.value}`;
+    }
+    return cleanStream;
   }
+
   return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}&quality=${effectivePdfQuality.value}`;
 });
 

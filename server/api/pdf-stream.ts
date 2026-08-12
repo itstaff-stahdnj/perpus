@@ -138,6 +138,7 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'Content-Type', 'application/pdf');
     setHeader(event, 'Content-Disposition', 'inline');
     setHeader(event, 'Accept-Ranges', 'bytes');
+    setHeader(event, 'Access-Control-Allow-Origin', '*');
     setHeader(event, 'Access-Control-Allow-Credentials', 'true');
     setHeader(event, 'X-Pdf-Quality-Mode', quality);
     removeResponseHeader(event, 'x-frame-options');
