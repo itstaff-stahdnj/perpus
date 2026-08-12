@@ -162,15 +162,15 @@
 
             <!-- JIKA BUKU DIGITAL (E-BOOK): HANYA DAPAT DIBACA JIKA SUDAH LOGIN -->
             <div v-if="isEbook" class="pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <button 
+              <a 
                 v-if="tokenCookie"
-                @click="openPdfReader"
+                :href="`https://portal-perpus.stahdnj.ac.id/read/book/${book?.id}`"
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-blue-600/25 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>📖</span>
                 <span>Baca E-Book Digital</span>
                 <span class="material-symbols-outlined text-base">chrome_reader_mode</span>
-              </button>
+              </a>
               <a 
                 v-else
                 href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
@@ -345,12 +345,7 @@
       <!-- Multi-Book Cart Borrowing Modal -->
       <CartBorrowModal v-model="showCartModal" @borrowed-success="loadBookDetail" />
 
-      <!-- PDF Reader Modal for E-Book Digital -->
-      <PdfReaderModal 
-        v-model="showPdfReader" 
-        :pdf-url="currentPdfUrl" 
-        :title="book?.judul" 
-      />
+
 
       <!-- Mandatory GPS Permission Activation Modal -->
       <GpsPermissionModal 
@@ -370,7 +365,7 @@ import { usePustakaApi, type Book } from '../../composables/usePustakaApi';
 import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
-import PdfReaderModal from '../../components/PdfReaderModal.vue';
+
 import GpsPermissionModal from '../../components/GpsPermissionModal.vue';
 
 import { useBookCover } from '../../composables/useBookCover';
@@ -409,17 +404,6 @@ const book = ref<Book | null>(null);
 const isWishlisted = ref(false);
 const isStaffOnline = ref(true);
 const togglingWishlist = ref(false);
-const showPdfReader = ref(false);
-
-const openPdfReader = () => {
-  if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
-    return;
-  }
-  showPdfReader.value = true;
-};
 
 const isEbook = computed(() => {
   return isEbookBook(book.value);

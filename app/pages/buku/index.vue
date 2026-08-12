@@ -303,13 +303,13 @@
 
                 <!-- JIKA BUKU E-BOOK DIGITAL -->
                 <div v-if="isEbook(book)" class="space-y-1.5">
-                  <NuxtLink 
+                  <a 
                     v-if="tokenCookie"
-                    :to="getBookUrl(book)"
+                    :href="`https://portal-perpus.stahdnj.ac.id/read/book/${book.id}`"
                     class="block w-full py-2 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <span>📖 Baca E-Book Digital</span>
-                  </NuxtLink>
+                  </a>
                   <a 
                     v-else
                     href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
@@ -420,13 +420,13 @@
                 <div class="flex items-center gap-2">
                   <!-- JIKA BUKU E-BOOK DIGITAL -->
                   <template v-if="isEbook(book)">
-                    <NuxtLink 
+                    <a 
                       v-if="tokenCookie"
-                      :to="getBookUrl(book)"
+                      :href="`https://portal-perpus.stahdnj.ac.id/read/book/${book.id}`"
                       class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <span>📖 Baca E-Book Digital</span>
-                    </NuxtLink>
+                    </a>
                     <a 
                       v-else
                       href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
