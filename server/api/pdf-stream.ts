@@ -1,4 +1,4 @@
-import { defineEventHandler, getQuery, getCookie, getHeader, setHeader, removeResponseHeader } from 'h3';
+import { defineEventHandler, getQuery, getCookie, getHeader, setHeader, removeResponseHeader, setResponseStatus } from 'h3';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -15,10 +15,14 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event);
   const rawUrl = (query.url as string) || '';
+  const quality = (query.quality as string) || 'auto'; // 'low' | 'medium' | 'high' | 'auto'
 
   if (!rawUrl || rawUrl.trim() === '') {
     return serveError(event, 'PDF Belum Disediakan', 'URL berkas PDF kosong atau belum diunggah.');
   }
+
+  // Range Request Header for Progressive PDF Chunk Streaming
+  const rangeHeader = getHeader(event, 'range');
 
   // 1. Direct Local Filesystem Read (Fastest & 100% Reliable for Local NAS)
   const cleanRelative = rawUrl
@@ -37,68 +41,94 @@ export default defineEventHandler(async (event) => {
     path.resolve(process.cwd(), '..', 'Web', 'perpustakaan', 'storage', 'app', 'private', cleanRelative),
   ];
 
+  let fileBuffer: Buffer | null = null;
+
   for (const localPath of possibleLocalPaths) {
     try {
       if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
-        const fileBuffer = fs.readFileSync(localPath);
-        setHeader(event, 'Content-Type', 'application/pdf');
-        setHeader(event, 'Content-Disposition', 'inline');
-        setHeader(event, 'Cache-Control', 'private, max-age=3600');
-        setHeader(event, 'Access-Control-Allow-Credentials', 'true');
-        removeResponseHeader(event, 'x-frame-options');
-        setHeader(event, 'X-Frame-Options', 'ALLOWALL');
-        return fileBuffer;
+        fileBuffer = fs.readFileSync(localPath);
+        break;
       }
     } catch (e) {
-      // Continue to next path or HTTP fetch fallback
+      // Continue to next path
     }
   }
 
-  // 2. HTTP Fetch Fallback
-  let targetUrl = rawUrl;
-  if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-    let cleanPath = targetUrl.startsWith('/') ? targetUrl : `/${targetUrl}`;
-    if (!cleanPath.startsWith('/storage/')) {
-      cleanPath = `/storage${cleanPath}`;
+  // 2. HTTP Fetch Fallback if not found on local filesystem
+  if (!fileBuffer) {
+    let targetUrl = rawUrl;
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      let cleanPath = targetUrl.startsWith('/') ? targetUrl : `/${targetUrl}`;
+      if (!cleanPath.startsWith('/storage/')) {
+        cleanPath = `/storage${cleanPath}`;
+      }
+      targetUrl = `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
+    } else {
+      try {
+        const urlObj = new URL(targetUrl);
+        if (!urlObj.pathname.startsWith('/storage/')) {
+          urlObj.pathname = `/storage${urlObj.pathname.startsWith('/') ? '' : '/'}${urlObj.pathname}`;
+          targetUrl = urlObj.toString();
+        }
+      } catch (e) {}
     }
-    targetUrl = `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
-  } else {
+
     try {
-      const urlObj = new URL(targetUrl);
-      if (!urlObj.pathname.startsWith('/storage/')) {
-        urlObj.pathname = `/storage${urlObj.pathname.startsWith('/') ? '' : '/'}${urlObj.pathname}`;
-        targetUrl = urlObj.toString();
+      const config = useRuntimeConfig();
+      const apiKey = config.pustakaApiKey || process.env.PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b';
+
+      const response = await fetch(targetUrl, {
+        headers: {
+          'x-api-key': apiKey,
+          'Accept': 'application/pdf, application/octet-stream, */*'
+        }
+      });
+
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        fileBuffer = Buffer.from(arrayBuffer);
       }
-    } catch (e) {}
+    } catch (err) {
+      console.error('PDF Stream HTTP fetch error:', err);
+    }
   }
 
-  try {
-    const config = useRuntimeConfig();
-    const apiKey = config.pustakaApiKey || process.env.PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b';
+  if (fileBuffer) {
+    const totalSize = fileBuffer.length;
 
-    const response = await fetch(targetUrl, {
-      headers: {
-        'x-api-key': apiKey,
-        'Accept': 'application/pdf, application/octet-stream, */*'
-      }
-    });
+    // Common PDF Stream Headers
+    setHeader(event, 'Content-Type', 'application/pdf');
+    setHeader(event, 'Content-Disposition', 'inline');
+    setHeader(event, 'Accept-Ranges', 'bytes');
+    setHeader(event, 'Access-Control-Allow-Credentials', 'true');
+    setHeader(event, 'X-Pdf-Quality-Mode', quality);
+    removeResponseHeader(event, 'x-frame-options');
+    setHeader(event, 'X-Frame-Options', 'ALLOWALL');
 
-    if (response.ok) {
-      const contentType = response.headers.get('content-type') || 'application/pdf';
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      setHeader(event, 'Content-Type', contentType);
-      setHeader(event, 'Content-Disposition', 'inline');
+    // Network Adaptive Caching: Cache low/medium compressed streams longer
+    if (quality === 'low' || quality === 'medium') {
+      setHeader(event, 'Cache-Control', 'private, max-age=86400, stale-while-revalidate=3600');
+    } else {
       setHeader(event, 'Cache-Control', 'private, max-age=3600');
-      setHeader(event, 'Access-Control-Allow-Credentials', 'true');
-      removeResponseHeader(event, 'x-frame-options');
-      setHeader(event, 'X-Frame-Options', 'ALLOWALL');
-
-      return buffer;
     }
-  } catch (err) {
-    console.error('PDF Stream HTTP error:', err);
+
+    // Handle HTTP Range Requests (206 Partial Content) for Progressive Page-on-Demand Loading
+    if (rangeHeader && rangeHeader.startsWith('bytes=')) {
+      const parts = rangeHeader.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10) || 0;
+      const end = parts[1] ? parseInt(parts[1], 10) : totalSize - 1;
+
+      if (start < totalSize && end < totalSize && start <= end) {
+        const chunkSize = end - start + 1;
+        setResponseStatus(event, 206, 'Partial Content');
+        setHeader(event, 'Content-Range', `bytes ${start}-${end}/${totalSize}`);
+        setHeader(event, 'Content-Length', String(chunkSize));
+        return fileBuffer.subarray(start, end + 1);
+      }
+    }
+
+    setHeader(event, 'Content-Length', String(totalSize));
+    return fileBuffer;
   }
 
   return serveError(event, 'Dokumen PDF Tidak Ditemukan', `Berkas PDF (${cleanRelative}) belum terunggah atau lokasi file di server backend tidak ditemukan.`);

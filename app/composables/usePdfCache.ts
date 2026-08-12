@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { useBookCover } from './useBookCover';
+import { useNetworkQuality } from './useNetworkQuality';
 import type { Book } from './usePustakaApi';
 
 const prefetchedPdfUrls = ref<Set<string>>(new Set());
@@ -7,15 +8,18 @@ const prefetchingCount = ref<number>(0);
 
 export const usePdfCache = () => {
   const { extractPdfUrl, isEbookBook } = useBookCover();
+  const { effectivePdfQuality, isSlowConnection } = useNetworkQuality();
 
   // Pre-fetch a single PDF URL into temporary session CacheStorage / browser HTTP cache
   const prefetchPdf = async (rawUrl: string): Promise<boolean> => {
     if (!rawUrl || !process.client) return false;
 
+    const qualityParam = `&quality=${effectivePdfQuality.value}`;
+
     // Convert relative URL to full stream URL if needed
     const pdfUrl = rawUrl.startsWith('http') 
-      ? `/api/pdf-stream?url=${encodeURIComponent(rawUrl)}`
-      : rawUrl;
+      ? `/api/pdf-stream?url=${encodeURIComponent(rawUrl)}${qualityParam}`
+      : (rawUrl.includes('?') ? `${rawUrl}${qualityParam}` : `${rawUrl}?quality=${effectivePdfQuality.value}`);
 
     if (prefetchedPdfUrls.value.has(pdfUrl)) {
       return true; // Already cached in session

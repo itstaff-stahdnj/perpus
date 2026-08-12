@@ -34,8 +34,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useApiStatus } from '~/composables/useApiStatus'
 
 const router = useRouter()
+const { setApiDown } = useApiStatus()
 
 const toast = ref(null)
 const list = ref([])
@@ -86,6 +88,9 @@ const isActivityToday = (item) => {
 const loadActivities = async () => {
   try {
     const res = await fetch('https://portal-perpus.stahdnj.ac.id/api/aktivitas-terbaru')
+    if (res.status >= 500) {
+      setApiDown(true, `Server API mengembalikan status ${res.status}.`)
+    }
     const json = await res.json()
     if (json?.success && Array.isArray(json?.data)) {
       // Filter ONLY activities that happened TODAY

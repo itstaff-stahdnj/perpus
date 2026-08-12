@@ -184,6 +184,33 @@ export const usePustakaApi = () => {
     return headers;
   };
 
+  const { setApiDown } = useApiStatus();
+
+  const handleApiError = (e: any) => {
+    const status = e?.status || e?.statusCode || e?.response?.status;
+    const msg = String(e?.message || '');
+    if (
+      (status && (status >= 500 || status === 502 || status === 503 || status === 504)) ||
+      e?.name === 'FetchError' ||
+      msg.includes('Failed to fetch') ||
+      msg.includes('NetworkError') ||
+      msg.includes('Load failed')
+    ) {
+      setApiDown(true, status ? `Server API mengembalikan status ${status} (${e?.statusText || 'Maintenance'}).` : 'Gagal terhubung ke server API Perpustakaan.');
+    }
+  };
+
+  const apiFetch = async <T = any>(request: string, opts?: any): Promise<T> => {
+    try {
+      const res = await $fetch<T>(request, opts);
+      setApiDown(false);
+      return res;
+    } catch (e: any) {
+      handleApiError(e);
+      throw e;
+    }
+  };
+
   const login = async (emailOrNim: string, password: string): Promise<{ success: boolean; message: string; data?: any; token?: string }> => {
     try {
       const cleanInput = emailOrNim.trim();
@@ -205,14 +232,14 @@ export const usePustakaApi = () => {
 
       let res: any = null;
       try {
-        res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/auth/login`, {
+        res = await apiFetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/auth/login`, {
           method: 'POST',
           headers: getHeaders({ 'Content-Type': 'application/json' }),
           body: bodyPayload
         });
       } catch (err: any) {
         if (err?.status === 404 || err?.statusCode === 404) {
-          res = await $fetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/login`, {
+          res = await apiFetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/login`, {
             method: 'POST',
             headers: getHeaders({ 'Content-Type': 'application/json' }),
             body: bodyPayload
@@ -254,7 +281,7 @@ export const usePustakaApi = () => {
   const logout = async () => {
     if (tokenCookie.value) {
       try {
-        await $fetch(`${baseUrl}/logout`, {
+        await apiFetch(`${baseUrl}/logout`, {
           method: 'POST',
           headers: getHeaders()
         }).catch(() => {});
@@ -265,12 +292,12 @@ export const usePustakaApi = () => {
 
   const getProfile = async (): Promise<{ success: boolean; data: UserProfile; user?: UserProfile; bebas_pustaka?: boolean; badges?: string[] }> => {
     try {
-      let res = await $fetch<any>(`${baseUrl}/me`, {
+      let res = await apiFetch<any>(`${baseUrl}/me`, {
         headers: getHeaders()
       }).catch(() => null);
 
       if (!res) {
-        res = await $fetch<any>(`${baseUrl}/auth/me`, {
+        res = await apiFetch<any>(`${baseUrl}/auth/me`, {
           headers: getHeaders()
         }).catch(() => null);
       }
@@ -319,7 +346,7 @@ export const usePustakaApi = () => {
 
   const getBooks = async (params?: Record<string, any>): Promise<{ success: boolean; data: Book[]; meta?: any }> => {
     try {
-      const res = await $fetch<any>(`${baseUrl}/books`, {
+      const res = await apiFetch<any>(`${baseUrl}/books`, {
         headers: getHeaders(),
         params
       });
@@ -335,7 +362,7 @@ export const usePustakaApi = () => {
 
   const getBookById = async (id: number | string): Promise<{ success: boolean; data: Book }> => {
     try {
-      const res = await $fetch<any>(`${baseUrl}/books/${id}`, {
+      const res = await apiFetch<any>(`${baseUrl}/books/${id}`, {
         headers: getHeaders()
       });
       if (res?.data && typeof res.data === 'object') return { success: true, data: res.data };
@@ -349,7 +376,7 @@ export const usePustakaApi = () => {
 
   const getCategories = async (): Promise<{ success: boolean; data: Category[] }> => {
     try {
-      const res = await $fetch<any>(`${baseUrl}/categories`, {
+      const res = await apiFetch<any>(`${baseUrl}/categories`, {
         headers: getHeaders()
       });
       if (Array.isArray(res)) return { success: true, data: res };
@@ -368,7 +395,7 @@ export const usePustakaApi = () => {
     const now = Date.now();
     try {
       localStorage.setItem('pustaka_staff_last_active', String(now));
-      await $fetch<any>(`${baseUrl}/staff-status/heartbeat`, {
+      await apiFetch<any>(`${baseUrl}/staff-status/heartbeat`, {
         method: 'POST',
         headers: getHeaders()
       }).catch(() => null);
@@ -387,7 +414,7 @@ export const usePustakaApi = () => {
     }
 
     try {
-      const res = await $fetch<any>(`${baseUrl}/staff-status`, {
+      const res = await apiFetch<any>(`${baseUrl}/staff-status`, {
         headers: getHeaders()
       });
 
@@ -478,6 +505,51 @@ export const usePustakaApi = () => {
       return { success: false, data: [] };
     } catch (e) {
       return { success: false, data: [] };
+    }
+  };
+
+  // Riwayat Pengembalian: memanggil GET /api/returns (status: selesai)
+  const getReturns = async (): Promise<{ success: boolean; data: any[]; meta?: any }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/returns`, {
+        headers: getHeaders()
+      });
+      if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data, meta: res.meta };
+      if (Array.isArray(res)) return { success: true, data: res };
+      return { success: false, data: [] };
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  };
+
+  /**
+   * Endpoint terpadu GET /api/circulation
+   * Mengembalikan loans aktif, riwayat pengembalian, dan reservasi sekaligus.
+   */
+  const getCirculation = async (params?: Record<string, any>): Promise<{
+    success: boolean;
+    loans: any[];
+    returns: { data: any[]; meta: any };
+    reservations: any[];
+    summary?: { total_loans_aktif: number; total_returns: number; total_reservations: number };
+  }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/circulation`, {
+        headers: getHeaders(),
+        params
+      });
+      if (res?.success && res.data) {
+        return {
+          success: true,
+          loans: res.data.loans || [],
+          returns: res.data.returns || { data: [], meta: {} },
+          reservations: res.data.reservations || [],
+          summary: res.summary
+        };
+      }
+      return { success: false, loans: [], returns: { data: [], meta: {} }, reservations: [] };
+    } catch (e) {
+      return { success: false, loans: [], returns: { data: [], meta: {} }, reservations: [] };
     }
   };
 
@@ -811,6 +883,8 @@ export const usePustakaApi = () => {
     getCategories,
     selfBorrow,
     getLoans,
+    getReturns,
+    getCirculation,
     extendLoan,
     returnLoan,
     createReservation,

@@ -7,5 +7,6 @@
     <AppFooter />
     <MobileBottomNav />
     <ActivityNotificationToast />
+    <ApiMaintenanceNotification />
   </div>
 </template>

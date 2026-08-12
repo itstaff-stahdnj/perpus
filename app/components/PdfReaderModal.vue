@@ -19,7 +19,7 @@
                 {{ title || 'Pembaca E-Book Digital Flipbook' }}
               </h3>
               <p class="text-[10px] text-zinc-400 truncate flex items-center gap-1.5">
-                <span>⚡ Mode FlipHTML5 3D</span>
+                <span>⚡ {{ isSlowConnection ? 'Auto Compress (Hemat Data)' : 'Mode FlipHTML5 3D' }}</span>
                 <span>•</span>
                 <span class="text-rose-400 font-bold flex items-center gap-0.5">
                   <span class="material-symbols-outlined text-[12px]">lock</span>
@@ -30,6 +30,25 @@
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
+            <!-- Network Adaptive Quality Selector -->
+            <div class="hidden sm:flex items-center gap-1.5 bg-zinc-950 px-2 py-1 rounded-xl border border-zinc-800 text-[11px]">
+              <span class="text-zinc-400 font-medium hidden lg:inline">Jaringan:</span>
+              <span class="font-bold text-amber-400 flex items-center gap-1 text-[10px] sm:text-[11px]">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                {{ networkLabel }}
+              </span>
+              <select 
+                :value="manualQualityOverride || 'auto'"
+                @change="(e: any) => setManualQuality(e.target.value)"
+                class="bg-zinc-900 text-zinc-200 border border-zinc-700 text-[10px] rounded-lg px-1.5 py-0.5 font-bold focus:outline-none cursor-pointer"
+                title="Pilih Kualitas PDF"
+              >
+                <option value="auto">⚡ Auto (Otomatis)</option>
+                <option value="low">📉 Hemat Data (Low)</option>
+                <option value="high">✨ Original (High)</option>
+              </select>
+            </div>
+
             <!-- View Mode Switcher: 3D Flipbook vs Scroll PDF -->
             <div class="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
               <button 
@@ -116,6 +135,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import FlipbookViewer from './FlipbookViewer.vue';
+import { useNetworkQuality } from '~/composables/useNetworkQuality';
+
+const { effectivePdfQuality, networkLabel, manualQualityOverride, setManualQuality, isSlowConnection } = useNetworkQuality();
 
 const props = defineProps<{
   modelValue: boolean;
@@ -155,7 +177,7 @@ const activePdfUrl = computed(() => {
 
 const streamPdfUrl = computed(() => {
   if (!activePdfUrl.value) return '';
-  return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}`;
+  return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}&quality=${effectivePdfQuality.value}`;
 });
 
 const viewerSrc = computed(() => {

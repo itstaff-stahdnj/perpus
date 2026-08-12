@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="min-h-screen bg-[#F8F9FD] text-on-surface font-sans pt-20 pb-24 md:pb-16">
     <div class="max-w-container-max mx-auto px-4 md:px-margin-desktop">
       
@@ -146,228 +146,266 @@
         </div>
       </div>
 
-      <!-- TAB 2: PINJAMAN AKTIF -->
-      <div v-else-if="activeTab === 'loans'" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4 animate-in fade-in">
-        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
-          <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary text-xl">pending_actions</span>
-            <span>Daftar Pinjaman Aktif &amp; Terlambat</span>
-          </h3>
-          <div class="flex items-center gap-2">
-            <button @click="loadData" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Muat Ulang Data Real-time">
-              <span class="material-symbols-outlined text-base">refresh</span>
+      <!-- TAB 2: SIRKULASI (Pinjaman + Riwayat + Reservasi) -->
+      <div v-else-if="activeTab === 'circulation'" class="bg-white rounded-3xl shadow-sm border border-slate-200 animate-in fade-in">
+
+        <!-- Sub-tab Navigation -->
+        <div class="flex items-center gap-1.5 p-4 border-b border-slate-100 overflow-x-auto no-scrollbar">
+          <button
+            v-for="st in subTabs"
+            :key="st.id"
+            @click="activeSubTab = st.id"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
+            :class="activeSubTab === st.id
+              ? 'bg-primary text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          >
+            <span class="material-symbols-outlined text-sm">{{ st.icon }}</span>
+            <span>{{ st.label }}</span>
+            <span v-if="st.count" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold"
+              :class="activeSubTab === st.id ? 'bg-white/30 text-white' : 'bg-amber-400 text-slate-950'"
+            >{{ st.count }}</span>
+          </button>
+
+          <div class="ml-auto flex-shrink-0">
+            <button
+              @click="loadData"
+              class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+              title="Muat ulang semua data"
+            >
+              <span class="material-symbols-outlined text-base" :class="loadingLoans ? 'animate-spin' : ''">refresh</span>
             </button>
-            <span class="text-xs font-bold px-3 py-1 bg-primary/10 text-primary rounded-full">
-              {{ loans.length }} Transaksi
-            </span>
           </div>
         </div>
 
-        <div v-if="loadingLoans" class="py-12 text-center text-slate-500 text-xs">
-          <div class="inline-block w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-2"></div>
-          <p>Memuat data peminjaman real-time dari server...</p>
-        </div>
+        <div class="p-6">
 
-        <div v-else-if="loans.length === 0" class="py-16 text-center text-slate-500 space-y-3">
-          <span class="material-symbols-outlined text-5xl text-slate-300">menu_book</span>
-          <p class="font-bold text-sm text-slate-700">Belum Ada Pinjaman Aktif</p>
-          <p class="text-xs text-slate-500">Anda tidak sedang meminjam buku saat ini.</p>
-          <NuxtLink to="/buku" class="inline-block px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-container transition-colors">
-            Cari &amp; Pinjam Buku
-          </NuxtLink>
-        </div>
-
-        <div v-else v-auto-animate class="divide-y divide-slate-100">
-          <div v-for="loan in loans" :key="loan.id" class="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div class="flex items-start gap-4">
-              <!-- Book Cover -->
-              <div class="w-14 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-xs">
-                <img 
-                  v-if="loan.book?.cover_image_url || loan.buku?.cover_image || loan.book?.cover_image" 
-                  :src="loan.book?.cover_image_url || loan.buku?.cover_image || loan.book?.cover_image" 
-                  alt="Cover" 
-                  class="w-full h-full object-cover" 
-                />
-                <span v-else class="material-symbols-outlined text-3xl text-slate-400 flex items-center justify-center h-full">book</span>
-              </div>
-
-              <!-- Loan Information Details -->
-              <div class="space-y-1.5 text-xs">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <!-- Real-time Loan Status Badge -->
-                  <span 
-                    v-if="loan.denda && Number(loan.denda) > 0" 
-                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse"
-                  >
-                    🔴 Terlambat {{ loan.hari_terlambat || 1 }} Hari (Denda: Rp {{ Number(loan.denda).toLocaleString('id-ID') }})
-                  </span>
-                  <span 
-                    v-else-if="String(loan.status).toLowerCase() === 'selesai'" 
-                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-300"
-                  >
-                    ✅ Sudah Dikembalikan
-                  </span>
-                  <span 
-                    v-else 
-                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300"
-                  >
-                    🟢 Aktif Dipinjam
-                  </span>
-
-                  <span class="text-[10px] font-mono text-slate-700 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-300 px-2 py-0.5 rounded-md border border-slate-300 dark:border-zinc-700 font-bold">
-                    📖 Kode Buku: {{ loan.barcode_qr_buku || (loan.book?.id ? `BK-${String(loan.book.id).padStart(3, '0')}` : 'BK-001') }}
-                  </span>
-                </div>
-
-                <h4 class="font-bold text-slate-900 text-sm leading-snug">
-                  {{ loan.book?.judul || loan.buku?.judul || loan.judul || 'Buku Perpustakaan' }}
-                </h4>
-
-                <p class="text-slate-500">
-                  ✍️ Pengarang: <strong class="text-slate-700">{{ loan.book?.penulis || loan.buku?.penulis || 'STAH DNJ' }}</strong>
-                </p>
-
-                <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pt-0.5">
-                  <span v-if="loan.tanggal_pinjam">📅 Pinjam: <strong class="text-slate-700 font-mono">{{ formatDate(loan.tanggal_pinjam) }}</strong></span>
-                  <span>⏳ Tenggat Kembali: <strong class="text-rose-600 font-mono">{{ formatDate(loan.tanggal_kembali_seharusnya || loan.tanggal_kembali || loan.due_date) }}</strong></span>
-                </div>
-              </div>
+          <!-- SUB-TAB A: PINJAMAN AKTIF -->
+          <div v-if="activeSubTab === 'loans'">
+            <div v-if="loadingLoans" class="py-12 text-center text-slate-500 text-xs">
+              <div class="inline-block w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-2"></div>
+              <p>Memuat data peminjaman...</p>
             </div>
 
-            <!-- Action Controls: Perpanjang & Return -->
-            <div v-if="String(loan.status).toLowerCase() !== 'selesai'" class="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <button 
-                @click="handleExtendLoan(loan.id)"
-                class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
-                title="Perpanjang masa peminjaman selama 7 hari kerja"
-              >
-                <span class="material-symbols-outlined text-sm">update</span>
-                <span>Perpanjang (+7 Hari)</span>
-              </button>
-
-              <button 
-                v-if="isCampusNetwork"
-                @click="handleReturnLoan(loan.id)"
-                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
-                title="Proses pengembalian buku"
-              >
-                <span class="material-symbols-outlined text-sm text-emerald-600">assignment_return</span>
-                <span>Kembalikan</span>
-              </button>
-
-              <button 
-                v-else
-                disabled
-                class="px-3 py-2 bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400 border border-slate-300 dark:border-zinc-700 text-xs font-bold rounded-xl cursor-not-allowed flex items-center gap-1 opacity-70 transition-all duration-300"
-                title="Pengembalian buku mandiri hanya dapat dilakukan saat terhubung ke Wi-Fi Kampus STAH DNJ"
-              >
-                <span class="material-symbols-outlined text-sm text-rose-500 animate-pulse">wifi_off</span>
-                <span>Gunakan Wi-Fi Kampus untuk Mengembalikan</span>
-              </button>
+            <div v-else-if="loans.length === 0" class="py-14 text-center text-slate-500 space-y-3">
+              <span class="material-symbols-outlined text-5xl text-slate-300">menu_book</span>
+              <p class="font-bold text-sm text-slate-700">Belum Ada Pinjaman Aktif</p>
+              <p class="text-xs text-slate-500">Anda tidak sedang meminjam buku saat ini.</p>
+              <NuxtLink to="/buku" class="inline-block px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:opacity-90 transition-opacity">
+                Cari &amp; Pinjam Buku
+              </NuxtLink>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- TAB 3: RESERVASI ANTREAN -->
-      <div v-else-if="activeTab === 'reservations'" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4 animate-in fade-in">
-        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
-          <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
-            <span class="material-symbols-outlined text-blue-600 text-xl">schedule</span>
-            <span>Daftar Reservasi &amp; Antrean Buku</span>
-          </h3>
-          <span class="text-xs font-bold px-3 py-1 bg-blue-50 text-blue-800 rounded-full">
-            {{ reservations.length }} Antrean Active
-          </span>
-        </div>
+            <div v-else v-auto-animate class="divide-y divide-slate-100">
+              <div v-for="loan in loans" :key="loan.id" class="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-14 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-xs">
+                    <img
+                      v-if="loan.book?.cover_image_url || loan.book?.cover_image"
+                      :src="loan.book?.cover_image_url || loan.book?.cover_image"
+                      alt="Cover"
+                      class="w-full h-full object-cover"
+                    />
+                    <span v-else class="material-symbols-outlined text-3xl text-slate-400 flex items-center justify-center h-full">book</span>
+                  </div>
 
-        <div v-if="reservations.length === 0" class="py-16 text-center text-slate-500 space-y-3">
-          <span class="material-symbols-outlined text-5xl text-slate-300">bookmark</span>
-          <p class="font-bold text-sm text-slate-700">Belum Ada Reservasi Buku</p>
-          <p class="text-xs text-slate-500">Anda tidak sedang mengantre reservasi buku saat ini.</p>
-        </div>
+                  <div class="space-y-1.5 text-xs">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span
+                        v-if="loan.denda && Number(loan.denda) > 0"
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse"
+                      >🔴 Terlambat {{ loan.hari_terlambat || 1 }} Hari — Denda Rp {{ Number(loan.denda).toLocaleString('id-ID') }}</span>
+                      <span
+                        v-else
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300"
+                      >🟢 Aktif Dipinjam</span>
+                      <span class="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-300 font-bold">
+                        📖 {{ loan.barcode_qr_buku || (loan.book?.id ? `BK-${String(loan.book.id).padStart(3,'0')}` : 'BK-001') }}
+                      </span>
+                    </div>
 
-        <div v-else class="divide-y divide-slate-100">
-          <div v-for="res in reservations" :key="res.id" class="py-4 flex flex-col items-start gap-4">
-            <div class="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div class="space-y-1 text-xs">
-                <h4 class="font-bold text-slate-900 text-sm">{{ res.buku?.judul || res.book?.judul || 'Buku Reservasi' }}</h4>
-                <p class="text-slate-500">Pemustaka: <strong class="text-slate-800">{{ res.user?.name || user?.name }}</strong> ({{ res.user?.nim || user?.nim || 'NIM' }})</p>
-                <p class="text-slate-500">Tanggal Pengajuan: {{ formatDate(res.created_at) }}</p>
-                
-                <div class="pt-1 flex flex-wrap items-center gap-2">
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold" :class="getReservationStatusBadge(res.status).class">
-                    <span>{{ getReservationStatusBadge(res.status).label }}</span>
-                  </span>
+                    <h4 class="font-bold text-slate-900 text-sm leading-snug">{{ loan.book?.judul || 'Buku Perpustakaan' }}</h4>
+                    <p class="text-slate-500">✍️ <strong class="text-slate-700">{{ loan.book?.penulis || 'STAH DNJ' }}</strong></p>
+
+                    <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+                      <span v-if="loan.tanggal_pinjam">📅 Pinjam: <strong class="text-slate-700 font-mono">{{ formatDate(loan.tanggal_pinjam) }}</strong></span>
+                      <span>⏳ Tenggat: <strong class="text-rose-600 font-mono">{{ formatDate(loan.tanggal_kembali_seharusnya) }}</strong></span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Action Controls for Staff & Pemustaka -->
-              <div class="flex flex-wrap items-center gap-2 self-stretch sm:self-center">
-                <!-- Staff Controls -->
-                <template v-if="isStaffUser">
-                  <button 
-                    @click="handleChangeReservationStatus(res.id, 'proses_pengambilan')"
-                    class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                    title="Tandai pustakawan sedang mengambil buku dari rak"
+                <!-- Actions -->
+                <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  <button
+                    @click="handleExtendLoan(loan.id)"
+                    class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
                   >
-                    <span class="material-symbols-outlined text-sm">directions_walk</span>
-                    <span>1. Ambil Buku</span>
+                    <span class="material-symbols-outlined text-sm">update</span>
+                    <span>+7 Hari</span>
                   </button>
 
-                  <button 
-                    @click="handleChangeReservationStatus(res.id, 'siap_diambil')"
-                    class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                    title="Tandai buku sudah ditaruh di meja reservasi & siap diambil"
+                  <button
+                    v-if="isCampusNetwork"
+                    @click="handleReturnLoan(loan.id)"
+                    class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
                   >
-                    <span class="material-symbols-outlined text-sm">task_alt</span>
-                    <span>2. Buku Siap di Meja</span>
+                    <span class="material-symbols-outlined text-sm text-emerald-600">assignment_return</span>
+                    <span>Kembalikan</span>
                   </button>
-
-                  <a 
-                    :href="getUserWhatsAppUrl(res)"
-                    target="_blank"
-                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-xs"
-                    title="Kirim notifikasi WhatsApp ke pemustaka"
+                  <button
+                    v-else
+                    disabled
+                    class="px-3 py-2 bg-slate-50 text-slate-400 border border-slate-200 text-xs font-bold rounded-xl cursor-not-allowed flex items-center gap-1 opacity-70"
+                    title="Hanya tersedia di jaringan Wi-Fi Kampus STAH DNJ"
                   >
-                    <span class="material-symbols-outlined text-sm">chat</span>
-                    <span>WA Pemustaka</span>
-                  </a>
-
-                  <button 
-                    v-if="String(res.status).toLowerCase() === 'siap_diambil'"
-                    @click="handleChangeReservationStatus(res.id, 'selesai')"
-                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-md"
-                  >
-                    <span class="material-symbols-outlined text-sm">check_circle</span>
-                    <span>Serahkan Buku (Selesai)</span>
+                    <span class="material-symbols-outlined text-sm text-rose-400 animate-pulse">wifi_off</span>
+                    <span class="hidden sm:inline">Wi-Fi Kampus</span>
                   </button>
-                </template>
-
-                <!-- Pemustaka Controls -->
-                <template v-else>
-                  <a 
-                    :href="getStaffWhatsAppUrl(res)"
-                    target="_blank"
-                    class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                    title="Tanya status reservasi ke Petugas Pustakawan via WhatsApp"
-                  >
-                    <span class="material-symbols-outlined text-sm">chat</span>
-                    <span>Chat Pustakawan WA</span>
-                  </a>
-
-                  <button 
-                    v-if="String(res.status).toLowerCase() === 'siap_diambil'"
-                    @click="handleChangeReservationStatus(res.id, 'selesai')"
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                  >
-                    <span class="material-symbols-outlined text-base">check_circle</span>
-                    <span>Konfirmasi Terima Buku</span>
-                  </button>
-                </template>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- SUB-TAB B: RIWAYAT PENGEMBALIAN -->
+          <div v-else-if="activeSubTab === 'returns'">
+            <div v-if="loadingReturns" class="py-12 text-center text-slate-500 text-xs">
+              <div class="inline-block w-8 h-8 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-2"></div>
+              <p>Memuat riwayat pengembalian...</p>
+            </div>
+
+            <div v-else-if="returnHistory.length === 0" class="py-14 text-center text-slate-500 space-y-3">
+              <span class="material-symbols-outlined text-5xl text-slate-300">inventory_2</span>
+              <p class="font-bold text-sm text-slate-700">Belum Ada Riwayat Pengembalian</p>
+              <p class="text-xs text-slate-500">Buku yang sudah Anda kembalikan akan muncul di sini.</p>
+            </div>
+
+            <div v-else v-auto-animate class="divide-y divide-slate-100">
+              <div v-for="item in returnHistory" :key="item.id" class="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-14 h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-xs">
+                    <img
+                      v-if="item.book?.cover_image_url || item.book?.cover_image"
+                      :src="item.book?.cover_image_url || item.book?.cover_image"
+                      alt="Cover"
+                      class="w-full h-full object-cover"
+                    />
+                    <span v-else class="material-symbols-outlined text-3xl text-slate-400 flex items-center justify-center h-full">book</span>
+                  </div>
+
+                  <div class="space-y-1.5 text-xs">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span
+                        v-if="item.denda && Number(item.denda) > 0"
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-300"
+                      >⚠️ Denda: Rp {{ Number(item.denda).toLocaleString('id-ID') }}</span>
+                      <span
+                        v-else
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300"
+                      >✅ Tepat Waktu</span>
+                      <span class="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-300 font-bold">
+                        📖 {{ item.barcode_qr_buku || (item.book?.id ? `BK-${String(item.book.id).padStart(3,'0')}` : 'BK-001') }}
+                      </span>
+                    </div>
+
+                    <h4 class="font-bold text-slate-900 text-sm leading-snug">{{ item.book?.judul || 'Buku Perpustakaan' }}</h4>
+                    <p class="text-slate-500">✍️ <strong class="text-slate-700">{{ item.book?.penulis || 'STAH DNJ' }}</strong></p>
+
+                    <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+                      <span v-if="item.tanggal_pinjam">📅 Pinjam: <strong class="text-slate-700 font-mono">{{ formatDate(item.tanggal_pinjam) }}</strong></span>
+                      <span>📋 Tenggat: <strong class="text-slate-600 font-mono">{{ formatDate(item.tanggal_kembali_seharusnya) }}</strong></span>
+                      <span v-if="item.tanggal_dikembalikan" class="text-emerald-700">
+                        ✅ Kembali: <strong class="font-mono">{{ formatDate(item.tanggal_dikembalikan) }}</strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shrink-0 flex flex-col items-end gap-1">
+                  <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">Selesai</span>
+                  <span v-if="item.denda && Number(item.denda) > 0" class="text-[10px] text-rose-600 font-bold">
+                    {{ item.hari_terlambat || 1 }} hari terlambat
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB C: RESERVASI -->
+          <div v-else-if="activeSubTab === 'reservations'">
+            <div v-if="reservations.length === 0" class="py-14 text-center text-slate-500 space-y-3">
+              <span class="material-symbols-outlined text-5xl text-slate-300">bookmark</span>
+              <p class="font-bold text-sm text-slate-700">Belum Ada Reservasi Buku</p>
+              <p class="text-xs text-slate-500">Anda tidak sedang mengantre reservasi buku saat ini.</p>
+            </div>
+
+            <div v-else class="divide-y divide-slate-100">
+              <div v-for="res in reservations" :key="res.id" class="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold" :class="getReservationStatusBadge(res.status).class">
+                      {{ getReservationStatusBadge(res.status).label }}
+                    </span>
+                  </div>
+                  <h4 class="font-bold text-slate-900 text-sm">{{ res.buku?.judul || res.book?.judul || 'Buku Reservasi' }}</h4>
+                  <p class="text-slate-500">Pemustaka: <strong class="text-slate-800">{{ res.user?.name || user?.name }}</strong> ({{ res.user?.nim || user?.nim || 'NIM' }})</p>
+                  <p class="text-slate-400">Diajukan: {{ formatDate(res.created_at) }}</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 self-end sm:self-center shrink-0">
+                  <!-- Staff Controls -->
+                  <template v-if="isStaffUser">
+                    <button
+                      @click="handleChangeReservationStatus(res.id, 'proses_pengambilan')"
+                      class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-sm">directions_walk</span>
+                      <span>Ambil Buku</span>
+                    </button>
+                    <button
+                      @click="handleChangeReservationStatus(res.id, 'siap_diambil')"
+                      class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-sm">task_alt</span>
+                      <span>Siap Diambil</span>
+                    </button>
+                    <a :href="getUserWhatsAppUrl(res)" target="_blank"
+                      class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-sm">chat</span>
+                      <span>WA</span>
+                    </a>
+                    <button
+                      v-if="String(res.status).toLowerCase() === 'siap_diambil'"
+                      @click="handleChangeReservationStatus(res.id, 'selesai')"
+                      class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl flex items-center gap-1 cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-sm">check_circle</span>
+                      <span>Serahkan Buku</span>
+                    </button>
+                  </template>
+
+                  <!-- Pemustaka Controls -->
+                  <template v-else>
+                    <a :href="getStaffWhatsAppUrl(res)" target="_blank"
+                      class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-sm">chat</span>
+                      <span>Chat Pustakawan</span>
+                    </a>
+                    <button
+                      v-if="String(res.status).toLowerCase() === 'siap_diambil'"
+                      @click="handleChangeReservationStatus(res.id, 'selesai')"
+                      class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 cursor-pointer active:scale-95"
+                    >
+                      <span class="material-symbols-outlined text-base">check_circle</span>
+                      <span>Konfirmasi Terima Buku</span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -770,7 +808,7 @@ import { usePustakaApi, type UserProfile, type Book } from '../../composables/us
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 
 const route = useRoute();
-const { getProfile, updateProfile, getLoans, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
+const { getProfile, updateProfile, getLoans, getReturns, getCirculation, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
 const { isCampusNetwork } = useCampusNetwork();
 
 const slugifyTitle = (text: string): string => {
@@ -789,9 +827,12 @@ const getBookUrl = (b: any): string => {
   return `/buku/${titleSlug}-${id}`;
 };
 
-const activeTab = ref<'card' | 'loans' | 'reservations' | 'wishlist' | 'testimonial' | 'profile_bio' | 'security'>('card');
+const activeTab = ref<'card' | 'circulation' | 'wishlist' | 'testimonial' | 'profile_bio' | 'security'>('card');
+const activeSubTab = ref<'loans' | 'returns' | 'reservations'>('loans');
 const user = ref<UserProfile | null>(null);
 const loans = ref<any[]>([]);
+const returnHistory = ref<any[]>([]);
+const loadingReturns = ref(false);
 const reservations = ref<any[]>([]);
 const wishlistBooks = ref<Book[]>([]);
 const myTestimonial = ref<any>(null);
@@ -840,10 +881,35 @@ const securityForm = ref({
   passwordConfirmation: ''
 });
 
+const subTabs = computed(() => [
+  {
+    id: 'loans' as const,
+    label: 'Pinjaman Aktif',
+    icon: 'pending_actions',
+    count: loans.value.length || 0
+  },
+  {
+    id: 'returns' as const,
+    label: 'Riwayat Kembali',
+    icon: 'assignment_returned',
+    count: returnHistory.value.length || 0
+  },
+  {
+    id: 'reservations' as const,
+    label: isStaffUser.value ? 'Kelola Reservasi' : 'Reservasi Antrean',
+    icon: 'collections_bookmark',
+    count: reservations.value.length || 0
+  }
+]);
+
 const tabs = computed(() => [
   { id: 'card', label: 'Kartu Anggota & QR', icon: 'badge' },
-  { id: 'loans', label: 'Pinjaman Aktif', icon: 'pending_actions', badgeCount: loans.value.length },
-  { id: 'reservations', label: isStaffUser.value ? 'Kelola Reservasi' : 'Reservasi Antrean', icon: 'collections_bookmark', badgeCount: reservations.value.length },
+  {
+    id: 'circulation',
+    label: 'Pinjaman & Reservasi',
+    icon: 'import_contacts',
+    badgeCount: (loans.value.length + reservations.value.length) || undefined
+  },
   { id: 'wishlist', label: 'Wishlist Favorit', icon: 'favorite' },
   { id: 'testimonial', label: 'Testimoni Saya (1x)', icon: 'rate_review' },
   { id: 'profile_bio', label: 'Data Diri', icon: 'person' },
@@ -1020,35 +1086,38 @@ const loadData = async () => {
     }
 
     loadingLoans.value = true;
-    const loansRes = await getLoans('aktif').catch(() => null);
-    if (loansRes?.data && Array.isArray(loansRes.data)) {
-      const currentUserId = user.value?.id;
-      if (currentUserId) {
-        loans.value = loansRes.data.filter((l: any) => 
-          String(l.user_id) === String(currentUserId) && 
-          String(l.status).toLowerCase() !== 'selesai'
-        );
-      } else {
-        loans.value = loansRes.data;
-      }
+    loadingReturns.value = true;
+
+    // Satu request untuk semua data sirkulasi
+    const circRes = await getCirculation().catch(() => null);
+    if (circRes?.success) {
+      loans.value = circRes.loans ?? [];
+      returnHistory.value = circRes.returns?.data ?? [];
+      reservations.value = circRes.reservations ?? [];
     } else {
-      loans.value = [];
+      // Fallback ke request terpisah jika endpoint baru belum tersedia
+      const loansRes = await getLoans('aktif,terlambat').catch(() => null);
+      loans.value = loansRes?.data ?? [];
+
+      const returnsRes = await getReturns().catch(() => null);
+      returnHistory.value = returnsRes?.data ?? [];
+
+      const resRes = await getReservations(true).catch(() => null);
+      if (resRes?.data && Array.isArray(resRes.data)) {
+        const currentUserId = user.value?.id;
+        reservations.value = currentUserId
+          ? resRes.data.filter((r: any) => String(r.user_id) === String(currentUserId))
+          : resRes.data;
+      } else {
+        reservations.value = [];
+      }
     }
 
-    const resRes = await getReservations(true).catch(() => null);
-    if (resRes?.data && Array.isArray(resRes.data)) {
-      const currentUserId = user.value?.id;
-      if (currentUserId) {
-        reservations.value = resRes.data.filter((r: any) => 
-          (r.user_id && String(r.user_id) === String(currentUserId)) ||
-          (r.user?.id && String(r.user.id) === String(currentUserId))
-        );
-      } else {
-        reservations.value = resRes.data;
-      }
-    } else {
-      reservations.value = [];
-    }
+    loadingLoans.value = false;
+    loadingReturns.value = false;
+
+
+
 
     const wishlistRes = await getWishlist().catch(() => null);
     if (wishlistRes?.data && Array.isArray(wishlistRes.data)) {
