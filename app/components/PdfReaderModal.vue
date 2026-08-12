@@ -157,6 +157,9 @@ const activePdfUrl = computed(() => {
 
 const streamPdfUrl = computed(() => {
   if (!activePdfUrl.value) return '';
+  if (activePdfUrl.value.includes('/api/pdf-stream')) {
+    return activePdfUrl.value;
+  }
   return `/api/pdf-stream?url=${encodeURIComponent(activePdfUrl.value)}&quality=${effectivePdfQuality.value}`;
 });
 

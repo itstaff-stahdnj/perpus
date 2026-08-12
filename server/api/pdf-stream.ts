@@ -18,6 +18,20 @@ export default defineEventHandler(async (event) => {
   let rawUrl = (query.url as string) || '';
   const quality = (query.quality as string) || 'low'; // 'low' | 'medium' | 'high' | 'auto'
 
+  // Unwrap double-nested or URL encoded /api/pdf-stream?url= if present
+  while (rawUrl.includes('/api/pdf-stream?url=') || rawUrl.includes('api/pdf-stream?url=')) {
+    try {
+      const match = rawUrl.match(/(?:api\/pdf-stream\?url=)([^&]+)/);
+      if (match && match[1]) {
+        rawUrl = decodeURIComponent(match[1]);
+      } else {
+        break;
+      }
+    } catch {
+      break;
+    }
+  }
+
   if (!rawUrl && bookId) {
     rawUrl = `https://portal-perpus.stahdnj.ac.id/api/books/${bookId}/pdf-stream?quality=${quality}`;
   }
@@ -30,14 +44,19 @@ export default defineEventHandler(async (event) => {
   const rangeHeader = getHeader(event, 'range');
 
   // 1. Direct Local Filesystem Read (Fastest & 100% Reliable for Local NAS)
-  const cleanRelative = rawUrl
+  let cleanRelative = rawUrl
     .replace(/^https?:\/\/[^\/]+/, '') // strip domain
     .replace(/^\/storage\//, '')       // strip leading /storage/
     .replace(/^\//, '');               // strip leading slash
 
+  try {
+    cleanRelative = decodeURIComponent(cleanRelative);
+  } catch {}
+
   const possibleLocalPaths = [
     path.join('\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app\\public', cleanRelative),
     path.join('\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app\\private', cleanRelative),
+    path.join('\\\\cloud-stah-dnj\\Web\\perpustakaan\\storage\\app', cleanRelative),
     path.join('/volume1/Web/perpustakaan/storage/app/public', cleanRelative),
     path.join('/volume1/Web/perpustakaan/storage/app/private', cleanRelative),
     path.resolve(process.cwd(), '..', 'perpustakaan', 'storage', 'app', 'public', cleanRelative),
