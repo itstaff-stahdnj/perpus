@@ -157,7 +157,10 @@
             v-for="(book, index) in filteredBooks" 
             :key="book.id" 
             :to="getBookUrl(book)"
-            class="group cursor-pointer bg-white p-3 sm:p-4 rounded-2xl border border-outline-variant/60 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col justify-between block"
+            :class="[
+              'group cursor-pointer bg-white p-3 sm:p-4 rounded-2xl border border-outline-variant/60 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex-col justify-between',
+              index >= 6 ? 'hidden md:flex' : 'flex'
+            ]"
           >
             <div>
               <div class="aspect-[3/4] rounded-xl overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all relative bg-surface-container-high flex items-center justify-center">
@@ -669,13 +672,13 @@ const displayedNews = computed(() => {
 
 const filteredBooks = computed(() => {
   const list = Array.isArray(books.value) ? books.value : [];
-  if (!searchQuery.value.trim()) return list.slice(0, 6);
+  if (!searchQuery.value.trim()) return list.slice(0, 10);
   const q = searchQuery.value.toLowerCase();
   return list.filter(b => 
     (b?.judul && b.judul.toLowerCase().includes(q)) ||
     (b?.penulis && b.penulis.toLowerCase().includes(q)) ||
     (b?.isbn && b.isbn.toLowerCase().includes(q))
-  ).slice(0, 6);
+  ).slice(0, 10);
 });
 
 const heroDefaultBg = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBnVEAU9hxewbpcL-zJBF-VYMfF9CYqeW4AdHNxhEAB7Q8lh7P-fhGTZJNNjLXaT1jnxBawGh951FGVimE_UXcGwmJi08H0XshoFxacv0x7DN5jiS-pKOYNENJvSxE4ErBEzXShmq-QIXhlPqBKpwLEOxNpTDkenvskzHDUTZgyqFhcROoKoJNxdFYk7M38BxAB5EJEYZI7pITbaTm1RB6XNBO4_fsoU6GUqk959h722b2tabSqCO_A_g';
