@@ -327,6 +327,7 @@ definePageMeta({
 });
 
 const { getBooks, createBook, updateBook, deleteBook, getLoans, getUsers, getAttendanceToday, getProfile, logout } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const router = useRouter();
 
 const activeTab = ref('statistics');
@@ -423,35 +424,57 @@ const handleLogout = async () => {
 };
 
 const loadAdminData = async () => {
+  // STEP 1: Restore from IndexedDB cache for instant display
+  try {
+    const [cachedProfile, cachedBooks, cachedUsers, cachedLoansCount, cachedAttCount] = await Promise.all([
+      getCatalogCache<any>('admin_profile'),
+      getCatalogCache<any[]>('admin_books'),
+      getCatalogCache<any[]>('admin_users'),
+      getCatalogCache<number>('admin_loans_count'),
+      getCatalogCache<number>('admin_attendance_count')
+    ]);
+    if (cachedProfile) userProfile.value = cachedProfile;
+    if (cachedBooks && cachedBooks.length > 0) booksList.value = cachedBooks;
+    if (cachedUsers && cachedUsers.length > 0) usersList.value = cachedUsers;
+    if (typeof cachedLoansCount === 'number') activeLoansCount.value = cachedLoansCount;
+    if (typeof cachedAttCount === 'number') todayAttendanceCount.value = cachedAttCount;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     // 1. Get profile
     const profileRes = await getProfile().catch(() => null);
     if (profileRes?.data || profileRes?.user) {
       userProfile.value = profileRes.data || profileRes.user;
+      saveCatalogCache('admin_profile', userProfile.value);
     }
 
     // 2. Get books
     const booksRes = await getBooks().catch(() => null);
     if (booksRes?.success && booksRes.data) {
       booksList.value = booksRes.data;
+      saveCatalogCache('admin_books', booksRes.data);
     }
 
     // 3. Get loans
     const loansRes = await getLoans().catch(() => null);
     if (loansRes?.success && loansRes.data) {
       activeLoansCount.value = loansRes.data.length;
+      saveCatalogCache('admin_loans_count', activeLoansCount.value);
     }
 
     // 4. Get users
     const usersRes = await getUsers().catch(() => null);
     if (usersRes?.success && usersRes.data) {
       usersList.value = usersRes.data;
+      saveCatalogCache('admin_users', usersRes.data);
     }
 
     // 5. Get attendance today
     const attRes = await getAttendanceToday().catch(() => null);
     if (attRes?.success && attRes.data) {
       todayAttendanceCount.value = attRes.data.total_hadir || (attRes.data.daftar_hadir || []).length;
+      saveCatalogCache('admin_attendance_count', todayAttendanceCount.value);
     }
   } catch (e) {
     console.error('Admin data load error:', e);

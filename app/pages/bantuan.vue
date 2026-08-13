@@ -193,6 +193,7 @@
 
 <script setup>
 const { getSettings } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const siteSettings = ref(null);
 const activeFaq = ref(0);
 const isSubmitting = ref(false);
@@ -251,10 +252,18 @@ const submitForm = async () => {
 };
 
 onMounted(async () => {
+  // STEP 1: Restore from IndexedDB cache
+  try {
+    const cached = await getCatalogCache<any>('bantuan_settings');
+    if (cached) siteSettings.value = cached;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const res = await getSettings();
     if (res?.success && res.data) {
       siteSettings.value = res.data;
+      saveCatalogCache('bantuan_settings', res.data);
     }
   } catch (e) {
     console.error('Failed to load settings:', e);

@@ -193,8 +193,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { usePustakaApi, type SiteSettings } from '../composables/usePustakaApi';
+import { useIndexedDB } from '../composables/useIndexedDB';
 
 const { getSettings } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const settings = ref<SiteSettings | null>(null);
 
 const scrollToTop = () => {
@@ -204,10 +206,18 @@ const scrollToTop = () => {
 };
 
 onMounted(async () => {
+  // STEP 1: Restore from IndexedDB cache for instant footer
+  try {
+    const cachedSettings = await getCatalogCache<SiteSettings>('footer_settings');
+    if (cachedSettings) settings.value = cachedSettings;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const res = await getSettings();
     if (res?.data) {
       settings.value = res.data;
+      saveCatalogCache('footer_settings', res.data);
     }
   } catch (e) {
     console.error('Footer settings load error:', e);

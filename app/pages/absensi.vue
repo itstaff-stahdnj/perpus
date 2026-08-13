@@ -284,12 +284,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePustakaApi, type SiteSettings, type AttendanceRecord, type AttendanceTodayResponse } from '../composables/usePustakaApi';
+import { useIndexedDB } from '../composables/useIndexedDB';
 
 definePageMeta({
   layout: false
 });
 
 const { getSettings, getAttendanceToday, submitAttendance } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const isFullscreen = ref(false);
 
@@ -519,11 +521,18 @@ onMounted(async () => {
     window.addEventListener('keydown', handleGlobalKeyPress);
   }
 
-  // Load settings
+  // STEP 1: Restore from IndexedDB cache
+  try {
+    const cachedSettings = await getCatalogCache<SiteSettings>('absensi_settings');
+    if (cachedSettings) siteSettings.value = cachedSettings;
+  } catch (e) {}
+
+  // STEP 2: Load settings from API
   try {
     const res = await getSettings();
     if (res?.success && res.data) {
       siteSettings.value = res.data;
+      saveCatalogCache('absensi_settings', res.data);
     }
   } catch (e) {
     console.error('Error fetching settings for attendance kiosk:', e);

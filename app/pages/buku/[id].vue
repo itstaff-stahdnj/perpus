@@ -407,6 +407,7 @@ const {
 } = usePustakaApi();
 
 const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustakaCart();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const loading = ref(true);
 const book = ref<Book | null>(null);
@@ -524,6 +525,21 @@ const checkStaffOnline = async () => {
 
 const loadBookDetail = async () => {
   loading.value = true;
+
+  // STEP 1: Restore from IndexedDB cache for instant display
+  try {
+    const cachedBook = await getCatalogCache<Book>(`book_detail_${bookId}`);
+    if (cachedBook) {
+      book.value = cachedBook;
+      loading.value = false;
+    }
+    const cachedReviews = await getCatalogCache<any[]>(`book_reviews_${bookId}`);
+    if (cachedReviews && cachedReviews.length > 0) {
+      reviewsList.value = cachedReviews;
+    }
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     checkStaffOnline();
     const resBook = await getBookById(bookId).catch(() => ({ success: false, data: null }));
@@ -537,6 +553,8 @@ const loadBookDetail = async () => {
     }
 
     if (book.value) {
+      // STEP 3: Save to IndexedDB cache
+      saveCatalogCache(`book_detail_${bookId}`, book.value);
       loadReviews(book.value.id);
       if (process.client) {
         const canonicalUrl = getBookUrl(book.value);
@@ -676,6 +694,8 @@ const loadReviews = async (id: number | string) => {
     const res = await getReviews(id).catch(() => null);
     if (res?.data && Array.isArray(res.data)) {
       reviewsList.value = res.data;
+      // Save reviews to IndexedDB cache
+      saveCatalogCache(`book_reviews_${id}`, res.data);
       return;
     }
     if ((book.value as any)?.reviews && Array.isArray((book.value as any).reviews)) {

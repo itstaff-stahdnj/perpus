@@ -547,8 +547,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePustakaApi, type UserProfile } from '../../composables/usePustakaApi';
+import { useIndexedDB } from '../../composables/useIndexedDB';
 
 const { getProfile, getReservations, updateReservationStatus, tokenCookie, recordStaffHeartbeat } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const loadingRole = ref(true);
 const refreshing = ref(false);
@@ -781,6 +783,7 @@ const refreshData = async (showToast = false) => {
     const resRes = await getReservations().catch(() => null);
     if (resRes?.data && Array.isArray(resRes.data)) {
       reservationsList.value = resRes.data;
+      saveCatalogCache('reservasi_queue', resRes.data);
     }
     if (showToast && process.client) {
       alert('Data antrean reservasi berhasil diperbarui!');
@@ -794,6 +797,16 @@ const refreshData = async (showToast = false) => {
 
 onMounted(async () => {
   loadingRole.value = true;
+
+  // STEP 1: Restore cached reservation queue for instant render
+  try {
+    const cachedQueue = await getCatalogCache<any[]>('reservasi_queue');
+    if (cachedQueue && cachedQueue.length > 0) {
+      reservationsList.value = cachedQueue;
+    }
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     if (tokenCookie.value) {
       const prof = await getProfile().catch(() => null);

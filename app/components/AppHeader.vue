@@ -148,6 +148,7 @@ import { usePustakaApi, type UserProfile } from '../composables/usePustakaApi';
 
 const route = useRoute();
 const { getProfile, getSettings, logout, tokenCookie } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const profile = ref<UserProfile | null>(null);
 const siteName = ref('Perpustakaan STAH DNJ');
 const logoUrl = ref<string | undefined>(undefined);
@@ -189,6 +190,20 @@ const handleLogout = async () => {
 };
 
 onMounted(async () => {
+  // STEP 1: Restore from IndexedDB cache for instant header
+  try {
+    const [cachedProfile, cachedSettings] = await Promise.all([
+      getCatalogCache<UserProfile>('header_profile'),
+      getCatalogCache<any>('header_settings')
+    ]);
+    if (cachedProfile) profile.value = cachedProfile;
+    if (cachedSettings) {
+      siteName.value = cachedSettings.app_name || 'Perpustakaan STAH DNJ';
+      logoUrl.value = cachedSettings.logo_url;
+    }
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const [resProfile, resSettings] = await Promise.all([
       tokenCookie.value ? getProfile().catch(() => null) : null,
@@ -197,15 +212,17 @@ onMounted(async () => {
     
     if (resProfile?.success && resProfile.data) {
       profile.value = resProfile.data as UserProfile;
+      saveCatalogCache('header_profile', profile.value);
     }
     if (resSettings?.success && resSettings.data) {
       siteName.value = resSettings.data.app_name || 'Perpustakaan STAH DNJ';
       logoUrl.value = resSettings.data.logo_url;
+      saveCatalogCache('header_settings', resSettings.data);
     }
 
     if (isAdminUser.value) {
       checkPendingReservations();
-      alertTimer = setInterval(checkPendingReservations, 10000); // Poll pending alerts every 10 seconds
+      alertTimer = setInterval(checkPendingReservations, 10000);
     }
   } catch (e) {
     console.error('Header load error:', e);

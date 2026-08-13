@@ -429,8 +429,10 @@ import {
   type UserProfile,
   type SiteSettings
 } from '../composables/usePustakaApi';
+import { useIndexedDB } from '../composables/useIndexedDB';
 
 const { getBooks, getCategories, getNews, getAnnouncements, getLoans, getProfile, getTestimonials, getSettings, tokenCookie, getWishlist, addToWishlist, removeFromWishlist, getUsers, getPublicStats } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const books = ref<Book[]>([]);
 const categories = ref<Category[]>([]);
@@ -815,6 +817,35 @@ const fetchRssFeed = async (): Promise<any[]> => {
 
 const loadData = async () => {
   loading.value = true;
+
+  // STEP 1: Restore cached data from IndexedDB for instant display
+  try {
+    const [cachedBooks, cachedCats, cachedNews, cachedRss, cachedAnn, cachedTestimonials, cachedSettings, cachedStats] = await Promise.all([
+      getCatalogCache<Book[]>('home_books'),
+      getCatalogCache<Category[]>('home_categories'),
+      getCatalogCache<NewsItem[]>('home_news'),
+      getCatalogCache<any[]>('home_rss'),
+      getCatalogCache<AnnouncementItem[]>('home_announcements'),
+      getCatalogCache<TestimonialItem[]>('home_testimonials'),
+      getCatalogCache<SiteSettings>('home_settings'),
+      getCatalogCache<{ total_books?: number; total_categories?: number; total_members?: number }>('home_stats')
+    ]);
+    if (cachedBooks && cachedBooks.length > 0) books.value = cachedBooks;
+    if (cachedCats && cachedCats.length > 0) categories.value = cachedCats;
+    if (cachedNews && cachedNews.length > 0) newsList.value = cachedNews;
+    if (cachedRss && cachedRss.length > 0) rssNewsList.value = cachedRss;
+    if (cachedAnn && cachedAnn.length > 0) announcementsList.value = cachedAnn;
+    if (cachedTestimonials && cachedTestimonials.length > 0) testimonialsList.value = cachedTestimonials;
+    if (cachedSettings) siteSettings.value = cachedSettings;
+    if (cachedStats) {
+      if (cachedStats.total_books) totalBooksCount.value = Number(cachedStats.total_books);
+      if (cachedStats.total_categories) totalCategoriesCount.value = Number(cachedStats.total_categories);
+      if (cachedStats.total_members) totalMembersCount.value = Number(cachedStats.total_members);
+    }
+    if (books.value.length > 0 || cachedSettings) loading.value = false;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const [resBooks, resCat, resNews, rssItems, resAnnouncements, resLoans, resProfile, resTestimonials, resSettings, resUsers, resPublicStats] = await Promise.all([
       getBooks({ per_page: 1000 }),
@@ -877,6 +908,17 @@ const loadData = async () => {
     if (resProfile?.success && resProfile.data) userProfile.value = resProfile.data.user || resProfile.data;
     if (resTestimonials?.success && resTestimonials.data) testimonialsList.value = resTestimonials.data || [];
     if (resSettings?.success && resSettings.data) siteSettings.value = resSettings.data;
+
+    // STEP 3: Save fresh data to IndexedDB cache
+    if (books.value.length > 0) saveCatalogCache('home_books', books.value);
+    if (categories.value.length > 0) saveCatalogCache('home_categories', categories.value);
+    if (newsList.value.length > 0) saveCatalogCache('home_news', newsList.value);
+    if (rssNewsList.value.length > 0) saveCatalogCache('home_rss', rssNewsList.value);
+    if (announcementsList.value.length > 0) saveCatalogCache('home_announcements', announcementsList.value);
+    if (testimonialsList.value.length > 0) saveCatalogCache('home_testimonials', testimonialsList.value);
+    if (siteSettings.value) saveCatalogCache('home_settings', siteSettings.value);
+    const statsData = { total_books: totalBooksCount.value, total_categories: totalCategoriesCount.value, total_members: totalMembersCount.value };
+    if (statsData.total_books > 0) saveCatalogCache('home_stats', statsData);
   } catch (err) {
     console.error('Error fetching library data:', err);
   } finally {

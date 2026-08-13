@@ -259,6 +259,7 @@ definePageMeta({
 });
 
 const { getProfile, getLoans, getBooks, getAnnouncements, logout } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const router = useRouter();
 
 const activeSection = ref('loans');
@@ -311,25 +312,44 @@ const handleLogout = async () => {
 };
 
 onMounted(async () => {
+  // STEP 1: Restore from IndexedDB cache for instant display
+  try {
+    const [cachedProfile, cachedLoans, cachedBooks, cachedAnn] = await Promise.all([
+      getCatalogCache<any>('dashboard_profile'),
+      getCatalogCache<any[]>('dashboard_loans'),
+      getCatalogCache<any[]>('dashboard_books'),
+      getCatalogCache<any[]>('dashboard_announcements')
+    ]);
+    if (cachedProfile) userProfile.value = cachedProfile;
+    if (cachedLoans && cachedLoans.length > 0) activeLoans.value = cachedLoans;
+    if (cachedBooks && cachedBooks.length > 0) booksList.value = cachedBooks;
+    if (cachedAnn && cachedAnn.length > 0) announcements.value = cachedAnn;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const profileRes = await getProfile().catch(() => null);
     if (profileRes?.data || profileRes?.user) {
       userProfile.value = profileRes.data || profileRes.user;
+      saveCatalogCache('dashboard_profile', userProfile.value);
     }
 
     const loansRes = await getLoans().catch(() => null);
     if (loansRes?.success && loansRes.data) {
       activeLoans.value = loansRes.data;
+      saveCatalogCache('dashboard_loans', loansRes.data);
     }
 
     const booksRes = await getBooks().catch(() => null);
     if (booksRes?.success && booksRes.data) {
       booksList.value = booksRes.data;
+      saveCatalogCache('dashboard_books', booksRes.data);
     }
 
     const annRes = await getAnnouncements().catch(() => null);
     if (annRes?.success && annRes.data) {
       announcements.value = annRes.data.slice(0, 3);
+      saveCatalogCache('dashboard_announcements', announcements.value);
     }
   } catch (e) {
     console.error('Failed to load dashboard data:', e);

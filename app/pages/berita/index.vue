@@ -200,8 +200,10 @@ import {
   type NewsItem, 
   type AnnouncementItem 
 } from '../../composables/usePustakaApi';
+import { useIndexedDB } from '../../composables/useIndexedDB';
 
 const { getNews, getAnnouncements } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const loading = ref(true);
 const searchQuery = ref('');
@@ -455,6 +457,21 @@ const fetchRssFeed = async (): Promise<any[]> => {
 
 const loadData = async () => {
   loading.value = true;
+
+  // STEP 1: Restore from IndexedDB cache for instant display
+  try {
+    const [cachedNews, cachedRss, cachedAnn] = await Promise.all([
+      getCatalogCache<NewsItem[]>('berita_news'),
+      getCatalogCache<any[]>('berita_rss'),
+      getCatalogCache<AnnouncementItem[]>('berita_announcements')
+    ]);
+    if (cachedNews && cachedNews.length > 0) newsList.value = cachedNews;
+    if (cachedRss && cachedRss.length > 0) rssNewsList.value = cachedRss;
+    if (cachedAnn && cachedAnn.length > 0) announcementsList.value = cachedAnn;
+    if (cachedNews?.length || cachedRss?.length || cachedAnn?.length) loading.value = false;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const [resNews, rssItems, resAnn] = await Promise.all([
       getNews().catch(() => ({ success: false, data: [] })),
@@ -465,6 +482,11 @@ const loadData = async () => {
     if (resNews?.success) newsList.value = resNews.data || [];
     if (Array.isArray(rssItems)) rssNewsList.value = rssItems;
     if (resAnn?.success) announcementsList.value = resAnn.data || [];
+
+    // STEP 3: Save fresh data to IndexedDB cache
+    if (newsList.value.length > 0) saveCatalogCache('berita_news', newsList.value);
+    if (rssNewsList.value.length > 0) saveCatalogCache('berita_rss', rssNewsList.value);
+    if (announcementsList.value.length > 0) saveCatalogCache('berita_announcements', announcementsList.value);
   } catch (err) {
     console.error('Error fetching Berita & Pengumuman data:', err);
   } finally {

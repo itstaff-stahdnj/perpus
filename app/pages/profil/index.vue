@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="min-h-screen bg-[#F8F9FD] text-on-surface font-sans pt-20 pb-24 md:pb-16">
     <div class="max-w-container-max mx-auto px-4 md:px-margin-desktop">
       
@@ -806,10 +806,12 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePustakaApi, type UserProfile, type Book } from '../../composables/usePustakaApi';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
+import { useIndexedDB } from '../../composables/useIndexedDB';
 
 const route = useRoute();
 const { getProfile, updateProfile, getLoans, getReturns, getCirculation, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
 const { isCampusNetwork } = useCampusNetwork();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const slugifyTitle = (text: string): string => {
   return (text || '')
@@ -1074,6 +1076,29 @@ const handleSubmitTestimonial = async () => {
 };
 
 const loadData = async () => {
+  // STEP 1: Restore from IndexedDB cache for instant display
+  try {
+    const [cachedUser, cachedLoans, cachedReturns, cachedRes, cachedWish] = await Promise.all([
+      getCatalogCache<UserProfile>('profil_user'),
+      getCatalogCache<any[]>('profil_loans'),
+      getCatalogCache<any[]>('profil_returns'),
+      getCatalogCache<any[]>('profil_reservations'),
+      getCatalogCache<Book[]>('profil_wishlist')
+    ]);
+    if (cachedUser) {
+      user.value = cachedUser;
+      bioForm.value.name = cachedUser.name || '';
+      bioForm.value.whatsapp = (cachedUser as any).whatsapp || '';
+      bioForm.value.prodi = (cachedUser as any).prodi || '';
+      bioForm.value.instansi = (cachedUser as any).instansi || 'STAH Dharma Nusantara Jakarta';
+    }
+    if (cachedLoans && cachedLoans.length > 0) loans.value = cachedLoans;
+    if (cachedReturns && cachedReturns.length > 0) returnHistory.value = cachedReturns;
+    if (cachedRes && cachedRes.length > 0) reservations.value = cachedRes;
+    if (cachedWish && cachedWish.length > 0) wishlistBooks.value = cachedWish;
+  } catch (e) {}
+
+  // STEP 2: Fetch fresh data from API
   try {
     const profileRes = await getProfile().catch(() => null);
     if (profileRes?.data || (profileRes as any)?.user) {
@@ -1083,6 +1108,7 @@ const loadData = async () => {
       bioForm.value.whatsapp = uData.whatsapp || '';
       bioForm.value.prodi = uData.prodi || '';
       bioForm.value.instansi = uData.instansi || 'STAH Dharma Nusantara Jakarta';
+      saveCatalogCache('profil_user', uData);
     }
 
     loadingLoans.value = true;
@@ -1116,12 +1142,18 @@ const loadData = async () => {
     loadingLoans.value = false;
     loadingReturns.value = false;
 
+    // STEP 3: Save to IndexedDB cache
+    if (loans.value.length > 0) saveCatalogCache('profil_loans', loans.value);
+    if (returnHistory.value.length > 0) saveCatalogCache('profil_returns', returnHistory.value);
+    if (reservations.value.length > 0) saveCatalogCache('profil_reservations', reservations.value);
+
 
 
 
     const wishlistRes = await getWishlist().catch(() => null);
     if (wishlistRes?.data && Array.isArray(wishlistRes.data)) {
       wishlistBooks.value = wishlistRes.data;
+      saveCatalogCache('profil_wishlist', wishlistRes.data);
     } else {
       wishlistBooks.value = [];
     }
