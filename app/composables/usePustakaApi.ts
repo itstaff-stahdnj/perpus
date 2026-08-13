@@ -215,25 +215,26 @@ export const usePustakaApi = () => {
     }
   };
 
-  const login = async (emailOrNim: string, password: string): Promise<{ success: boolean; message: string; data?: any; token?: string }> => {
+  const login = async (emailOrNim: string, password: string): Promise<{ success: boolean; message: string; data?: any; token?: string; is_failover?: boolean }> => {
+    const cleanInput = emailOrNim.trim();
+    const isEmail = cleanInput.includes('@');
+
+    const bodyPayload: Record<string, any> = {
+      login: cleanInput,
+      password: password
+    };
+
+    if (isEmail) {
+      bodyPayload.email = cleanInput;
+    } else {
+      bodyPayload.nim = cleanInput;
+      bodyPayload.email = cleanInput;
+      bodyPayload.username = cleanInput;
+      bodyPayload.identity = cleanInput;
+    }
+
+    // 1. Try Primary Portal API Login
     try {
-      const cleanInput = emailOrNim.trim();
-      const isEmail = cleanInput.includes('@');
-
-      const bodyPayload: Record<string, any> = {
-        login: cleanInput,
-        password: password
-      };
-
-      if (isEmail) {
-        bodyPayload.email = cleanInput;
-      } else {
-        bodyPayload.nim = cleanInput;
-        bodyPayload.email = cleanInput;
-        bodyPayload.username = cleanInput;
-        bodyPayload.identity = cleanInput;
-      }
-
       let res: any = null;
       try {
         res = await apiFetch<{ success: boolean; token?: string; data?: any; message?: string }>(`${baseUrl}/auth/login`, {
@@ -265,21 +266,39 @@ export const usePustakaApi = () => {
           token
         };
       }
-      return { success: false, message: res?.message || 'Login gagal. Periksa kembali NIM/Email dan password Anda.' };
     } catch (e: any) {
-      let errorMsg = 'Gagal melakukan otentikasi. Silakan periksa kredensial Anda.';
-      if (e?.data?.errors && typeof e.data.errors === 'object') {
-        const fieldErrors = Object.values(e.data.errors).flat().filter(Boolean);
-        if (fieldErrors.length > 0) {
-          errorMsg = fieldErrors.join(' ');
-        }
-      } else if (e?.data?.message) {
-        errorMsg = e.data.message;
-      } else if (e?.message) {
-        errorMsg = e.message;
-      }
-      return { success: false, message: errorMsg };
+      console.warn('Primary portal login failed/down, attempting Cloudflare D1 failover login...', e);
     }
+
+    // 2. Failover to Cloudflare D1 Backup Database Login if Primary API is down or failed
+    try {
+      const resD1: any = await $fetch('/api/backup/auth', {
+        method: 'POST',
+        body: { login: cleanInput, password }
+      });
+
+      if (resD1?.success && resD1?.data) {
+        const token = resD1.token || `d1_token_${resD1.data.id}`;
+        tokenCookie.value = token;
+        if (process.client) {
+          localStorage.setItem('pustaka_token', token);
+          localStorage.setItem('pustaka_user', JSON.stringify(resD1.data));
+        }
+        return {
+          success: true,
+          message: resD1.message || '🟢 Login Berhasil via Backup D1 Database (Failover Mode)',
+          data: resD1.data,
+          token,
+          is_failover: true
+        };
+      } else if (resD1?.message) {
+        return { success: false, message: resD1.message };
+      }
+    } catch (errD1: any) {
+      console.error('D1 Failover Auth Error:', errD1);
+    }
+
+    return { success: false, message: 'Login gagal. Silakan periksa kembali Email/NIM dan password Anda.' };
   };
 
   const logout = async () => {
