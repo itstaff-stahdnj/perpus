@@ -207,14 +207,26 @@
         </div>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Refresh Button -->
+          <!-- Refresh API Data Button -->
           <button 
             @click="loadAdminData(true)" 
             :disabled="refreshing"
-            class="p-2 text-slate-700 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center cursor-pointer border border-slate-200 shrink-0"
-            title="Refresh Data API Realtime"
+            class="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-primary/20 shrink-0 font-bold text-xs shadow-2xs"
+            title="Refresh & Sinkronkan Data API Realtime"
           >
-            <span class="material-symbols-outlined text-lg" :class="refreshing ? 'animate-spin' : ''">refresh</span>
+            <span class="material-symbols-outlined text-base" :class="refreshing ? 'animate-spin' : ''">sync</span>
+            <span>Sinkron Data</span>
+          </button>
+
+          <!-- D1 Backup Database Sync Button -->
+          <button 
+            @click="handleSyncD1" 
+            :disabled="syncingD1"
+            class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 font-bold text-xs active:scale-95"
+            title="Sinkronisasi ke Cloudflare D1 Failover Database"
+          >
+            <span class="material-symbols-outlined text-base" :class="syncingD1 ? 'animate-spin' : ''">cloud_sync</span>
+            <span class="hidden sm:inline">Sync DB D1</span>
           </button>
 
           <NuxtLink to="/reservasi" class="px-3 py-1.5 text-amber-900 hover:bg-amber-100 transition-colors flex items-center gap-1 text-xs font-black bg-amber-50 border border-amber-300 rounded-xl shadow-xs shrink-0" title="Portal Reservasi">
@@ -249,10 +261,20 @@
           <div v-if="activeTab === 'statistics'" class="space-y-8">
             <!-- Section 1: Ringkasan KPI Realtime -->
             <section>
-              <div class="flex items-center justify-between mb-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <h2 class="font-headline-md text-lg sm:text-xl font-extrabold text-primary">Statistik Realtime Perpustakaan</h2>
                   <p class="text-xs text-on-surface-variant mt-0.5">Pemantauan data koleksi, anggota, sirkulasi, dan kunjungan hari ini secara live.</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button @click="loadAdminData(true)" :disabled="refreshing" class="px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest text-primary rounded-xl font-bold text-xs flex items-center gap-1.5 border border-outline-variant cursor-pointer transition-colors shadow-2xs">
+                    <span class="material-symbols-outlined text-base" :class="refreshing ? 'animate-spin' : ''">sync</span>
+                    <span>Sinkronkan API</span>
+                  </button>
+                  <button @click="handleSyncD1" :disabled="syncingD1" class="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs active:scale-95">
+                    <span class="material-symbols-outlined text-base" :class="syncingD1 ? 'animate-spin' : ''">cloud_sync</span>
+                    <span>Sync DB D1</span>
+                  </button>
                 </div>
               </div>
 

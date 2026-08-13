@@ -235,14 +235,15 @@
         </div>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Refresh Button -->
+          <!-- Sinkronisasi Data Button -->
           <button 
             @click="loadDashboardData(true)" 
             :disabled="refreshing"
-            class="p-2 text-slate-700 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center cursor-pointer border border-slate-200 shrink-0"
-            title="Refresh Data Realtime"
+            class="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-primary/20 shrink-0 font-bold text-xs shadow-2xs active:scale-95"
+            title="Sinkronisasi & Refresh Data Realtime"
           >
-            <span class="material-symbols-outlined text-lg" :class="refreshing ? 'animate-spin' : ''">refresh</span>
+            <span class="material-symbols-outlined text-base" :class="refreshing ? 'animate-spin' : ''">sync</span>
+            <span>Sinkronkan Data</span>
           </button>
 
           <!-- QR Card Button -->
@@ -280,10 +281,16 @@
               </h1>
               <p class="font-body-lg text-xs text-on-surface-variant">Pantau pinjaman aktif, reservasi, riwayat baca, dan perpanjang buku secara realtime.</p>
             </div>
-            <button @click="showQrModal = true" class="px-4 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-95 shrink-0">
-              <span class="material-symbols-outlined text-lg">badge</span>
-              <span>Lihat Kartu Digital &amp; QR</span>
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+              <button @click="loadDashboardData(true)" :disabled="refreshing" class="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-extrabold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg" :class="refreshing ? 'animate-spin' : ''">sync</span>
+                <span>Sinkronkan Data</span>
+              </button>
+              <button @click="showQrModal = true" class="px-4 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg">badge</span>
+                <span>Kartu Digital</span>
+              </button>
+            </div>
           </section>
 
           <!-- Stat Cards Grid -->
@@ -532,10 +539,10 @@
                   <p class="text-[11px] text-on-surface-variant">Buku populer untuk mendukung studi Anda.</p>
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
                   <NuxtLink v-for="book in recommendedBooks" :key="book.id" :to="getBookUrl(book)" class="flex gap-3 group cursor-pointer p-2 rounded-xl hover:bg-surface-container-low transition-colors">
                     <div class="w-12 h-16 shrink-0 rounded bg-primary-container/10 flex items-center justify-center text-primary font-bold overflow-hidden shadow-xs border border-outline-variant">
-                      <img v-if="book.cover_image" :src="book.cover_image" alt="Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                      <img v-if="book.cover_image || book.cover_image_url" :src="book.cover_image || book.cover_image_url" alt="Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
                       <span v-else class="material-symbols-outlined text-xl">book</span>
                     </div>
                     <div class="flex flex-col justify-center text-xs min-w-0">
@@ -682,7 +689,7 @@ const getBookUrl = (b: any) => {
 };
 
 const recommendedBooks = computed(() => {
-  return booksList.value.slice(0, 3);
+  return booksList.value;
 });
 
 const formatDate = (dateStr: any) => {
@@ -803,7 +810,7 @@ const loadDashboardData = async (manual = false) => {
     }
 
     if (annRes?.success && annRes.data) {
-      announcements.value = annRes.data.slice(0, 3);
+      announcements.value = annRes.data;
       saveCatalogCache('dashboard_announcements', announcements.value);
     }
 

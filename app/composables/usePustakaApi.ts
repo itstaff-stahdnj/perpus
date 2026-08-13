@@ -352,7 +352,7 @@ export const usePustakaApi = () => {
     try {
       const res = await apiFetch<any>(`${baseUrl}/books`, {
         headers: getHeaders(),
-        params
+        params: { per_page: 1000, limit: 1000, ...params }
       });
       if (Array.isArray(res)) return { success: true, data: res };
       if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data, meta: res.meta };
@@ -498,11 +498,12 @@ export const usePustakaApi = () => {
     }
   };
 
-  const getLoans = async (status?: string): Promise<{ success: boolean; data: any[] }> => {
+  const getLoans = async (paramsOrStatus?: string | Record<string, any>): Promise<{ success: boolean; data: any[] }> => {
     try {
+      const queryParams = typeof paramsOrStatus === 'string' ? { status: paramsOrStatus } : (paramsOrStatus || {});
       const res = await $fetch<any>(`${baseUrl}/loans`, {
         headers: getHeaders(),
-        params: status ? { status } : undefined
+        params: { per_page: 1000, limit: 1000, ...queryParams }
       });
       if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data };
       if (Array.isArray(res)) return { success: true, data: res };
@@ -513,10 +514,11 @@ export const usePustakaApi = () => {
   };
 
   // Riwayat Pengembalian: memanggil GET /api/returns (status: selesai)
-  const getReturns = async (): Promise<{ success: boolean; data: any[]; meta?: any }> => {
+  const getReturns = async (params?: Record<string, any>): Promise<{ success: boolean; data: any[]; meta?: any }> => {
     try {
       const res = await $fetch<any>(`${baseUrl}/returns`, {
-        headers: getHeaders()
+        headers: getHeaders(),
+        params: { per_page: 1000, limit: 1000, ...params }
       });
       if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data, meta: res.meta };
       if (Array.isArray(res)) return { success: true, data: res };
@@ -540,7 +542,7 @@ export const usePustakaApi = () => {
     try {
       const res = await $fetch<any>(`${baseUrl}/circulation`, {
         headers: getHeaders(),
-        params
+        params: { per_page: 1000, limit: 1000, ...params }
       });
       if (res?.success && res.data) {
         return {
@@ -608,11 +610,16 @@ export const usePustakaApi = () => {
     }
   };
 
-  const getReservations = async (myReservations: boolean = true): Promise<{ success: boolean; data: any[] }> => {
+  const getReservations = async (myReservations: boolean = true, params?: Record<string, any>): Promise<{ success: boolean; data: any[] }> => {
     try {
       const res = await $fetch<any>(`${baseUrl}/reservations`, {
         headers: getHeaders(),
-        params: myReservations ? { my_reservations: 1 } : undefined
+        params: {
+          ...(myReservations ? { my_reservations: 1 } : {}),
+          per_page: 1000,
+          limit: 1000,
+          ...params
+        }
       });
       if (res?.data && Array.isArray(res.data)) return { success: true, data: res.data };
       if (Array.isArray(res)) return { success: true, data: res };
@@ -779,14 +786,14 @@ export const usePustakaApi = () => {
   const getAttendances = async (params?: Record<string, any>): Promise<{ success: boolean; data: AttendanceRecord[]; meta?: any; message?: string }> => {
     return await $fetch(`${baseUrl}/attendances`, {
       headers: getHeaders(),
-      params
+      params: { per_page: 1000, limit: 1000, ...params }
     });
   };
 
   const getUsers = async (params?: Record<string, any>): Promise<{ success: boolean; data: any[]; meta?: any; message?: string }> => {
     return await $fetch(`${baseUrl}/users`, {
       headers: getHeaders(),
-      params
+      params: { per_page: 1000, limit: 1000, ...params }
     });
   };
 
