@@ -253,7 +253,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
   layout: false
 });
@@ -264,12 +264,12 @@ const router = useRouter();
 
 const activeSection = ref('loans');
 const catalogSearch = ref('');
-const userProfile = ref(null);
-const activeLoans = ref([]);
-const booksList = ref([]);
-const announcements = ref([]);
+const userProfile = ref<any>(null);
+const activeLoans = ref<any[]>([]);
+const booksList = ref<any[]>([]);
+const announcements = ref<any[]>([]);
 
-const slugifyTitle = (text) => {
+const slugifyTitle = (text: any) => {
   return (text || '')
     .toLowerCase()
     .normalize('NFD')
@@ -278,7 +278,7 @@ const slugifyTitle = (text) => {
     .replace(/(^-|-$)+/g, '');
 };
 
-const getBookUrl = (b) => {
+const getBookUrl = (b: any) => {
   if (!b) return '/buku';
   const titleSlug = slugifyTitle(b.judul);
   return `/buku/${titleSlug}-${b.id}`;
@@ -292,7 +292,7 @@ const recommendedBooks = computed(() => {
   return booksList.value.slice(0, 3);
 });
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: any) => {
   if (!dateStr) return '7 Hari Kerja';
   try {
     const d = new Date(dateStr);
@@ -302,7 +302,7 @@ const formatDate = (dateStr) => {
   }
 };
 
-const extendLoan = async (loan) => {
+const extendLoan = async (loan: any) => {
   alert(`Permintaan perpanjangan untuk buku "${loan.buku?.judul || 'Pustaka'}" telah diajukan ke pustakawan.`);
 };
 
@@ -315,10 +315,10 @@ onMounted(async () => {
   // STEP 1: Restore from IndexedDB cache for instant display
   try {
     const [cachedProfile, cachedLoans, cachedBooks, cachedAnn] = await Promise.all([
-      getCatalogCache<any>('dashboard_profile'),
-      getCatalogCache<any[]>('dashboard_loans'),
-      getCatalogCache<any[]>('dashboard_books'),
-      getCatalogCache<any[]>('dashboard_announcements')
+      getCatalogCache('dashboard_profile'),
+      getCatalogCache('dashboard_loans'),
+      getCatalogCache('dashboard_books'),
+      getCatalogCache('dashboard_announcements')
     ]);
     if (cachedProfile) userProfile.value = cachedProfile;
     if (cachedLoans && cachedLoans.length > 0) activeLoans.value = cachedLoans;

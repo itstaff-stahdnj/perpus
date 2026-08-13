@@ -321,7 +321,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
   layout: false
 });
@@ -427,11 +427,11 @@ const loadAdminData = async () => {
   // STEP 1: Restore from IndexedDB cache for instant display
   try {
     const [cachedProfile, cachedBooks, cachedUsers, cachedLoansCount, cachedAttCount] = await Promise.all([
-      getCatalogCache<any>('admin_profile'),
-      getCatalogCache<any[]>('admin_books'),
-      getCatalogCache<any[]>('admin_users'),
-      getCatalogCache<number>('admin_loans_count'),
-      getCatalogCache<number>('admin_attendance_count')
+      getCatalogCache('admin_profile'),
+      getCatalogCache('admin_books'),
+      getCatalogCache('admin_users'),
+      getCatalogCache('admin_loans_count'),
+      getCatalogCache('admin_attendance_count')
     ]);
     if (cachedProfile) userProfile.value = cachedProfile;
     if (cachedBooks && cachedBooks.length > 0) booksList.value = cachedBooks;
