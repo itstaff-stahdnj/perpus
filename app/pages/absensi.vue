@@ -426,6 +426,25 @@ const formatTodayDateLabel = (dateInput?: string) => {
 
 const refreshAttendanceData = async () => {
   loadingToday.value = true;
+
+  // 1. Restore from IndexedDB cache
+  try {
+    const cachedData = await getCatalogCache<any>('absensi_today');
+    if (cachedData && cachedData.daftar_hadir) {
+      todayData.value = cachedData;
+      const rawList = cachedData.daftar_hadir || [];
+      const todayList = rawList.filter((item: any) => {
+        const targetDate = item.created_at || item.tanggal;
+        if (!targetDate) return true;
+        return isToday(targetDate);
+      });
+      todayAttendees.value = todayList;
+      todayTotal.value = todayList.length;
+      todayDate.value = formatTodayDateLabel(cachedData.tanggal);
+    }
+  } catch (e) {}
+
+  // 2. Fetch fresh data from API
   try {
     const res = await getAttendanceToday();
     if (res?.success && res.data) {
@@ -433,7 +452,7 @@ const refreshAttendanceData = async () => {
       const rawList = res.data.daftar_hadir || [];
       
       // Filter strictly by created_at or tanggal timestamp matching TODAY
-      const todayList = rawList.filter(item => {
+      const todayList = rawList.filter((item: any) => {
         const targetDate = item.created_at || item.tanggal;
         if (!targetDate) return true;
         return isToday(targetDate);
@@ -442,12 +461,17 @@ const refreshAttendanceData = async () => {
       todayAttendees.value = todayList;
       todayTotal.value = todayList.length;
       todayDate.value = formatTodayDateLabel(res.data.tanggal);
+
+      // Save fresh data to IndexedDB
+      saveCatalogCache('absensi_today', res.data);
     } else {
       todayDate.value = formatTodayDateLabel();
     }
   } catch (e) {
     console.error('Error fetching today attendance:', e);
-    todayDate.value = formatTodayDateLabel();
+    if (!todayAttendees.value || todayAttendees.value.length === 0) {
+      todayDate.value = formatTodayDateLabel();
+    }
   } finally {
     loadingToday.value = false;
   }
