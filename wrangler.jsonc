@@ -21,8 +21,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "perpus-backup-db",
-			"database_id": "cd496a97-3b00-4e84-a39f-575befcea5d6",
+			"database_name": "perpustakaan-database-stahdnj",
+			"database_id": "22bc8fcd-b428-4e36-b6cb-b1d936bea020",
 			"migrations_dir": "./migrations"
 		}
 	],
