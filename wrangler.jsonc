@@ -17,6 +17,14 @@
 	"upload_source_maps": true,
 	"compatibility_flags": [
 		"nodejs_compat"
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "perpus-backup-db",
+			"database_id": "perpus-backup-db-local",
+			"migrations_dir": "./migrations"
+		}
 	]
 	/**
 	 * Smart Placement
