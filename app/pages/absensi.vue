@@ -17,6 +17,7 @@
           <span class="text-[10px] sm:text-xs opacity-90 hidden sm:block">{{ currentDate }}</span>
         </div>
         <div class="h-8 w-[1px] bg-white/20 hidden sm:block"></div>
+        <SyncDataButton variant="header" />
         <button 
           @click="toggleFullscreen" 
           class="flex items-center gap-1.5 bg-secondary text-white hover:bg-on-secondary-container px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"

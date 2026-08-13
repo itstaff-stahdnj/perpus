@@ -63,8 +63,11 @@
         </NuxtLink>
       </nav>
 
-      <!-- Right Action Area (SSO Portal / User Account) -->
+      <!-- Right Action Area (SSO Portal / User Account / Sync Button) -->
       <div class="flex items-center gap-2 shrink-0">
+        <!-- Global Sync Button -->
+        <SyncDataButton variant="header" />
+
         <!-- Logged In State -->
         <div v-if="tokenCookie" class="flex items-center gap-2 sm:gap-3 pl-2 border-l border-outline-variant/60">
           <!-- Member Profile Button (Nuxt Internal) -->

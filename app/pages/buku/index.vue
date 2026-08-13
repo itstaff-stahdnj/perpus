@@ -148,6 +148,9 @@
                   </select>
                 </div>
 
+                <!-- Sync Button -->
+                <SyncDataButton variant="header" />
+
                 <!-- View Mode Buttons (Grid/List) -->
                 <div class="flex items-center bg-surface-container-high p-1 rounded-xl gap-1">
                   <button 
