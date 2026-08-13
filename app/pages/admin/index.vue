@@ -37,6 +37,11 @@
             <span>Kiosk Absensi</span>
           </NuxtLink>
 
+          <button @click="handleSyncD1(); showMobileAdminSheet = false" class="p-3.5 bg-blue-900/80 hover:bg-blue-800 text-blue-200 border border-blue-700/80 rounded-2xl font-bold flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-blue-400 text-xl">database</span>
+            <span>Sync DB D1</span>
+          </button>
+
           <button @click="handlePrintReport(); showMobileAdminSheet = false" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-2xl font-bold flex items-center gap-2.5">
             <span class="material-symbols-outlined text-xl">print</span>
             <span>Cetak Laporan</span>
@@ -856,6 +861,24 @@ const triggerToast = (msg: string) => {
   setTimeout(() => {
     toastMessage.value = '';
   }, 4000);
+};
+
+const syncingD1 = ref(false);
+const handleSyncD1 = async () => {
+  syncingD1.value = true;
+  triggerToast('Memulai sinkronisasi data ke Cloudflare D1 Database...');
+  try {
+    const res: any = await $fetch('/api/backup/sync', { method: 'POST' });
+    if (res?.success) {
+      triggerToast('✅ Sinkronisasi Cloudflare D1 Berhasil!');
+    } else {
+      triggerToast('ℹ️ ' + (res?.message || 'Proses sinkronisasi D1 selesai.'));
+    }
+  } catch (err: any) {
+    triggerToast('❌ Error D1: ' + (err?.message || 'Gagal terhubung ke Cloudflare D1.'));
+  } finally {
+    syncingD1.value = false;
+  }
 };
 
 const availableBooksCount = computed(() => {
