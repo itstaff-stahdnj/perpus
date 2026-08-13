@@ -22,7 +22,8 @@ export const useBookCover = () => {
 
   const isEbookBook = (b: Book | any): boolean => {
     if (!b) return false;
-    if (b.is_ebook || b.is_digital || b.tipe_koleksi === 'digital' || extractPdfUrl(b)) return true;
+    if (b.is_ebook || b.is_digital || b.kavita_book_id || b.kavita_series_id || b.kavita_custom_url || b.tipe_koleksi === 'digital' || extractPdfUrl(b)) return true;
+
     const catObj = b.category || b.kategori;
     let catName = '';
     if (catObj && typeof catObj === 'object') {

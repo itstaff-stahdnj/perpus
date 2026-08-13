@@ -28,7 +28,17 @@
                 {{ title || 'Pembaca E-Book Digital' }}
               </h3>
               <p class="text-[10px] text-zinc-400 truncate flex items-center gap-1.5">
-                <span>⚡ PDF.js Super Ringan</span>
+                <span>⚡ PDF.js</span>
+                <span>•</span>
+                <!-- IndexedDB Offline Status Pill -->
+                <button 
+                  @click="toggleSaveOffline" 
+                  class="font-bold flex items-center gap-1 px-1.5 py-0.5 rounded transition-all cursor-pointer text-[10px]"
+                  :class="isOfflineReady ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : (isSavingOffline ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700')"
+                  :title="isOfflineReady ? 'Tersimpan di IndexedDB (Klik untuk Hapus Cache)' : 'Klik untuk Simpan Offline ke IndexedDB'"
+                >
+                  <span>{{ isOfflineReady ? '💾 Offline Ready' : (isSavingOffline ? '⏳ Menyimpan...' : '📥 Simpan Offline') }}</span>
+                </button>
                 <span>•</span>
                 <span class="text-rose-400 font-bold flex items-center gap-0.5">
                   <Icon name="material-symbols:lock" class="text-[12px]" />
@@ -196,16 +206,23 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { useIndexedDB } from '~/composables/useIndexedDB';
+import { usePdfCache } from '~/composables/usePdfCache';
 
 const props = defineProps<{
   modelValue: boolean;
   pdfUrl?: string;
   title?: string;
+  bookId?: number | string;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: boolean): void;
 }>();
+
+// Composables
+const { getReadingProgress, saveReadingProgress } = useIndexedDB();
+const { getCachedPdfBlob, savePdfToIndexedDb, removePdfFromDb } = usePdfCache();
 
 // State
 const loading = ref(true);
@@ -216,6 +233,12 @@ const totalPages = ref(0);
 const scale = ref(1.25);
 const sidebarOpen = ref(false);
 const currentTheme = ref<'dark' | 'sepia' | 'light'>('dark');
+
+// Offline & IndexedDB states
+const isOfflineReady = ref(false);
+const isSavingOffline = ref(false);
+const offlineBlobUrl = ref<string | null>(null);
+const restoredProgress = ref(false);
 
 const mainCanvasRef = ref<HTMLCanvasElement | null>(null);
 const scrollerRef = ref<HTMLElement | null>(null);
@@ -252,6 +275,14 @@ const setThumbRef = (n: number, el: HTMLCanvasElement) => {
   if (el) thumbRefs.set(n, el);
 };
 
+// Cleanup Object URL Blob
+const cleanupBlobUrl = () => {
+  if (offlineBlobUrl.value) {
+    URL.revokeObjectURL(offlineBlobUrl.value);
+    offlineBlobUrl.value = null;
+  }
+};
+
 // Load PDF.js from CDN
 const loadPdfJs = async (): Promise<any> => {
   if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
@@ -279,18 +310,45 @@ const getStreamUrl = (): string => {
 
   let url = props.pdfUrl.trim();
 
-  // If it's already a /api/pdf-stream URL, use it
   if (url.includes('api/pdf-stream')) {
     return url.startsWith('/') ? url : `/${url}`;
   }
 
-  // If full URL, proxy through our API
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return `/api/pdf-stream?url=${encodeURIComponent(url)}&quality=high`;
   }
 
-  // Relative path → proxy via Nuxt API
   return `/api/pdf-stream?url=${encodeURIComponent(url)}&quality=high`;
+};
+
+// Save PDF Blob to IndexedDB in background
+const saveBlobToDbInBackground = async () => {
+  if (!props.pdfUrl || isSavingOffline.value) return;
+  isSavingOffline.value = true;
+  try {
+    const streamUrl = getStreamUrl();
+    const res = await fetch(streamUrl, { credentials: 'include' });
+    if (res.ok) {
+      const blob = await res.blob();
+      await savePdfToIndexedDb(props.pdfUrl, blob, props.title, props.bookId);
+      isOfflineReady.value = true;
+    }
+  } catch (e) {
+    console.warn('Gagal menyimpan blob ke IndexedDB di background:', e);
+  } finally {
+    isSavingOffline.value = false;
+  }
+};
+
+// Manual toggle to save/delete offline cache
+const toggleSaveOffline = async () => {
+  if (!props.pdfUrl) return;
+  if (isOfflineReady.value) {
+    await removePdfFromDb(props.pdfUrl);
+    isOfflineReady.value = false;
+  } else {
+    await saveBlobToDbInBackground();
+  }
 };
 
 // Render a specific page to the main canvas
@@ -322,6 +380,18 @@ const renderPage = async (num: number) => {
     }).promise;
 
     currentPage.value = num;
+
+    // Save reading progress to IndexedDB automatically
+    if (props.pdfUrl) {
+      saveReadingProgress({
+        pdfUrl: props.pdfUrl,
+        bookId: props.bookId,
+        currentPage: num,
+        totalPages: totalPages.value,
+        scale: scale.value,
+        theme: currentTheme.value,
+      });
+    }
 
     // Scroll to top
     if (scrollerRef.value) {
@@ -426,7 +496,7 @@ const generateThumbnails = async () => {
   }
 };
 
-// Load PDF document
+// Load PDF document (IndexedDB Cache-First strategy)
 const loadPdf = async () => {
   if (!props.pdfUrl || !props.modelValue) return;
 
@@ -435,28 +505,52 @@ const loadPdf = async () => {
   loadingMessage.value = 'Memuat engine PDF.js...';
   currentPage.value = 1;
   totalPages.value = 0;
+  restoredProgress.value = false;
+  cleanupBlobUrl();
 
   try {
-    // Load PDF.js library
     pdfjsLib = await loadPdfJs();
-    loadingMessage.value = 'Menghubungkan ke server...';
 
-    const streamUrl = getStreamUrl();
-    if (!streamUrl) {
-      errorMessage.value = 'URL berkas PDF kosong atau belum diunggah.';
-      loading.value = false;
-      return;
+    // 1. Restore reading progress from IndexedDB
+    let targetPage = 1;
+    const savedProgress = await getReadingProgress(props.pdfUrl);
+    if (savedProgress) {
+      targetPage = savedProgress.currentPage || 1;
+      if (savedProgress.scale) scale.value = savedProgress.scale;
+      if (savedProgress.theme) currentTheme.value = savedProgress.theme as any;
+      restoredProgress.value = true;
     }
 
-    // Load document with range request support
-    const loadingTask = pdfjsLib.getDocument({
-      url: streamUrl,
-      rangeChunkSize: 65536 * 4, // 256KB chunks
-      disableAutoFetch: false,
-      disableStream: false,
-      withCredentials: true,
-    });
+    // 2. Check IndexedDB for cached PDF Blob
+    loadingMessage.value = 'Memeriksa cache IndexedDB...';
+    const cachedBlob = await getCachedPdfBlob(props.pdfUrl);
 
+    let docSource: any = null;
+
+    if (cachedBlob) {
+      loadingMessage.value = 'Memuat E-Book dari IndexedDB (Offline Ready)...';
+      isOfflineReady.value = true;
+      offlineBlobUrl.value = URL.createObjectURL(cachedBlob);
+      docSource = { url: offlineBlobUrl.value };
+    } else {
+      isOfflineReady.value = false;
+      loadingMessage.value = 'Menghubungkan ke server...';
+      const streamUrl = getStreamUrl();
+      if (!streamUrl) {
+        errorMessage.value = 'URL berkas PDF kosong atau belum diunggah.';
+        loading.value = false;
+        return;
+      }
+      docSource = {
+        url: streamUrl,
+        rangeChunkSize: 65536 * 4,
+        disableAutoFetch: false,
+        disableStream: false,
+        withCredentials: true,
+      };
+    }
+
+    const loadingTask = pdfjsLib.getDocument(docSource);
     loadingTask.onProgress = (data: any) => {
       if (data.total > 0) {
         const pct = Math.round((data.loaded / data.total) * 100);
@@ -467,14 +561,21 @@ const loadPdf = async () => {
     pdfDoc = await loadingTask.promise;
     totalPages.value = pdfDoc.numPages;
 
+    if (targetPage > totalPages.value) targetPage = 1;
+
     await nextTick();
-    await renderPage(1);
+    await renderPage(targetPage);
 
     loading.value = false;
 
     // Generate thumbnails in background
     await nextTick();
     setTimeout(() => generateThumbnails(), 500);
+
+    // Save blob to IndexedDB automatically if loaded from network
+    if (!cachedBlob && props.pdfUrl && navigator.onLine) {
+      saveBlobToDbInBackground();
+    }
 
   } catch (err: any) {
     console.error('PDF.js load error:', err);
@@ -490,10 +591,12 @@ const loadPdf = async () => {
 
 // Close
 const close = () => {
+  cleanupBlobUrl();
   pdfDoc = null;
   totalPages.value = 0;
   currentPage.value = 1;
   errorMessage.value = '';
+  restoredProgress.value = false;
   thumbRefs.clear();
   emit('update:modelValue', false);
 };
@@ -503,7 +606,6 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if (!props.modelValue) return;
   if (e.target instanceof HTMLInputElement) return;
 
-  // Block save & print
   if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) {
     e.preventDefault();
     e.stopPropagation();
@@ -540,6 +642,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  cleanupBlobUrl();
   pdfDoc = null;
   thumbRefs.clear();
   if (process.client) {
@@ -547,23 +650,18 @@ onUnmounted(() => {
   }
 });
 
-// Watch open/close
 watch(() => props.modelValue, (val) => {
   if (val) {
     nextTick(() => loadPdf());
   } else {
-    pdfDoc = null;
-    totalPages.value = 0;
-    currentPage.value = 1;
-    errorMessage.value = '';
-    thumbRefs.clear();
+    close();
   }
 });
 
-// Watch pdfUrl change while open
 watch(() => props.pdfUrl, () => {
   if (props.modelValue) {
     nextTick(() => loadPdf());
   }
 });
 </script>
+

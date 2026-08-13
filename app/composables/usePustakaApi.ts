@@ -22,13 +22,17 @@ export interface Book {
     nama_kategori: string;
     slug?: string;
   } | string;
-  ddc?: string;
-  kode_ddc?: string;
-  klasifikasi?: string;
-  no_panggil?: string;
-  nomor_panggil?: string;
-  call_number?: string;
+  pdf_file?: string;
+  pdf_file_url?: string;
+  is_digital?: boolean;
+  is_ebook?: boolean;
+  tipe_koleksi?: string;
+  kavita_book_id?: number;
+  kavita_series_id?: number;
+  kavita_volume_id?: number;
+  kavita_custom_url?: string;
 }
+
 
 export interface Category {
   id: number;

@@ -162,15 +162,16 @@
 
             <!-- JIKA BUKU DIGITAL (E-BOOK): HANYA DAPAT DIBACA JIKA SUDAH LOGIN -->
             <div v-if="isEbook" class="pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <a 
+              <button 
                 v-if="tokenCookie"
-                :href="`https://portal-perpus.stahdnj.ac.id/read/book/${book?.id}`"
+                @click="showPdfModal = true"
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-blue-600/25 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>📖</span>
-                <span>Baca E-Book Digital</span>
+                <span>Baca E-Book Digital (IndexedDB Offline)</span>
                 <span class="material-symbols-outlined text-base">chrome_reader_mode</span>
-              </a>
+              </button>
+
               <a 
                 v-else
                 href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
@@ -354,6 +355,14 @@
         @granted="checkGeolocation" 
       />
 
+      <!-- PDF Reader Modal dengan IndexedDB -->
+      <PdfReaderModal 
+        v-model="showPdfModal" 
+        :pdf-url="currentPdfUrl" 
+        :title="book?.judul" 
+        :book-id="book?.id" 
+      />
+
     </div>
   </div>
 </template>
@@ -424,6 +433,7 @@ const bookClassification = computed(() => {
 });
 
 const showBorrowModal = ref(false);
+const showPdfModal = ref(false);
 const borrowDuration = ref(7);
 const submittingBorrow = ref(false);
 const submittingReservation = ref(false);

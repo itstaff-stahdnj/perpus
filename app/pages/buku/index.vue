@@ -725,6 +725,7 @@ import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import { useBookCover } from '../../composables/useBookCover';
 import { usePdfCache } from '../../composables/usePdfCache';
+import { useIndexedDB } from '../../composables/useIndexedDB';
 import CartBorrowModal from '../../components/CartBorrowModal.vue';
 
 const route = useRoute();
@@ -735,6 +736,7 @@ const { cart, cartCount, isInCart, toggleCart, loadCartFromStorage } = usePustak
 const { isCampusNetwork, currentSelfBorrowText } = useCampusNetwork();
 const { fallbackCover, getBookCoverUrl, handleImageError: handleCoverImageError, isEbookBook } = useBookCover();
 const { prefetchCatalogPdfList } = usePdfCache();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const wishlistedIds = ref<Set<number>>(new Set());
 
@@ -1260,8 +1262,8 @@ const loadData = async () => {
   loading.value = true;
   try {
     const [resBooks, resCat] = await Promise.all([
-      getBooks({ per_page: 1000, limit: 1000, all: 1 }),
-      getCategories()
+      getBooks({ per_page: 1000, limit: 1000, all: 1 }).catch(() => null),
+      getCategories().catch(() => null)
     ]);
 
     if (resBooks?.data && Array.isArray(resBooks.data)) {
@@ -1270,21 +1272,43 @@ const loadData = async () => {
       books.value = resBooks;
     }
 
-    if (books.value.length > 0) {
-      displayedCount.value = Math.max(500, books.value.length);
-    }
-
     if (resCat?.data && Array.isArray(resCat.data) && resCat.data.length > 0) {
       categories.value = resCat.data;
     } else if (Array.isArray(resCat) && resCat.length > 0) {
       categories.value = resCat;
     }
 
+    // Jika berhasil ambil dari server, simpan ke IndexedDB untuk akses offline
+    if (books.value.length > 0) {
+      saveCatalogCache('catalog_books', books.value);
+    }
+    if (categories.value.length > 0) {
+      saveCatalogCache('catalog_categories', categories.value);
+    }
+
+    // Jika gagal / offline, ambil dari cache IndexedDB
+    if (books.value.length === 0) {
+      const cachedBooks = await getCatalogCache<Book[]>('catalog_books');
+      if (cachedBooks && cachedBooks.length > 0) {
+        books.value = cachedBooks;
+      }
+    }
+    if (categories.value.length === 0) {
+      const cachedCats = await getCatalogCache<Category[]>('catalog_categories');
+      if (cachedCats && cachedCats.length > 0) {
+        categories.value = cachedCats;
+      }
+    }
+
+    if (books.value.length > 0) {
+      displayedCount.value = Math.max(500, books.value.length);
+    }
+
     if (categories.value.length === 0 && books.value.length > 0) {
       categories.value = deriveCategoriesFromBooks(books.value);
     }
 
-    // Pre-fetch E-Books into temporary session cache for instant reading
+    // Pre-fetch E-Books into IndexedDB for instant offline reading
     if (books.value.length > 0) {
       prefetchCatalogPdfList(books.value);
     }
