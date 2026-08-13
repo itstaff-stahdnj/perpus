@@ -519,8 +519,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { usePustakaApi } from '../../composables/usePustakaApi';
+import { useIndexedDB } from '../../composables/useIndexedDB';
 
 const { getProfile, tokenCookie } = usePustakaApi();
+const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 
 const currentUser = ref<any>(null);
 const loadingUser = ref(true);
@@ -741,6 +743,15 @@ const executeArticleSearch = async () => {
   isSearchingArticles.value = true;
   articlesList.value = [];
 
+  // Restore cached search results from IndexedDB if available
+  try {
+    const cachedArticles = await getCatalogCache<any[]>('eresource_search_' + q.toLowerCase());
+    if (cachedArticles && cachedArticles.length > 0) {
+      articlesList.value = cachedArticles;
+      isSearchingArticles.value = false;
+    }
+  } catch (e) {}
+
   const pasupatiMatches = [
     {
       id: `pasupati-${Date.now()}`,
@@ -783,8 +794,11 @@ const executeArticleSearch = async () => {
     }
 
     articlesList.value = [...pasupatiMatches, ...crossrefItems];
+    saveCatalogCache('eresource_search_' + q.toLowerCase(), articlesList.value);
   } catch (e) {
-    articlesList.value = pasupatiMatches;
+    if (articlesList.value.length === 0) {
+      articlesList.value = pasupatiMatches;
+    }
   } finally {
     isSearchingArticles.value = false;
   }
