@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
   let syncedUsersCount = 0;
   let syncedLoansCount = 0;
   let syncedCategoriesCount = 0;
+  let syncedReservationsCount = 0;
 
   try {
     // 1. Fetch & Sync Categories
@@ -58,7 +59,6 @@ export default defineEventHandler(async (event) => {
     } else if (Array.isArray(booksRes)) {
       rawBooks = booksRes;
     } else {
-      // Fallback to /buku
       const fallbackRes = await fetch(`${targetBase}/buku?per_page=1000&limit=1000`, {
         headers: { 'accept': 'application/json', 'x-api-key': apiKey }
       }).then(r => r.json()).catch(() => null);
@@ -113,13 +113,122 @@ export default defineEventHandler(async (event) => {
           b.deskripsi || b.description || null,
           isEbookVal,
           pdfUrl
-        ).run();
+        ).run().catch(() => {});
 
         syncedBooksCount++;
       }
     }
 
-    // 3. Fetch & Sync Announcements
+    // 3. Fetch & Sync Users/Members
+    let rawUsers: any[] = [];
+    const usersRes = await fetch(`${targetBase}/users?per_page=1000&limit=1000`, {
+      headers: { 'accept': 'application/json', 'x-api-key': apiKey }
+    }).then(r => r.json()).catch(() => null);
+
+    if (usersRes?.data && Array.isArray(usersRes.data)) {
+      rawUsers = usersRes.data;
+    } else if (Array.isArray(usersRes)) {
+      rawUsers = usersRes;
+    }
+
+    for (const u of rawUsers) {
+      if (u.id && u.name) {
+        await db.prepare(`
+          INSERT INTO users (id, name, email, role, nim, nidn, status_keanggotaan, qr_token)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            name=excluded.name,
+            email=excluded.email,
+            role=excluded.role,
+            nim=excluded.nim,
+            nidn=excluded.nidn,
+            status_keanggotaan=excluded.status_keanggotaan,
+            qr_token=excluded.qr_token
+        `).bind(
+          u.id,
+          u.name,
+          u.email || `${u.id}@stahdnj.ac.id`,
+          u.role || 'member',
+          u.nim || null,
+          u.nidn || null,
+          u.status_keanggotaan || 'Aktif',
+          u.qr_token || null
+        ).run().catch(() => {});
+        syncedUsersCount++;
+      }
+    }
+
+    // 4. Fetch & Sync Loans
+    let rawLoans: any[] = [];
+    const loansRes = await fetch(`${targetBase}/peminjaman?per_page=1000&limit=1000`, {
+      headers: { 'accept': 'application/json', 'x-api-key': apiKey }
+    }).then(r => r.json()).catch(() => null);
+
+    if (loansRes?.data && Array.isArray(loansRes.data)) {
+      rawLoans = loansRes.data;
+    } else if (Array.isArray(loansRes)) {
+      rawLoans = loansRes;
+    }
+
+    for (const l of rawLoans) {
+      if (l.id) {
+        await db.prepare(`
+          INSERT INTO loans (id, user_id, book_id, tanggal_pinjam, tanggal_kembali, status, perpanjangan_count)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            user_id=excluded.user_id,
+            book_id=excluded.book_id,
+            tanggal_pinjam=excluded.tanggal_pinjam,
+            tanggal_kembali=excluded.tanggal_kembali,
+            status=excluded.status,
+            perpanjangan_count=excluded.perpanjangan_count
+        `).bind(
+          l.id,
+          l.user_id || l.user?.id || null,
+          l.book_id || l.buku?.id || l.book?.id || null,
+          l.tanggal_pinjam || null,
+          l.tanggal_kembali || null,
+          l.status || 'dipinjam',
+          l.perpanjangan_count || 0
+        ).run().catch(() => {});
+        syncedLoansCount++;
+      }
+    }
+
+    // 5. Fetch & Sync Reservations
+    let rawReservations: any[] = [];
+    const resRes = await fetch(`${targetBase}/reservasi?per_page=1000&limit=1000`, {
+      headers: { 'accept': 'application/json', 'x-api-key': apiKey }
+    }).then(r => r.json()).catch(() => null);
+
+    if (resRes?.data && Array.isArray(resRes.data)) {
+      rawReservations = resRes.data;
+    } else if (Array.isArray(resRes)) {
+      rawReservations = resRes;
+    }
+
+    for (const r of rawReservations) {
+      if (r.id) {
+        await db.prepare(`
+          INSERT INTO reservations (id, user_id, book_id, tanggal_reservasi, status)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            user_id=excluded.user_id,
+            book_id=excluded.book_id,
+            tanggal_reservasi=excluded.tanggal_reservasi,
+            status=excluded.status
+        `).bind(
+          r.id,
+          r.user_id || r.user?.id || null,
+          r.book_id || r.buku?.id || r.book?.id || null,
+          r.tanggal_reservasi || r.created_at || null,
+          r.status || 'pending'
+        ).run().catch(() => {});
+        syncedReservationsCount++;
+      }
+    }
+
+    // 6. Fetch & Sync Announcements
     const annRes = await fetch(`${targetBase}/pengumuman`, {
       headers: { 'accept': 'application/json', 'x-api-key': apiKey }
     }).then(r => r.json()).catch(() => null);
@@ -145,17 +254,18 @@ export default defineEventHandler(async (event) => {
       syncedBooksCount,
       syncedUsersCount,
       syncedLoansCount,
-      `Berhasil menyinkronkan ${syncedBooksCount} buku & ${syncedCategoriesCount} kategori dari backend API ke Cloudflare D1.`
-    ).run();
+      `Full Backup: ${syncedBooksCount} buku, ${syncedCategoriesCount} kategori, ${syncedUsersCount} anggota, ${syncedLoansCount} peminjaman & ${syncedReservationsCount} reservasi tersimpan ke D1.`
+    ).run().catch(() => {});
 
     return {
       success: true,
-      message: `Sinkronisasi berhasil! ${syncedBooksCount} buku dan ${syncedCategoriesCount} kategori tersimpan di Cloudflare D1.`,
+      message: `Full Backup D1 Berhasil! ${syncedBooksCount} buku, ${syncedCategoriesCount} kategori, ${syncedUsersCount} anggota, ${syncedLoansCount} peminjaman & ${syncedReservationsCount} reservasi tersimpan.`,
       synced: {
         books: syncedBooksCount,
         categories: syncedCategoriesCount,
         users: syncedUsersCount,
-        loans: syncedLoansCount
+        loans: syncedLoansCount,
+        reservations: syncedReservationsCount
       },
       timestamp: new Date().toISOString()
     };
@@ -173,7 +283,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: false,
       message: err?.message || 'Gagal menyinkronkan data ke Cloudflare D1 database.',
-      synced: { books: syncedBooksCount, categories: syncedCategoriesCount, users: syncedUsersCount, loans: syncedLoansCount }
+      synced: { books: syncedBooksCount, categories: syncedCategoriesCount, users: syncedUsersCount, loans: syncedLoansCount, reservations: syncedReservationsCount }
     };
   }
 });

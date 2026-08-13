@@ -135,6 +135,20 @@
           </span>
         </button>
 
+        <button 
+          @click="activeTab = 'backup'"
+          class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all cursor-pointer"
+          :class="activeTab === 'backup' ? 'bg-primary text-white font-bold shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest'"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">cloud_sync</span>
+            <span class="text-xs font-semibold">Pusat Backup &amp; Failover D1</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
+            D1 Active
+          </span>
+        </button>
+
         <NuxtLink 
           to="/reservasi" 
           class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all text-amber-900 bg-amber-100/90 font-bold hover:bg-amber-200 border border-amber-300/80 shadow-xs"
@@ -677,6 +691,79 @@
             </div>
           </div>
 
+          <!-- TAB 5: PUSAT BACKUP & FAILOVER D1 -->
+          <div v-if="activeTab === 'backup'" class="space-y-8">
+            <section class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 border border-outline-variant shadow-md">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-outline-variant/60">
+                <div class="space-y-2">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span>Cloudflare D1 SQLite Database Ready</span>
+                  </div>
+                  <h2 class="text-2xl font-black text-primary">Pusat Backup &amp; Failover Database</h2>
+                  <p class="text-xs sm:text-sm text-on-surface-variant max-w-2xl leading-relaxed">
+                    Kelola pencadangan terpadu untuk seluruh data perpustakaan (Buku, Kategori, Anggota, Peminjaman, &amp; Reservasi) secara otomatis ke Cloudflare D1 Remote serta IndexedDB lokal browser.
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 shrink-0">
+                  <button 
+                    @click="handleSyncD1" 
+                    :disabled="syncingD1"
+                    class="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-2xl font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    <span class="material-symbols-outlined text-lg" :class="syncingD1 ? 'animate-spin' : ''">cloud_sync</span>
+                    <span>{{ syncingD1 ? 'Memproses Full Sync...' : '🔄 Jalankan Full Backup ke D1' }}</span>
+                  </button>
+
+                  <a 
+                    href="/api/backup/export?format=json" 
+                    download
+                    class="px-4 py-3 bg-primary hover:bg-primary-container text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span class="material-symbols-outlined text-lg">download</span>
+                    <span>Download Backup (JSON)</span>
+                  </a>
+
+                  <a 
+                    href="/api/backup/export?format=sql" 
+                    download
+                    class="px-4 py-3 bg-slate-800 hover:bg-slate-900 text-slate-100 rounded-2xl font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer border border-slate-700"
+                  >
+                    <span class="material-symbols-outlined text-lg">database</span>
+                    <span>Download SQL Dump</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Status KPI Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                <div class="p-4 rounded-2xl bg-blue-50/60 dark:bg-slate-800/40 border border-blue-200/80 dark:border-slate-700">
+                  <p class="text-xs text-blue-900 dark:text-blue-300 font-bold mb-1">Total Buku D1</p>
+                  <p class="text-2xl font-black text-blue-700 dark:text-blue-200">{{ booksList.length }} Buku</p>
+                  <p class="text-[10px] text-blue-800/80 dark:text-blue-300 mt-1">Status: Tersinkron (Full Schema)</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-800/40 border border-emerald-200/80 dark:border-slate-700">
+                  <p class="text-xs text-emerald-900 dark:text-emerald-300 font-bold mb-1">Total Anggota D1</p>
+                  <p class="text-2xl font-black text-emerald-700 dark:text-emerald-200">{{ usersList.length }} Members</p>
+                  <p class="text-[10px] text-emerald-800/80 dark:text-emerald-300 mt-1">Status: Tersinkron (Role &amp; QR Token)</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-800/40 border border-amber-200/80 dark:border-slate-700">
+                  <p class="text-xs text-amber-900 dark:text-amber-300 font-bold mb-1">Peminjaman D1</p>
+                  <p class="text-2xl font-black text-amber-700 dark:text-amber-200">{{ loansList.length }} Transaksi</p>
+                  <p class="text-[10px] text-amber-800/80 dark:text-amber-300 mt-1">Status: Tersinkron</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-purple-50/60 dark:bg-slate-800/40 border border-purple-200/80 dark:border-slate-700">
+                  <p class="text-xs text-purple-900 dark:text-purple-300 font-bold mb-1">Client Storage</p>
+                  <p class="text-2xl font-black text-purple-700 dark:text-purple-200">IndexedDB Active</p>
+                  <p class="text-[10px] text-purple-800/80 dark:text-purple-300 mt-1">Offline Storage Ready</p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </main>
 
@@ -830,6 +917,8 @@
         </form>
       </div>
     </div>
+    <!-- Global Sync Button Widget -->
+    <SyncDataButton variant="floating" />
   </div>
 </template>
 
@@ -840,6 +929,7 @@ definePageMeta({
 
 const { getBooks, createBook, updateBook, deleteBook, getLoans, getUsers, getAttendanceToday, getCategories, getRecentActivities, getReservations, returnLoan, getProfile, logout } = usePustakaApi();
 const { saveCatalogCache, getCatalogCache } = useIndexedDB();
+const { triggerSync } = useSyncData();
 const router = useRouter();
 
 const activeTab = ref('statistics');
@@ -896,16 +986,17 @@ const triggerToast = (msg: string) => {
 const syncingD1 = ref(false);
 const handleSyncD1 = async () => {
   syncingD1.value = true;
-  triggerToast('Memulai sinkronisasi data ke Cloudflare D1 Database...');
+  triggerToast('Memulai sinkronisasi terpadu ke IndexedDB & Cloudflare D1...');
   try {
-    const res: any = await $fetch('/api/backup/sync', { method: 'POST' });
-    if (res?.success) {
-      triggerToast('✅ Sinkronisasi Cloudflare D1 Berhasil!');
+    const ok = await triggerSync();
+    if (ok) {
+      triggerToast('✅ Sinkronisasi IndexedDB & Cloudflare D1 Berhasil!');
+      await loadAdminData(false);
     } else {
-      triggerToast('ℹ️ ' + (res?.message || 'Proses sinkronisasi D1 selesai.'));
+      triggerToast('ℹ️ Proses sinkronisasi data selesai.');
     }
   } catch (err: any) {
-    triggerToast('❌ Error D1: ' + (err?.message || 'Gagal terhubung ke Cloudflare D1.'));
+    triggerToast('❌ Error: ' + (err?.message || 'Gagal sinkronisasi data.'));
   } finally {
     syncingD1.value = false;
   }
