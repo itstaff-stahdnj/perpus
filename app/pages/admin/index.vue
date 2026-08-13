@@ -42,6 +42,11 @@
             <span>Sync DB D1</span>
           </button>
 
+          <button @click="handleSyncKavita(); showMobileAdminSheet = false" class="p-3.5 bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 border border-indigo-700/80 rounded-2xl font-bold flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-indigo-400 text-xl">menu_book</span>
+            <span>Sync Kavita</span>
+          </button>
+
           <button @click="handlePrintReport(); showMobileAdminSheet = false" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-2xl font-bold flex items-center gap-2.5">
             <span class="material-symbols-outlined text-xl">print</span>
             <span>Cetak Laporan</span>
@@ -241,6 +246,17 @@
           >
             <span class="material-symbols-outlined text-base" :class="syncingD1 ? 'animate-spin' : ''">cloud_sync</span>
             <span class="hidden sm:inline">Sync DB D1</span>
+          </button>
+
+          <!-- Kavita E-Book Digital Sync Button -->
+          <button 
+            @click="handleSyncKavita" 
+            :disabled="syncingKavita"
+            class="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 font-bold text-xs active:scale-95"
+            title="Sinkronisasi Katalog E-Book dari Server Kavita"
+          >
+            <span class="material-symbols-outlined text-base" :class="syncingKavita ? 'animate-spin' : ''">menu_book</span>
+            <span class="hidden sm:inline">Sync Kavita</span>
           </button>
 
           <NuxtLink to="/reservasi" class="px-3 py-1.5 text-amber-900 hover:bg-amber-100 transition-colors flex items-center gap-1 text-xs font-black bg-amber-50 border border-amber-300 rounded-xl shadow-xs shrink-0" title="Portal Reservasi">
@@ -999,6 +1015,26 @@ const handleSyncD1 = async () => {
     triggerToast('❌ Error: ' + (err?.message || 'Gagal sinkronisasi data.'));
   } finally {
     syncingD1.value = false;
+  }
+};
+
+const { syncKavitaToD1 } = useKavita();
+const syncingKavita = ref(false);
+const handleSyncKavita = async () => {
+  syncingKavita.value = true;
+  triggerToast('Memulai sinkronisasi katalog E-Book dari Kavita Server...');
+  try {
+    const res = await syncKavitaToD1();
+    if (res.success) {
+      triggerToast(`✅ ${res.message}`);
+      await loadAdminData(false);
+    } else {
+      triggerToast(`⚠️ ${res.message}`);
+    }
+  } catch (err: any) {
+    triggerToast('❌ Error: ' + (err?.message || 'Gagal sinkronisasi data Kavita.'));
+  } finally {
+    syncingKavita.value = false;
   }
 };
 
