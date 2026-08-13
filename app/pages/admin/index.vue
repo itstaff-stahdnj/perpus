@@ -414,6 +414,14 @@
                   <option value="available">Tersedia (>0)</option>
                   <option value="out">Stok Habis / Dipinjam</option>
                 </select>
+
+                <select v-model="itemsPerPage" class="px-3 py-2 bg-primary-container text-white border border-primary rounded-xl text-xs font-bold focus:outline-none w-full sm:w-auto cursor-pointer shadow-xs">
+                  <option value="all">Tampilkan Semua Buku ({{ filteredBooks.length }})</option>
+                  <option :value="10">10 Per Halaman</option>
+                  <option :value="25">25 Per Halaman</option>
+                  <option :value="50">50 Per Halaman</option>
+                  <option :value="100">100 Per Halaman</option>
+                </select>
               </div>
             </div>
 
@@ -834,7 +842,7 @@ const toastMessage = ref('');
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref<number | string>('all');
 
 // Modal state
 const showBookModal = ref(false);
@@ -937,13 +945,19 @@ const filteredBooks = computed(() => {
   return list;
 });
 
+const effectiveItemsPerPage = computed(() => {
+  if (itemsPerPage.value === 'all') return Math.max(filteredBooks.value.length, 1);
+  return Number(itemsPerPage.value) || 10;
+});
+
 const totalPages = computed(() => {
-  return Math.ceil(filteredBooks.value.length / itemsPerPage.value);
+  return Math.ceil(filteredBooks.value.length / effectiveItemsPerPage.value);
 });
 
 const paginatedBooks = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  return filteredBooks.value.slice(start, start + itemsPerPage.value);
+  if (itemsPerPage.value === 'all') return filteredBooks.value;
+  const start = (currentPage.value - 1) * effectiveItemsPerPage.value;
+  return filteredBooks.value.slice(start, start + effectiveItemsPerPage.value);
 });
 
 const filteredMembers = computed(() => {
@@ -1074,7 +1088,7 @@ const loadAdminData = async (manual = false) => {
   try {
     const [profileRes, booksRes, loansRes, usersRes, attRes, catRes, actRes, resRes] = await Promise.all([
       getProfile().catch(() => null),
-      getBooks().catch(() => null),
+      getBooks({ per_page: 1000, limit: 1000, all: 1 }).catch(() => null),
       getLoans().catch(() => null),
       getUsers().catch(() => null),
       getAttendanceToday().catch(() => null),
