@@ -1,10 +1,10 @@
 <template>
   <div class="bg-surface text-on-surface font-body-md min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row relative">
     
-    <!-- Mobile Action Sheet Drawer / Backdrop -->
-    <div v-if="showMobileMenuSheet" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-[100] md:hidden flex flex-col justify-end" @click.self="showMobileMenuSheet = false">
-      <div class="bg-white rounded-t-3xl p-6 shadow-2xl border-t border-slate-200 animate-in slide-in-from-bottom duration-300 space-y-5 text-slate-800">
-        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1"></div>
+    <!-- Action Sheet Drawer / Backdrop (Desktop & Mobile) -->
+    <div v-if="showMobileMenuSheet" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showMobileMenuSheet = false">
+      <div class="bg-white rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-200 animate-in slide-in-from-bottom duration-300 space-y-5 text-slate-800">
+        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden"></div>
         <div class="flex justify-between items-center pb-3 border-b border-slate-200">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border border-primary/20 shrink-0">
@@ -21,33 +21,67 @@
           </button>
         </div>
 
-        <!-- Quick Actions Grid -->
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          <button @click="showQrModal = true; showMobileMenuSheet = false" class="p-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-2xl flex items-center gap-2.5 font-black shadow-md">
-            <span class="material-symbols-outlined text-slate-950 text-xl">qr_code_2</span>
-            <span>QR Presensi Kiosk</span>
+        <!-- Full Quick Actions Grid -->
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <button @click="showQrModal = true; showMobileMenuSheet = false" class="col-span-2 p-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 rounded-2xl flex items-center justify-between font-black shadow-md">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-slate-950 text-2xl">qr_code_2</span>
+              <div class="text-left">
+                <p class="font-extrabold text-xs">QR Presensi Digital Kiosk</p>
+                <p class="text-[10px] text-slate-900/80 font-normal">Tunjukkan QR ke scanner perpustakaan</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-slate-950 text-base">arrow_forward</span>
           </button>
 
-          <NuxtLink to="/" class="p-3.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 rounded-2xl flex items-center gap-2.5 font-bold">
-            <span class="material-symbols-outlined text-primary text-xl">home</span>
-            <span>Beranda Utama</span>
-          </NuxtLink>
+          <button @click="loadDashboardData(true); showMobileMenuSheet = false" class="col-span-2 p-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-2xl flex items-center justify-between font-bold">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-primary text-xl" :class="refreshing ? 'animate-spin' : ''">sync</span>
+              <span>Sinkronkan Data Realtime</span>
+            </div>
+            <span class="text-[10px] bg-primary/20 px-2 py-0.5 rounded-full font-bold">Refresh</span>
+          </button>
 
-          <NuxtLink to="/buku" class="p-3.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 rounded-2xl flex items-center gap-2.5 font-bold">
-            <span class="material-symbols-outlined text-primary text-xl">library_books</span>
+          <button @click="activeSection = 'loans'; showMobileMenuSheet = false" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/80 rounded-2xl flex items-center gap-2.5 font-bold">
+            <span class="material-symbols-outlined text-primary text-xl">pending_actions</span>
+            <span>Pinjaman Aktif</span>
+          </button>
+
+          <button @click="activeSection = 'reservations'; showMobileMenuSheet = false" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/80 rounded-2xl flex items-center gap-2.5 font-bold">
+            <span class="material-symbols-outlined text-primary text-xl">collections_bookmark</span>
+            <span>Reservasi Saya</span>
+          </button>
+
+          <button @click="activeSection = 'history'; showMobileMenuSheet = false" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/80 rounded-2xl flex items-center gap-2.5 font-bold">
+            <span class="material-symbols-outlined text-primary text-xl">history_edu</span>
+            <span>Riwayat Transaksi</span>
+          </button>
+
+          <NuxtLink to="/buku" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/80 rounded-2xl flex items-center gap-2.5 font-bold">
+            <span class="material-symbols-outlined text-primary text-xl">menu_book</span>
             <span>Katalog Pustaka</span>
           </NuxtLink>
 
-          <NuxtLink to="/tata-tertib" class="p-3.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 rounded-2xl flex items-center gap-2.5 font-bold">
+          <NuxtLink to="/tata-tertib" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/80 rounded-2xl flex items-center gap-2.5 font-bold">
             <span class="material-symbols-outlined text-slate-700 text-xl">gavel</span>
             <span>Tata Tertib</span>
           </NuxtLink>
+
+          <NuxtLink to="/bantuan" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/80 rounded-2xl flex items-center gap-2.5 font-bold">
+            <span class="material-symbols-outlined text-amber-600 text-xl">support_agent</span>
+            <span>Bantuan Pustaka</span>
+          </NuxtLink>
         </div>
 
-        <div class="pt-2 border-t border-slate-200">
-          <button @click="handleLogout" class="w-full py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-lg">logout</span>
-            <span>Keluar dari Akun</span>
+        <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+          <NuxtLink to="/" @click="showMobileMenuSheet = false" class="text-xs text-slate-600 hover:text-primary font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">home</span>
+            <span>Beranda Utama</span>
+          </NuxtLink>
+          
+          <button @click="handleLogout" class="text-xs text-rose-700 hover:text-rose-900 font-bold flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">logout</span>
+            <span>Keluar Akun</span>
           </button>
         </div>
       </div>
@@ -234,24 +268,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Sinkronisasi Data Button -->
-          <button 
-            @click="loadDashboardData(true)" 
-            :disabled="refreshing"
-            class="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-primary/20 shrink-0 font-bold text-xs shadow-2xs active:scale-95"
-            title="Sinkronisasi & Refresh Data Realtime"
-          >
-            <span class="material-symbols-outlined text-base" :class="refreshing ? 'animate-spin' : ''">sync</span>
-            <span>Sinkronkan Data</span>
-          </button>
-
-          <!-- QR Card Button -->
-          <button @click="showQrModal = true" class="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 shrink-0">
-            <span class="material-symbols-outlined text-base">qr_code_2</span>
-            <span class="hidden sm:inline">Kartu Presensi</span>
-          </button>
-
+        <div class="flex items-center gap-2">
           <!-- User Avatar -->
           <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border border-primary/30 shrink-0">
             <img v-if="userProfile?.avatar_url" :src="userProfile.avatar_url" alt="Avatar" class="w-full h-full object-cover"/>
@@ -644,7 +661,7 @@ definePageMeta({
   layout: false
 });
 
-const { getProfile, getLoans, getReturns, getReservations, getWishlist, removeFromWishlist, extendLoan, getBooks, getAnnouncements, logout } = usePustakaApi();
+const { getProfile, getLoans, getReturns, getReservations, getWishlist, removeFromWishlist, extendLoan, getBooks, getAnnouncements, logout, tokenCookie } = usePustakaApi();
 const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const router = useRouter();
 
@@ -838,7 +855,34 @@ const loadDashboardData = async (manual = false) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // STRICT ROLE GUARD: Admin, Kepala Pustaka, and Pustakawan CANNOT access Member Dashboard
+  if (process.client) {
+    let currentRole = '';
+    try {
+      const storedUser = localStorage.getItem('pustaka_user');
+      if (storedUser) {
+        currentRole = (JSON.parse(storedUser)?.role || '').toLowerCase();
+      }
+    } catch (e) {}
+
+    if (tokenCookie.value) {
+      const prof = await getProfile().catch(() => null);
+      if (prof?.data?.role || prof?.user?.role) {
+        currentRole = (prof.data?.role || prof.user?.role || '').toLowerCase();
+      }
+    }
+
+    const adminStaffRoles = ['admin', 'administrator', 'kepala_pustaka', 'kepala_perpustakaan', 'pustakawan', 'staf', 'petugas', 'operator', 'super_admin'];
+    if (adminStaffRoles.includes(currentRole)) {
+      triggerToast('ℹ️ Anda login sebagai Admin Staff. Pengalihan otomatis ke Panel Admin.');
+      setTimeout(() => {
+        router.push('/admin');
+      }, 500);
+      return;
+    }
+  }
+
   loadDashboardData();
 
   // Setup auto-polling every 15 seconds for realtime API synchronization

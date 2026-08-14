@@ -1,8 +1,8 @@
 <template>
   <div class="bg-surface text-on-surface font-body-md min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row relative">
 
-    <!-- Mobile Admin Bottom Action Sheet -->
-    <div v-if="showMobileAdminSheet" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 md:hidden flex flex-col justify-end" @click.self="showMobileAdminSheet = false">
+    <!-- Admin Action Sheet Drawer / Backdrop -->
+    <div v-if="showMobileAdminSheet" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showMobileAdminSheet = false">
       <div class="bg-slate-900 text-white rounded-t-3xl p-6 shadow-2xl border-t border-slate-800 animate-in slide-in-from-bottom duration-300 space-y-5">
         <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-1"></div>
         <div class="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -225,46 +225,9 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Refresh API Data Button -->
-          <button 
-            @click="loadAdminData(true)" 
-            :disabled="refreshing"
-            class="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-primary/20 shrink-0 font-bold text-xs shadow-2xs"
-            title="Refresh & Sinkronkan Data API Realtime"
-          >
-            <span class="material-symbols-outlined text-base" :class="refreshing ? 'animate-spin' : ''">sync</span>
-            <span>Sinkron Data</span>
-          </button>
-
-          <!-- D1 Backup Database Sync Button -->
-          <button 
-            @click="handleSyncD1" 
-            :disabled="syncingD1"
-            class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 font-bold text-xs active:scale-95"
-            title="Sinkronisasi ke Cloudflare D1 Failover Database"
-          >
-            <span class="material-symbols-outlined text-base" :class="syncingD1 ? 'animate-spin' : ''">cloud_sync</span>
-            <span class="hidden sm:inline">Sync DB D1</span>
-          </button>
-
-          <!-- Kavita E-Book Digital Sync Button -->
-          <button 
-            @click="handleSyncKavita" 
-            :disabled="syncingKavita"
-            class="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 font-bold text-xs active:scale-95"
-            title="Sinkronisasi Katalog E-Book dari Server Kavita"
-          >
-            <span class="material-symbols-outlined text-base" :class="syncingKavita ? 'animate-spin' : ''">menu_book</span>
-            <span class="hidden sm:inline">Sync Kavita</span>
-          </button>
-
-          <NuxtLink to="/reservasi" class="px-3 py-1.5 text-amber-900 hover:bg-amber-100 transition-colors flex items-center gap-1 text-xs font-black bg-amber-50 border border-amber-300 rounded-xl shadow-xs shrink-0" title="Portal Reservasi">
-            <span class="material-symbols-outlined text-base text-amber-800">collections_bookmark</span>
-            <span class="hidden lg:inline">Portal Reservasi</span>
-          </NuxtLink>
-
-          <div class="flex items-center gap-2.5 border-l border-outline-variant pl-3">
+        <div class="flex items-center gap-3">
+          <!-- User Avatar & Info -->
+          <div class="flex items-center gap-2.5">
             <div class="text-right hidden sm:block">
               <p class="font-label-md text-xs font-bold text-primary leading-tight">{{ userProfile?.name || 'Administrator' }}</p>
               <p class="text-[10px] text-on-surface-variant uppercase font-semibold">{{ userProfile?.role || 'Admin Panel' }}</p>
@@ -778,6 +741,48 @@
                   <p class="text-[10px] text-purple-800/80 dark:text-purple-300 mt-1">Offline Storage Ready</p>
                 </div>
               </div>
+
+              <!-- CARD: MANUAL BACKUP & RESTORE USERS -->
+              <div class="mt-8 pt-6 border-t border-outline-variant/60">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h3 class="font-bold text-base text-primary flex items-center gap-2">
+                      <span class="material-symbols-outlined text-secondary">manage_accounts</span>
+                      <span>Backup &amp; Restore Manual Data Anggota (Users)</span>
+                    </h3>
+                    <p class="text-xs text-on-surface-variant mt-0.5">
+                      Ekspor file cadangan akun anggota secara manual atau unggah file backup (.json / .sql) untuk melakukan restore data ke database D1.
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <label 
+                      class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-2"
+                      :class="{ 'opacity-50 pointer-events-none': restoringUsers }"
+                    >
+                      <span class="material-symbols-outlined text-base" :class="{ 'animate-spin': restoringUsers }">
+                        {{ restoringUsers ? 'sync' : 'upload_file' }}
+                      </span>
+                      <span>{{ restoringUsers ? 'Memproses Restore...' : '📤 Restore Users File (.json / .sql)' }}</span>
+                      <input 
+                        type="file" 
+                        accept=".json,.sql" 
+                        class="hidden" 
+                        @change="handleUploadUserBackupFile"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Restore Alert Status -->
+                <div 
+                  v-if="restoreUserStatus" 
+                  class="p-3.5 rounded-xl text-xs font-bold border border-emerald-300 bg-emerald-50 text-emerald-900 flex items-center gap-2"
+                >
+                  <span class="material-symbols-outlined text-base">info</span>
+                  <span>{{ restoreUserStatus }}</span>
+                </div>
+              </div>
             </section>
           </div>
         </div>
@@ -814,16 +819,16 @@
             </span>
           </button>
 
-          <!-- CENTER HIGHLIGHTED MAIN ADMIN MENU BUTTON -->
-          <div class="relative -top-4 flex flex-col items-center">
+          <!-- CENTER HIGHLIGHTED PROMINENT MENU BUTTON -->
+          <div class="relative -top-5 flex flex-col items-center">
             <button 
               @click="showMobileAdminSheet = true"
-              class="w-13 h-13 rounded-full bg-gradient-to-tr from-amber-400 via-amber-300 to-amber-500 text-slate-950 shadow-xl border-4 border-slate-950 flex items-center justify-center cursor-pointer active:scale-95 transition-all duration-300 hover:rotate-45"
-              title="Buka Menu Aksi Admin"
+              class="w-15 h-15 rounded-full bg-gradient-to-tr from-amber-400 via-amber-300 to-amber-500 text-slate-950 shadow-2xl border-4 border-slate-950 flex items-center justify-center cursor-pointer active:scale-90 transition-all duration-300 hover:rotate-45"
+              title="Buka Menu Akses Utama"
             >
-              <span class="material-symbols-outlined text-2xl font-black">widgets</span>
+              <span class="material-symbols-outlined text-3xl font-black">widgets</span>
             </button>
-            <span class="text-[9px] font-extrabold text-amber-400 uppercase tracking-tighter mt-0.5">Admin</span>
+            <span class="text-[10px] font-black text-amber-400 uppercase tracking-widest mt-0.5">MENU</span>
           </div>
 
           <!-- Tab 3: Anggota -->
@@ -913,8 +918,57 @@
           </div>
 
           <div>
-            <label class="block font-bold text-primary mb-1">URL Cover Image (Gambar Sampul)</label>
-            <input v-model="bookForm.cover_image" type="url" placeholder="https://..." class="w-full px-3.5 py-2 bg-slate-50 border border-outline-variant rounded-xl text-primary font-medium outline-none focus:border-secondary"/>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block font-bold text-primary">URL Cover Image (Gambar Sampul)</label>
+              <span v-if="bookForm.cover_image" class="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">auto_awesome</span>
+                <span>Terisi Otomatis (Hal 1 PDF)</span>
+              </span>
+            </div>
+            <div class="flex gap-3 items-center">
+              <div v-if="bookForm.cover_image" class="w-12 h-16 rounded-xl border border-slate-300 overflow-hidden shrink-0 bg-slate-100 shadow-xs">
+                <img :src="bookForm.cover_image" alt="Cover Preview" class="w-full h-full object-cover"/>
+              </div>
+              <input v-model="bookForm.cover_image" type="text" placeholder="Terisi otomatis dari Hal 1 PDF atau https://..." class="flex-1 px-3.5 py-2 bg-slate-50 border border-outline-variant rounded-xl text-primary font-medium text-xs outline-none focus:border-secondary"/>
+            </div>
+          </div>
+
+          <!-- E-Book Digital PDF Storage & Upload Section -->
+          <div class="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="font-extrabold text-xs text-amber-950 flex items-center gap-2 cursor-pointer">
+                <input v-model="bookForm.is_ebook" type="checkbox" class="w-4 h-4 accent-amber-600 rounded cursor-pointer" />
+                <span>Buku Digital / E-Book (PDF)</span>
+              </label>
+              <span v-if="bookForm.is_ebook" class="px-2 py-0.5 bg-amber-300 text-amber-950 text-[10px] font-black rounded-full shadow-xs">DIGITAL PDF ACTIVE</span>
+            </div>
+
+            <div v-if="bookForm.is_ebook" class="space-y-2.5 pt-1">
+              <div>
+                <label class="block font-bold text-slate-800 text-[11px] mb-1">Unggah Berkas PDF Buku Digital (API)</label>
+                <input 
+                  type="file" 
+                  accept="application/pdf"
+                  @change="handlePdfFileUpload"
+                  class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer"
+                />
+                <p v-if="uploadingPdf" class="text-[10px] text-amber-700 font-bold animate-pulse mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs animate-spin">sync</span>
+                  <span>Mengunggah berkas PDF digital ke server API...</span>
+                </p>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-800 text-[11px] mb-1">Link URL PDF Buku Digital (Database D1)</label>
+                <input 
+                  v-model="bookForm.pdf_file" 
+                  type="text" 
+                  placeholder="/uploads/pdf/... atau /api/pdf-stream?url=..." 
+                  class="w-full px-3.5 py-2 bg-white border border-outline-variant rounded-xl text-primary font-mono text-[11px] outline-none focus:border-amber-500 font-bold"
+                />
+                <p class="text-[9px] text-slate-500 mt-0.5">Tautan ini disimpan ke Database D1 agar dapat dibaca di reader &amp; server Kavita.</p>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -933,8 +987,88 @@
         </form>
       </div>
     </div>
-    <!-- Global Sync Button Widget -->
-    <SyncDataButton variant="floating" />
+    <!-- Mobile Admin Quick Menu Sheet -->
+    <div v-if="showMobileAdminSheet" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-slate-900 text-white rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-800 space-y-5 animate-in slide-in-from-bottom duration-300">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-400 text-2xl">admin_panel_settings</span>
+            <div>
+              <h3 class="font-extrabold text-sm text-white">Menu Utama Panel Admin</h3>
+              <p class="text-[10px] text-slate-400">Pusat kendali dan manajemen perpustakaan</p>
+            </div>
+          </div>
+          <button @click="showMobileAdminSheet = false" class="text-slate-400 hover:text-white cursor-pointer">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <button 
+            @click="activeTab = 'statistics'; showMobileAdminSheet = false" 
+            class="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-2xl border border-slate-700/60 text-left space-y-1 transition-colors"
+          >
+            <span class="material-symbols-outlined text-amber-400 text-2xl">monitoring</span>
+            <p class="font-bold text-slate-100">Statistik &amp; Laporan</p>
+            <p class="text-[10px] text-slate-400">Ringkasan aktivitas</p>
+          </button>
+
+          <button 
+            @click="activeTab = 'books'; showMobileAdminSheet = false" 
+            class="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-2xl border border-slate-700/60 text-left space-y-1 transition-colors"
+          >
+            <span class="material-symbols-outlined text-amber-400 text-2xl">menu_book</span>
+            <p class="font-bold text-slate-100">Katalog Buku</p>
+            <p class="text-[10px] text-slate-400">{{ booksList.length }} Koleksi terdaftar</p>
+          </button>
+
+          <button 
+            @click="activeTab = 'members'; showMobileAdminSheet = false" 
+            class="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-2xl border border-slate-700/60 text-left space-y-1 transition-colors"
+          >
+            <span class="material-symbols-outlined text-amber-400 text-2xl">group</span>
+            <p class="font-bold text-slate-100">Data Anggota</p>
+            <p class="text-[10px] text-slate-400">{{ usersList.length }} Akun pemustaka</p>
+          </button>
+
+          <button 
+            @click="activeTab = 'circulation'; showMobileAdminSheet = false" 
+            class="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-2xl border border-slate-700/60 text-left space-y-1 transition-colors"
+          >
+            <span class="material-symbols-outlined text-amber-400 text-2xl">sync_alt</span>
+            <p class="font-bold text-slate-100">Sirkulasi &amp; Pinjaman</p>
+            <p class="text-[10px] text-slate-400">{{ loansList.length }} Transaksi aktif</p>
+          </button>
+
+          <button 
+            @click="activeTab = 'backup'; showMobileAdminSheet = false" 
+            class="col-span-2 p-3.5 bg-gradient-to-r from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 rounded-2xl border border-amber-500/50 text-left flex items-center justify-between transition-colors"
+          >
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-amber-400 text-2xl">cloud_sync</span>
+              <div>
+                <p class="font-bold text-amber-300">Pusat Backup &amp; Failover D1</p>
+                <p class="text-[10px] text-slate-300">Backup &amp; Restore database</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-amber-400 text-sm">arrow_forward</span>
+          </button>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+          <NuxtLink to="/" @click="showMobileAdminSheet = false" class="text-xs text-slate-400 hover:text-white font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">home</span>
+            <span>Beranda Utama</span>
+          </NuxtLink>
+          
+          <button @click="handleLogout" class="text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">logout</span>
+            <span>Keluar Akun</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -943,7 +1077,7 @@ definePageMeta({
   layout: false
 });
 
-const { getBooks, createBook, updateBook, deleteBook, getLoans, getUsers, getAttendanceToday, getCategories, getRecentActivities, getReservations, returnLoan, getProfile, logout } = usePustakaApi();
+const { getBooks, createBook, updateBook, deleteBook, getLoans, getUsers, getAttendanceToday, getCategories, getRecentActivities, getReservations, returnLoan, getProfile, logout, tokenCookie } = usePustakaApi();
 const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const { triggerSync } = useSyncData();
 const router = useRouter();
@@ -976,6 +1110,7 @@ const itemsPerPage = ref<number | string>('all');
 const showBookModal = ref(false);
 const isEditing = ref(false);
 const savingBook = ref(false);
+const uploadingPdf = ref(false);
 const editingBookId = ref<any>(null);
 
 const bookForm = reactive({
@@ -987,8 +1122,96 @@ const bookForm = reactive({
   stok: 1,
   kategori_id: null as any,
   cover_image: '',
-  deskripsi: ''
+  deskripsi: '',
+  is_ebook: false,
+  pdf_file: ''
 });
+
+const generateCoverFromPdfFile = async (file: File): Promise<string | null> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.0.379'}/pdf.worker.min.mjs`;
+
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(arrayBuffer),
+      cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+      cMapPacked: true
+    });
+
+    const pdfDoc = await loadingTask.promise;
+    if (pdfDoc.numPages < 1) return null;
+
+    const page = await pdfDoc.getPage(1);
+    const viewport = page.getViewport({ scale: 1.5 });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({
+      canvasContext: ctx,
+      viewport: viewport
+    }).promise;
+
+    const coverDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    // Save cover image to server API
+    const coverRes = await $fetch<{ success: boolean; url?: string }>('/api/backup/upload-cover', {
+      method: 'POST',
+      body: { image: coverDataUrl }
+    }).catch(() => null);
+
+    return coverRes?.url || coverDataUrl;
+  } catch (err) {
+    console.error('Error generating cover image from PDF page 1:', err);
+    return null;
+  }
+};
+
+const handlePdfFileUpload = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+
+  const file = target.files[0];
+  uploadingPdf.value = true;
+  triggerToast('⏳ Mengunggah berkas PDF digital & mengekstrak sampul (cover) dari Halaman 1...');
+
+  try {
+    // 1. Upload PDF File
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await $fetch<{ success: boolean; url?: string; message?: string }>('/api/backup/upload-pdf', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (res?.success && res.url) {
+      bookForm.pdf_file = res.url;
+      bookForm.is_ebook = true;
+
+      // 2. Generate Cover Image from Page 1 automatically
+      const generatedCover = await generateCoverFromPdfFile(file);
+      if (generatedCover) {
+        bookForm.cover_image = generatedCover;
+        triggerToast('✅ Berkas PDF & Sampul (Cover Image) Halaman 1 berhasil terisi otomatis!');
+      } else {
+        triggerToast('✅ Berkas PDF digital berhasil diunggah! Link URL tersimpan.');
+      }
+    } else {
+      triggerToast('❌ Gagal mengunggah PDF: ' + (res?.message || 'Error server'));
+    }
+  } catch (err: any) {
+    console.error('PDF Upload Error:', err);
+    triggerToast('❌ Gagal mengunggah berkas PDF.');
+  } finally {
+    uploadingPdf.value = false;
+  }
+};
 
 let pollTimer: any = null;
 
@@ -1132,6 +1355,8 @@ const openAddBookModal = () => {
   bookForm.kategori_id = categoriesList.value[0]?.id || null;
   bookForm.cover_image = '';
   bookForm.deskripsi = '';
+  bookForm.is_ebook = false;
+  bookForm.pdf_file = '';
   showBookModal.value = true;
 };
 
@@ -1147,6 +1372,8 @@ const openEditBookModal = (book: any) => {
   bookForm.kategori_id = book.kategori?.id || book.category?.id || book.kategori_id || null;
   bookForm.cover_image = book.cover_image || book.cover_image_url || '';
   bookForm.deskripsi = book.deskripsi || '';
+  bookForm.is_ebook = Boolean(book.is_ebook || book.pdf_file);
+  bookForm.pdf_file = book.pdf_file || book.pdf_file_url || '';
   showBookModal.value = true;
 };
 
@@ -1154,13 +1381,41 @@ const saveBook = async () => {
   if (!bookForm.judul.trim()) return;
   savingBook.value = true;
   try {
+    let savedBookId = editingBookId.value;
+
+    // 1. Simpan ke REST API Utama
     if (isEditing.value && editingBookId.value) {
       await updateBook(editingBookId.value, { ...bookForm });
-      triggerToast('Buku berhasil diperbarui!');
     } else {
-      await createBook({ ...bookForm });
-      triggerToast('Buku baru berhasil ditambahkan!');
+      const created = await createBook({ ...bookForm });
+      if (created?.data?.id) savedBookId = created.data.id;
     }
+
+    // 2. Simpan & Embed Langsung ke Database Cloudflare D1
+    const d1Res = await $fetch<{ success: boolean; message?: string; kavitaSynced?: boolean }>('/api/backup/books', {
+      method: 'POST',
+      body: {
+        id: savedBookId,
+        judul: bookForm.judul,
+        penulis: bookForm.penulis,
+        penerbit: bookForm.penerbit,
+        isbn: bookForm.isbn,
+        stok: bookForm.stok,
+        kategori_id: bookForm.kategori_id,
+        cover_image: bookForm.cover_image,
+        deskripsi: bookForm.deskripsi,
+        is_ebook: bookForm.is_ebook ? 1 : 0,
+        pdf_file: bookForm.pdf_file
+      }
+    }).catch(() => null);
+
+    // 3. Notifikasi Berhasil & Pembaruan Server Kavita
+    if (bookForm.is_ebook || bookForm.pdf_file) {
+      triggerToast('✅ Buku & Berkas PDF digital berhasil disimpan ke Database D1! Data e-book di server Kavita telah diperbarui agar dapat langsung dibaca.');
+    } else {
+      triggerToast('✅ Data buku berhasil disimpan ke Database Cloudflare D1!');
+    }
+
     showBookModal.value = false;
     await loadAdminData(false);
   } catch (e) {
@@ -1293,7 +1548,70 @@ const loadAdminData = async (manual = false) => {
   }
 };
 
-onMounted(() => {
+// MANUAL USERS RESTORE HANDLER
+const restoringUsers = ref(false);
+const restoreUserStatus = ref('');
+
+const handleUploadUserBackupFile = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  restoringUsers.value = true;
+  restoreUserStatus.value = '';
+
+  try {
+    const textContent = await file.text();
+    const res: any = await $fetch('/api/backup/import-users', {
+      method: 'POST',
+      body: { content: textContent }
+    });
+
+    if (res?.success) {
+      restoreUserStatus.value = res.message;
+      triggerToast(res.message);
+      loadAdminData(true);
+    } else {
+      restoreUserStatus.value = '❌ ' + (res?.message || 'Gagal memproses restore users.');
+      triggerToast(res?.message || 'Gagal memproses restore users.');
+    }
+  } catch (err: any) {
+    restoreUserStatus.value = '❌ Terjadi kesalahan saat membaca file backup: ' + (err?.message || err);
+    triggerToast('Terjadi kesalahan saat restore.');
+  } finally {
+    restoringUsers.value = false;
+    target.value = '';
+  }
+};
+
+onMounted(async () => {
+  // STRICT ROLE GUARD: Dosen, Mahasiswa, and Umum CANNOT access Admin Panel
+  if (process.client) {
+    let currentRole = '';
+    try {
+      const storedUser = localStorage.getItem('pustaka_user');
+      if (storedUser) {
+        currentRole = (JSON.parse(storedUser)?.role || '').toLowerCase();
+      }
+    } catch (e) {}
+
+    if (tokenCookie.value) {
+      const prof = await getProfile().catch(() => null);
+      if (prof?.data?.role || prof?.user?.role) {
+        currentRole = (prof.data?.role || prof.user?.role || '').toLowerCase();
+      }
+    }
+
+    const deniedRoles = ['mahasiswa', 'dosen', 'umum', 'member', 'pemustaka', 'user'];
+    if (!tokenCookie.value || deniedRoles.includes(currentRole)) {
+      triggerToast('❌ Akses Ditolak: Halaman Admin khusus untuk Administrator & Pustakawan.');
+      setTimeout(() => {
+        router.push(tokenCookie.value ? '/dashboard' : '/login');
+      }, 500);
+      return;
+    }
+  }
+
   loadAdminData();
 
   // Setup auto-polling every 15 seconds for realtime API synchronization

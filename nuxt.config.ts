@@ -153,11 +153,12 @@ export default defineNuxtConfig({
   routeRules: {
     '/**': {
       headers: {
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
         'X-XSS-Protection': '1; mode=block',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)'
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self), payment=()'
       }
     }
   },

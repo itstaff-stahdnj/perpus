@@ -63,49 +63,47 @@
         </NuxtLink>
       </nav>
 
-      <!-- Right Action Area (SSO Portal / User Account / Sync Button) -->
+      <!-- Right Action Area (SSO Portal / User Account) -->
       <div class="flex items-center gap-2 shrink-0">
-        <!-- Global Sync Button -->
-        <SyncDataButton variant="header" />
 
         <!-- Logged In State -->
         <div v-if="tokenCookie" class="flex items-center gap-2 sm:gap-3 pl-2 border-l border-outline-variant/60">
-          <!-- Member Profile Button (Nuxt Internal) -->
+          <!-- Member Dashboard Button (Only for Mahasiswa, Dosen, Umum - Desktop Only) -->
           <NuxtLink 
             v-if="!isAdminUser"
-            to="/profil" 
-            class="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
-            title="Buka Profil &amp; Kartu Member"
+            to="/dashboard" 
+            class="hidden md:flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+            title="Buka Dashboard Member"
           >
-            <Icon name="material-symbols:account-circle" class="text-base" />
-            <span class="hidden sm:inline">Profil Member</span>
+            <Icon name="material-symbols:dashboard" class="text-base" />
+            <span class="inline">Dashboard Member</span>
           </NuxtLink>
 
-          <!-- Admin Panel Link (Filament External) -->
-          <a 
+          <!-- Admin Panel Button (Only for Admin, Kepala Pustaka, Pustakawan - Desktop Only) -->
+          <NuxtLink 
             v-else
-            href="https://portal-perpus.stahdnj.ac.id/admin" 
-            target="_blank"
-            class="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
-            title="Buka Panel Admin Filament"
+            to="/admin" 
+            class="hidden md:flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+            title="Buka Panel Administrasi Perpustakaan"
           >
             <Icon name="material-symbols:admin-panel-settings" class="text-base" />
-            <span class="hidden sm:inline">Panel Admin</span>
-          </a>
+            <span class="inline">Panel Admin</span>
+          </NuxtLink>
 
-          <!-- User Avatar & Profile Tag -->
+          <!-- User Avatar & Profile Tag (Always Visible) -->
           <NuxtLink 
             v-if="profile"
-            to="/profil" 
+            :to="isAdminUser ? '/admin' : '/dashboard'" 
             class="flex items-center gap-2 p-1 hover:bg-surface-container-high rounded-full sm:rounded-xl transition-all border border-outline-variant/60" 
             :title="`Profil ${profile.name}`"
           >
-            <div class="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden border border-secondary/30 shrink-0">
+            <div class="w-8 h-8 sm:w-7 sm:h-7 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden border border-secondary/30 shrink-0">
               <img v-if="profile?.avatar_url" class="w-full h-full object-cover" :src="profile.avatar_url" :alt="profile.name" />
-              <span v-else class="text-[11px]">{{ (profile?.name || 'U').charAt(0) }}</span>
+              <span v-else class="text-xs sm:text-[11px]">{{ (profile?.name || 'U').charAt(0) }}</span>
             </div>
             <div class="text-left hidden xl:block pr-2 max-w-[140px]">
               <p class="font-label-md text-xs text-primary font-bold truncate leading-tight">{{ profile?.name }}</p>
+              <p class="text-[9px] text-slate-500 capitalize font-medium">{{ profile?.role || 'Member' }}</p>
             </div>
           </NuxtLink>
 
@@ -114,7 +112,7 @@
           </button>
         </div>
 
-        <!-- Logged Out State (SSO Login Button) -->
+        <!-- Logged Out State (Direct Login Button) -->
         <div v-else class="flex items-center gap-2 pl-2 border-l border-outline-variant/60">
           <NuxtLink 
             to="/login" 

@@ -6,7 +6,6 @@
     </div>
     <AppFooter />
     <MobileBottomNav />
-    <SyncDataButton variant="floating" />
     <ActivityNotificationToast />
     <ApiMaintenanceNotification />
   </div>
