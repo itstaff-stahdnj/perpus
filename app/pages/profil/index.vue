@@ -1175,14 +1175,41 @@ const loadData = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // STRICT ROLE GUARD: Admin, Kepala Pustaka, and Pustakawan CANNOT access Member Profile
+  if (process.client) {
+    let currentRole = '';
+    try {
+      const storedUser = localStorage.getItem('pustaka_user');
+      if (storedUser) {
+        currentRole = (JSON.parse(storedUser)?.role || '').toLowerCase();
+      }
+    } catch (e) {}
+
+    if (tokenCookie.value) {
+      const prof = await getProfile().catch(() => null);
+      if (prof?.data?.role || prof?.user?.role) {
+        currentRole = (prof.data?.role || prof.user?.role || '').toLowerCase();
+      }
+    }
+
+    const adminStaffRoles = ['admin', 'administrator', 'kepala_pustaka', 'kepala_perpustakaan', 'pustakawan', 'staf', 'petugas', 'operator', 'super_admin'];
+    if (adminStaffRoles.includes(currentRole)) {
+      triggerToast('ℹ️ Anda login sebagai Admin Staff. Pengalihan otomatis ke Panel Admin.');
+      setTimeout(() => {
+        router.push('/admin');
+      }, 500);
+      return;
+    }
+  }
+
   if (route.query.tab && typeof route.query.tab === 'string') {
     activeTab.value = route.query.tab as any;
   }
 
   if (!tokenCookie.value) {
     if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
+      router.push('/login');
     }
   } else {
     loadData();

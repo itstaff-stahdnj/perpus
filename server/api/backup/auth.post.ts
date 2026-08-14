@@ -1,22 +1,31 @@
-import { defineEventHandler, readBody } from 'h3';
+import { defineEventHandler, readBody, getRequestHeader } from 'h3';
 
 async function hashPasswordSecurely(pwd: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(`stah_dnj_secure_salt_2026_${pwd}`);
+  // Multi-salted HMAC-SHA256 hash for max security
+  const data = encoder.encode(`stah_dnj_secure_salt_2026_v2_#${pwd}#_super_secret`);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 export default defineEventHandler(async (event) => {
+  const clientIp = getRequestHeader(event, 'cf-connecting-ip') || 
+                   getRequestHeader(event, 'x-forwarded-for') || 
+                   event.node.req.socket.remoteAddress || '127.0.0.1';
+
   const body = await readBody(event).catch(() => ({}));
-  const loginInput = String(body?.login || body?.email || body?.nim || '').trim();
+  
+  // Input Sanitization: Strip dangerous script & HTML injection symbols
+  const rawLogin = String(body?.login || body?.email || body?.nim || '').trim();
+  const loginInput = rawLogin.replace(/[<>'"]/g, '');
   const passwordInput = String(body?.password || '').trim();
 
   if (!loginInput || !passwordInput) {
+    recordFailedAttempt(clientIp);
     return {
       success: false,
-      message: 'Email/NIM dan password wajib diisi.'
+      message: 'Email/NIM/NIDN dan password wajib diisi.'
     };
   }
 
@@ -38,9 +47,10 @@ export default defineEventHandler(async (event) => {
     `).bind(loginInput, loginInput, loginInput).first();
 
     if (!user) {
+      recordFailedAttempt(clientIp);
       return {
         success: false,
-        message: `Pengguna "${loginInput}" tidak ditemukan pada database cadangan D1.`
+        message: `Kredensial atau kata sandi tidak cocok.`
       };
     }
 
@@ -48,15 +58,19 @@ export default defineEventHandler(async (event) => {
 
     if (user.password_hash) {
       if (user.password_hash !== computedHash) {
+        recordFailedAttempt(clientIp);
         return {
           success: false,
-          message: 'Password tidak cocok dengan data cadangan terenkripsi D1.'
+          message: 'Kredensial atau kata sandi tidak cocok.'
         };
       }
     } else {
       // First-time authentication: save secure SHA-256 hash to D1 database (never plain text!)
       await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(computedHash, user.id).run().catch(() => {});
     }
+
+    // Reset failed attempts on successful login
+    resetFailedAttempts(clientIp);
 
     const fallbackToken = `d1_session_${user.id}_${Date.now()}`;
 

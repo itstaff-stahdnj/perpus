@@ -127,51 +127,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 3. Fetch & Sync Users/Members (with 100% QR Token fallback & Secure SHA-256 Password Hash)
-    let rawUsers: any[] = [];
-    const usersRes = await fetch(`${targetBase}/users?per_page=1000&limit=1000`, {
-      headers: { 'accept': 'application/json', 'x-api-key': apiKey }
-    }).then(r => r.json()).catch(() => null);
-
-    if (usersRes?.data && Array.isArray(usersRes.data)) {
-      rawUsers = usersRes.data;
-    } else if (Array.isArray(usersRes)) {
-      rawUsers = usersRes;
-    }
-
-    for (const u of rawUsers) {
-      if (u.id && u.name) {
-        // Fallback for QR token to guarantee 100% coverage
-        const qrTokenVal = u.qr_token || u.nim || u.nidn || u.email || `STAH-QR-${u.id}`;
-        const defaultPass = u.nim || u.email || 'stahdnj123';
-        const initialHash = await hashPasswordSecurely(defaultPass);
-
-        await db.prepare(`
-          INSERT INTO users (id, name, email, password_hash, role, nim, nidn, status_keanggotaan, qr_token)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET
-            name=excluded.name,
-            email=excluded.email,
-            password_hash=COALESCE(users.password_hash, excluded.password_hash),
-            role=excluded.role,
-            nim=excluded.nim,
-            nidn=excluded.nidn,
-            status_keanggotaan=excluded.status_keanggotaan,
-            qr_token=excluded.qr_token
-        `).bind(
-          u.id,
-          u.name,
-          u.email || `${u.id}@stahdnj.ac.id`,
-          initialHash,
-          u.role || 'member',
-          u.nim || null,
-          u.nidn || null,
-          u.status_keanggotaan || 'Aktif',
-          qrTokenVal
-        ).run().catch(() => {});
-        syncedUsersCount++;
-      }
-    }
+    // 3. (Data Pengguna / Users dikelola secara MANUAL oleh Admin via Manual Backup & Restore)
 
     // 4. Fetch & Sync Loans
     let rawLoans: any[] = [];
@@ -274,7 +230,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      message: `Full Backup D1 Berhasil! ${syncedBooksCount} buku, ${syncedCategoriesCount} kategori, ${syncedUsersCount} anggota (QR Token 100% & Enkripsi Password SHA-256) tersimpan.`,
+      message: `Sync Katalog D1 Berhasil! ${syncedBooksCount} buku, ${syncedCategoriesCount} kategori, ${syncedLoansCount} peminjaman tersimpan. Data pengguna dikelola secara manual.`,
       synced: {
         books: syncedBooksCount,
         categories: syncedCategoriesCount,

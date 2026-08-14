@@ -301,6 +301,39 @@ export const usePustakaApi = () => {
     return { success: false, message: 'Login gagal. Silakan periksa kembali Email/NIM dan password Anda.' };
   };
 
+  const registerUser = async (payload: {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    nim?: string;
+    nidn?: string;
+    whatsapp?: string;
+    prodi?: string;
+  }): Promise<{ success: boolean; message: string; data?: any; token?: string }> => {
+    try {
+      const res: any = await $fetch('/api/backup/register', {
+        method: 'POST',
+        body: payload
+      });
+      if (res?.success && res?.token) {
+        tokenCookie.value = res.token;
+        if (process.client) {
+          localStorage.setItem('pustaka_token', res.token);
+          if (res.data) {
+            localStorage.setItem('pustaka_user', JSON.stringify(res.data));
+          }
+        }
+      }
+      return res;
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.data?.message || err?.message || 'Gagal melakukan pendaftaran akun baru.'
+      };
+    }
+  };
+
   const logout = async () => {
     if (tokenCookie.value) {
       try {
@@ -902,6 +935,7 @@ export const usePustakaApi = () => {
     tokenCookie,
     getHeaders,
     login,
+    registerUser,
     logout,
     getProfile,
     updateProfile,
