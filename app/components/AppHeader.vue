@@ -116,14 +116,14 @@
 
         <!-- Logged Out State (SSO Login Button) -->
         <div v-else class="flex items-center gap-2 pl-2 border-l border-outline-variant/60">
-          <a 
-            href="https://portal-perpus.stahdnj.ac.id/sso/perpus" 
+          <NuxtLink 
+            to="/login" 
             class="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-            title="Masuk menggunakan SSO Portal STAH DNJ"
+            title="Masuk ke Sistem Perpustakaan"
           >
             <Icon name="material-symbols:vpn-key" class="text-base" />
             <span>Masuk</span>
-          </a>
+          </NuxtLink>
         </div>
       </div>
 
@@ -188,7 +188,7 @@ const handleLogout = async () => {
   await logout();
   profile.value = null;
   if (process.client) {
-    window.location.href = 'https://portal-perpus.stahdnj.ac.id/member/logout';
+    window.location.href = '/login';
   }
 };
 

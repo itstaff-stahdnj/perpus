@@ -803,12 +803,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { usePustakaApi, type UserProfile, type Book } from '../../composables/usePustakaApi';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
 import { useIndexedDB } from '../../composables/useIndexedDB';
 
 const route = useRoute();
+const router = useRouter();
 const { getProfile, updateProfile, getLoans, getReturns, getCirculation, extendLoan, returnLoan, getReservations, updateReservationStatus, getWishlist, getBooks, getTestimonials, createTestimonial, tokenCookie } = usePustakaApi();
 const { isCampusNetwork } = useCampusNetwork();
 const { saveCatalogCache, getCatalogCache } = useIndexedDB();
@@ -1181,9 +1182,7 @@ onMounted(() => {
   }
 
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
   } else {
     loadData();
   }

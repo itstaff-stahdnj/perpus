@@ -64,13 +64,13 @@
               </p>
             </div>
 
-            <a 
-              href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+            <NuxtLink 
+              to="/login"
               class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>🔑</span>
               <span>Login SSO Civitas</span>
-            </a>
+            </NuxtLink>
           </div>
         </div>
 
@@ -288,13 +288,13 @@
           </div>
         </div>
 
-        <a 
-          href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+        <NuxtLink 
+          to="/login"
           class="px-5 py-2.5 rounded-2xl bg-primary hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-2 cursor-pointer"
         >
           <span>🔑</span>
           <span>Login SSO Kampus</span>
-        </a>
+        </NuxtLink>
       </div>
 
       <!-- E-RESOURCES GRID CARDS -->

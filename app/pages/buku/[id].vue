@@ -172,15 +172,15 @@
                 <span class="material-symbols-outlined text-base">chrome_reader_mode</span>
               </button>
 
-              <a 
+              <NuxtLink 
                 v-else
-                href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                to="/login"
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>🔑</span>
                 <span>Login untuk Membaca E-Book Digital</span>
                 <span class="material-symbols-outlined text-base">arrow_forward</span>
-              </a>
+              </NuxtLink>
             </div>
 
             <!-- TOMBOL AKSI BUKU FISIK: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (JIKA USER LOGIN) -->
@@ -237,14 +237,14 @@
 
             <!-- JIKA USER BELUM LOGIN (BUKU FISIK): TAMPILKAN TOMBOL LOGIN SSO -->
             <div v-else class="pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <a 
-                href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+              <NuxtLink 
+                to="/login"
                 class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>🔑</span>
                 <span>Login untuk Meminjam &amp; Reservasi Buku</span>
                 <span class="material-symbols-outlined text-base">arrow_forward</span>
-              </a>
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -369,7 +369,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { usePustakaApi, type Book } from '../../composables/usePustakaApi';
 import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
@@ -380,6 +380,7 @@ import GpsPermissionModal from '../../components/GpsPermissionModal.vue';
 import { useBookCover } from '../../composables/useBookCover';
 
 const route = useRoute();
+const router = useRouter();
 const { 
   isCampusNetwork, 
   isInsideCampus, 
@@ -589,9 +590,7 @@ const loadBookDetail = async () => {
 
 const openBorrowModal = () => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   showBorrowModal.value = true;
@@ -600,9 +599,7 @@ const openBorrowModal = () => {
 // 1. Handling Peminjaman Mandiri
 const handleSelfBorrow = async () => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   if (!book.value) return;
@@ -625,9 +622,7 @@ const handleSelfBorrow = async () => {
 // 2. Handling Reservasi Buku (Diawasi Pustakawan / Kepala Pustaka Aktif)
 const handleReservation = async () => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   if (!book.value) return;
@@ -657,9 +652,7 @@ const handleReservation = async () => {
 // 3. Handling Wishlist
 const toggleWishlist = async () => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   if (!book.value || togglingWishlist.value) return;
@@ -708,9 +701,7 @@ const loadReviews = async (id: number | string) => {
 
 const handleReviewSubmit = async () => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   if (!book.value || !newReviewText.value.trim()) return;

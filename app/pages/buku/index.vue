@@ -313,13 +313,13 @@
                   >
                     <span>📖 Baca E-Book Digital</span>
                   </a>
-                  <a 
+                  <NuxtLink 
                     v-else
-                    href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                    to="/login"
                     class="block w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <span>🔑 Login untuk Membaca E-Book Digital</span>
-                  </a>
+                  </NuxtLink>
                 </div>
 
                 <!-- Action Buttons Buku Fisik (JIKA SUDAH LOGIN) -->
@@ -358,13 +358,13 @@
                   </div>
                 </div>
 
-                <a 
+                <NuxtLink 
                   v-else
-                  href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                  to="/login"
                   class="block w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-label-md text-[11px] font-extrabold text-center shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <span>🔑 Login untuk Meminjam</span>
-                </a>
+                </NuxtLink>
 
                 <NuxtLink 
                   :to="getBookUrl(book)" 
@@ -430,13 +430,13 @@
                     >
                       <span>📖 Baca E-Book Digital</span>
                     </a>
-                    <a 
+                    <NuxtLink 
                       v-else
-                      href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                      to="/login"
                       class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <span>🔑 Login untuk Membaca E-Book Digital</span>
-                    </a>
+                    </NuxtLink>
                   </template>
 
                   <!-- BUKU FISIK (JIKA USER LOGIN) -->
@@ -473,13 +473,13 @@
                   </template>
 
                   <!-- BUKU FISIK (BELUM LOGIN) -->
-                  <a 
+                  <NuxtLink 
                     v-else
-                    href="https://portal-perpus.stahdnj.ac.id/sso/perpus"
+                    to="/login"
                     class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-3.5 py-2 rounded-lg font-label-md text-xs font-extrabold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <span>🔑 Login untuk Meminjam</span>
-                  </a>
+                  </NuxtLink>
 
                   <!-- Tombol Favorit / Wishlist Animasi List View (HANYA DITAMPILKAN JIKA USER SUDAH LOGIN) -->
                   <button 
@@ -842,9 +842,7 @@ const calculatedDueDate = computed(() => {
 
 const openBorrowModal = (b: Book) => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   selectedBookForBorrow.value = b;
@@ -853,9 +851,7 @@ const openBorrowModal = (b: Book) => {
 
 const openReservationModal = (b: Book) => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    router.push('/login');
     return;
   }
   selectedBookForReservation.value = b;

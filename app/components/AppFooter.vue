@@ -110,11 +110,10 @@
           <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4">Layanan Terkait</h4>
           <ul class="space-y-2.5 text-xs sm:text-sm text-slate-300">
             <li>
-              <a href="https://portal-perpus.stahdnj.ac.id/sso/perpus" target="_blank" class="hover:text-amber-300 transition-colors flex items-center gap-1.5 font-semibold">
+              <NuxtLink to="/login" class="hover:text-amber-300 transition-colors flex items-center gap-1.5 font-semibold">
                 <span class="material-symbols-outlined text-xs text-amber-400">vpn_key</span>
-                <span>SSO Portal Perpus</span>
-                <span class="material-symbols-outlined text-[10px] text-slate-400">open_in_new</span>
-              </a>
+                <span>Masuk Pemustaka</span>
+              </NuxtLink>
             </li>
             <li>
               <a href="https://repository.stahdnj.ac.id" target="_blank" class="hover:text-amber-300 transition-colors flex items-center gap-1.5">

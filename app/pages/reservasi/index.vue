@@ -13,9 +13,9 @@
           </p>
         </div>
         <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a href="https://portal-perpus.stahdnj.ac.id/sso/perpus" class="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-md transition-all">
+          <NuxtLink to="/login" class="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-md transition-all">
             Masuk Akun Staf / SSO Kampus
-          </a>
+          </NuxtLink>
           <NuxtLink to="/" class="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all">
             Kembali ke Beranda Utama
           </NuxtLink>

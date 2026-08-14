@@ -160,9 +160,7 @@ const calculatedDueDate = computed(() => {
 
 const processBatchBorrow = async () => {
   if (!tokenCookie.value) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/sso/perpus';
-    }
+    navigateTo('/login');
     return;
   }
 
