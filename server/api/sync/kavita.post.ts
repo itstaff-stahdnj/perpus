@@ -12,9 +12,10 @@ export default defineEventHandler(async (event) => {
 
   try {
     // 1. Fetch libraries from Kavita API
-    const librariesRes = await fetch(`${kavitaBase}/api/Library/libraries`, {
+    const librariesRes = await fetch(`${kavitaBase}/api/Library/libraries?apiKey=${apiKey}`, {
       headers: {
         'accept': 'application/json',
+        'x-api-key': apiKey || '',
         'authorization': apiKey ? `Bearer ${apiKey}` : ''
       }
     }).then(r => r.json()).catch(() => null)
@@ -25,9 +26,10 @@ export default defineEventHandler(async (event) => {
       if (!lib.id) continue
 
       // 2. Fetch series in library
-      const seriesRes = await fetch(`${kavitaBase}/api/Series/series-in-library?libraryId=${lib.id}`, {
+      const seriesRes = await fetch(`${kavitaBase}/api/Series/series-in-library?libraryId=${lib.id}&apiKey=${apiKey}`, {
         headers: {
           'accept': 'application/json',
+          'x-api-key': apiKey || '',
           'authorization': apiKey ? `Bearer ${apiKey}` : ''
         }
       }).then(r => r.json()).catch(() => null)
