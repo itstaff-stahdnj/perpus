@@ -230,7 +230,7 @@ const loadingMessage = ref('Menyiapkan PDF.js...');
 const errorMessage = ref('');
 const currentPage = ref(1);
 const totalPages = ref(0);
-const scale = ref(1.25);
+const scale = ref(0.6);
 const sidebarOpen = ref(false);
 const currentTheme = ref<'dark' | 'sepia' | 'light'>('dark');
 

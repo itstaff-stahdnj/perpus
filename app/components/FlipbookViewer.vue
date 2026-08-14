@@ -263,7 +263,7 @@ const pageCount = ref(0);
 const currentPage = ref(1);
 const pageInput = ref(1);
 
-const zoomLevel = ref(1);
+const zoomLevel = ref(0.6);
 const soundEnabled = ref(false);
 const showThumbnails = ref(false);
 const isFullscreen = ref(false);
