@@ -118,9 +118,12 @@
                   placeholder="Cari judul buku, penulis, atau ISBN..."
                   class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs sm:text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
                 />
-                <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  <span class="material-symbols-outlined text-sm">close</span>
-                </button>
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button v-if="searchQuery" @click="searchQuery = ''" class="text-slate-400 hover:text-slate-600 p-1">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                  <VoiceSearchButton @result="(txt) => searchQuery = txt" />
+                </div>
               </div>
 
               <!-- Controls: View Mode & Sorting & Mobile Filter Toggle -->
@@ -1315,7 +1318,19 @@ const loadData = async () => {
   }
 };
 
+watch(viewMode, (newVal) => {
+  if (process.client) {
+    localStorage.setItem('pustaka_view_mode', newVal);
+  }
+});
+
 onMounted(() => {
+  if (process.client) {
+    const savedMode = localStorage.getItem('pustaka_view_mode');
+    if (savedMode === 'grid' || savedMode === 'list') {
+      viewMode.value = savedMode;
+    }
+  }
   syncFromRoute();
   loadData();
   loadWishlistData();

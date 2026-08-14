@@ -72,12 +72,30 @@ export default defineEventHandler(async (event) => {
     // Reset failed attempts on successful login
     resetFailedAttempts(clientIp);
 
-    const fallbackToken = `d1_session_${user.id}_${Date.now()}`;
+    const JWT_SECRET = 'stah_dnj_jwt_secret_key_2026_secure_edge_auth';
+
+    const base64UrlEncode = (str: string) => btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const encodedHeader = base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = base64UrlEncode(JSON.stringify({ id: user.id, email: user.email, role: user.role, exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) }));
+    const dataToSign = `${encodedHeader}.${encodedPayload}`;
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(JWT_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(dataToSign));
+    const signatureArray = Array.from(new Uint8Array(signature));
+    const jwtToken = `${dataToSign}.${base64UrlEncode(String.fromCharCode(...signatureArray))}`;
 
     return {
       success: true,
-      message: '🟢 Login Berhasil via Cloudflare D1 Backup (Secure Failover Mode)',
-      token: fallbackToken,
+      message: '🟢 Login Berhasil via Cloudflare D1 Database Utama (Signed JWT)',
+      token: jwtToken,
       is_failover: true,
       data: {
         id: user.id,

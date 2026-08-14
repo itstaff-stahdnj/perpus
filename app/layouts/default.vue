@@ -8,5 +8,6 @@
     <MobileBottomNav />
     <ActivityNotificationToast />
     <ApiMaintenanceNotification />
+    <AiLibrarianChatModal />
   </div>
 </template>

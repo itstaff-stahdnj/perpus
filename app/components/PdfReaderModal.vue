@@ -40,6 +40,14 @@
                   <span>{{ isOfflineReady ? '💾 Offline Ready' : (isSavingOffline ? '⏳ Menyimpan...' : '📥 Simpan Offline') }}</span>
                 </button>
                 <span>•</span>
+                <button 
+                  @click="showAudioPlayer = !showAudioPlayer"
+                  class="font-extrabold flex items-center gap-1 px-2 py-0.5 rounded transition-all cursor-pointer text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
+                  title="Putar Narator Suara E-Book (Audiobook TTS)"
+                >
+                  <span>🎙️ Narator Suara</span>
+                </button>
+                <span>•</span>
                 <span class="text-rose-400 font-bold flex items-center gap-0.5">
                   <Icon name="material-symbols:lock" class="text-[12px]" />
                   <span>Dokumen Dilindungi</span>
@@ -178,17 +186,27 @@
           </div>
 
           <!-- Error State -->
-          <div v-if="!loading && errorMessage" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto">
-            <div class="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-3xl">
+          <div v-if="!loading && errorMessage" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center space-y-4 max-w-md mx-auto z-30 bg-zinc-950/95 backdrop-blur-sm">
+            <div class="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-3xl shadow-inner border border-rose-500/20">
               <Icon name="material-symbols:warning" />
             </div>
             <div class="space-y-1">
-              <h4 class="text-base font-bold text-white">Tidak Dapat Membuka E-Book</h4>
+              <h4 class="text-base font-extrabold text-white">Tidak Dapat Membuka E-Book Digital</h4>
               <p class="text-xs text-zinc-400 leading-relaxed">{{ errorMessage }}</p>
             </div>
-            <button @click="close" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white rounded-xl transition-colors cursor-pointer">
-              Tutup Pembaca
-            </button>
+            <div class="flex items-center gap-2 pt-2">
+              <button @click="loadPdf" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+                🔄 Coba Lagi
+              </button>
+              <button @click="close" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white rounded-xl transition-all cursor-pointer">
+                Tutup Pembaca
+              </button>
+            </div>
+          </div>
+
+          <!-- Floating Audio Player Overlay -->
+          <div v-if="showAudioPlayer" class="absolute top-4 right-4 z-40 w-full max-w-sm">
+            <BookAudioPlayer :title="title" :textToRead="`E-book digital ${title || 'STAH DNJ'}. Pembaca E-Book Digital Perpustakaan Dharma Nusantara Jakarta.`" />
           </div>
 
           <!-- Mobile Floating Nav -->
@@ -208,6 +226,8 @@
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useIndexedDB } from '~/composables/useIndexedDB';
 import { usePdfCache } from '~/composables/usePdfCache';
+
+const showAudioPlayer = ref(false);
 
 const props = defineProps<{
   modelValue: boolean;

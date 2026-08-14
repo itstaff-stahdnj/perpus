@@ -79,6 +79,12 @@ CREATE TABLE IF NOT EXISTS sync_history (
   details TEXT
 );
 
+-- Performance Indexes for Cloudflare D1 SQLite
+CREATE INDEX IF NOT EXISTS idx_books_kategori ON books(kategori_id);
+CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn);
+CREATE INDEX IF NOT EXISTS idx_loans_user_status ON loans(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_reservations_user_status ON reservations(user_id, status);
+
 -- Seed Initial Categories
 INSERT OR IGNORE INTO categories (id, nama_kategori, slug) VALUES 
 (1, 'Agama Hindu & Kitab Suci', 'agama-hindu'),
@@ -86,3 +92,4 @@ INSERT OR IGNORE INTO categories (id, nama_kategori, slug) VALUES
 (3, 'Pendidikan & Kebudayaan', 'pendidikan'),
 (4, 'Sastra & Bahasa Kawi', 'sastra-kawi'),
 (5, 'Teknologi & Umum', 'teknologi-umum');
+

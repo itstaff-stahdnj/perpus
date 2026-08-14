@@ -66,8 +66,31 @@
       <!-- Right Action Area (SSO Portal / User Account) -->
       <div class="flex items-center gap-2 shrink-0">
 
+        <!-- Spotlight Command Palette (Ctrl+K) Trigger -->
+        <button 
+          @click="showCommandPalette = true" 
+          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-zinc-700/80 cursor-pointer"
+          title="Buka Command Center (Ctrl+K)"
+        >
+          <span class="material-symbols-outlined text-base text-primary dark:text-blue-400">search</span>
+          <span class="hidden lg:inline text-[11px]">Cari & Pintasan</span>
+          <kbd class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded text-[9px] font-mono text-slate-500 dark:text-zinc-400">Ctrl K</kbd>
+        </button>
+
+        <!-- Dynamic Dark/Light Theme Switcher -->
+        <ThemeToggle />
+
         <!-- Logged In State -->
         <div v-if="tokenCookie" class="flex items-center gap-2 sm:gap-3 pl-2 border-l border-outline-variant/60">
+          <!-- Member Card Button -->
+          <button 
+            @click="showMemberCard = true"
+            class="p-2 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer shrink-0"
+            title="Kartu Keanggotaan Digital (3D Card)"
+          >
+            <span class="material-symbols-outlined text-xl">badge</span>
+          </button>
+
           <!-- Member Dashboard Button (Only for Mahasiswa, Dosen, Umum - Desktop Only) -->
           <NuxtLink 
             v-if="!isAdminUser"
@@ -107,7 +130,7 @@
             </div>
           </NuxtLink>
 
-          <button @click="handleLogout" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer shrink-0" title="Keluar (Logout)">
+          <button @click="handleLogout" class="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-full transition-colors cursor-pointer shrink-0" title="Keluar (Logout)">
             <Icon name="material-symbols:logout" class="text-lg" />
           </button>
         </div>
@@ -139,6 +162,10 @@
         </NuxtLink>
       </div>
     </div>
+
+    <!-- Modals -->
+    <CommandPaletteModal v-model="showCommandPalette" @trigger-member-card="showMemberCard = true" />
+    <DigitalMemberCardModal v-model="showMemberCard" :user="profile" />
   </header>
 </template>
 
@@ -154,6 +181,8 @@ const profile = ref<UserProfile | null>(null);
 const siteName = ref('Perpustakaan STAH DNJ');
 const logoUrl = ref<string | undefined>(undefined);
 const pendingReservationCount = ref(0);
+const showCommandPalette = ref(false);
+const showMemberCard = ref(false);
 let alertTimer: any = null;
 
 const adminRoles = ['admin', 'kepala_pustaka', 'kepala_perpustakaan', 'pustakawan', 'staf', 'petugas', 'operator', 'super_admin'];
@@ -169,7 +198,7 @@ const isAdminUser = computed(() => {
 const checkPendingReservations = async () => {
   if (!tokenCookie.value || !isAdminUser.value) return;
   try {
-    const res = await fetch('https://portal-perpus.stahdnj.ac.id/api/reservations/pending-alerts', {
+    const res = await fetch('/api/pustaka/reservations/pending-alerts', {
       headers: {
         'x-api-key': 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b',
         'Authorization': `Bearer ${tokenCookie.value}`

@@ -55,6 +55,28 @@
                 >
                   🔢 {{ bookClassification }}
                 </span>
+
+                <!-- Quick Action Pills: Sitasi, Peta Rak & Reading Time -->
+                <button 
+                  @click="showCitationModal = true"
+                  class="px-3 py-1 rounded-full text-[0.68rem] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800 flex items-center gap-1"
+                  title="Generate Format Sitasi (APA, MLA, IEEE, BibTeX)"
+                >
+                  <span>Format Sitasi</span>
+                </button>
+
+                <button 
+                  v-if="!isEbook"
+                  @click="showShelfModal = true"
+                  class="px-3 py-1 rounded-full text-[0.68rem] font-bold bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 transition-colors cursor-pointer border border-amber-200 dark:border-amber-800 flex items-center gap-1"
+                  title="Lihat Denah Peta Rak Buku 2D"
+                >
+                  <span>📍 Denah Peta Rak 2D</span>
+                </button>
+
+                <span class="px-3 py-1 rounded-full text-[0.68rem] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                  ⏱️ {{ estimatedReadingTime }} Menit Baca
+                </span>
               </div>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight pt-1">
                 {{ book?.judul }}
@@ -152,9 +174,25 @@
             <!-- Ringkasan / Sinopsis Buku (Otomatis Hidden Jika Kosong / Opsional) -->
             <div 
               v-if="book?.deskripsi && book.deskripsi.trim() !== ''" 
-              class="pt-3 border-t border-slate-100 dark:border-zinc-800"
+              class="pt-3 border-t border-slate-100 dark:border-zinc-800 space-y-3"
             >
-              <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-1">Sinopsis / Ringkasan</h3>
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider">Sinopsis / Ringkasan</h3>
+                <button 
+                  @click="showAudioSynopsis = !showAudioSynopsis"
+                  class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>🎙️ {{ showAudioSynopsis ? 'Sembunyikan Audio' : 'Dengarkan Narasi Suara' }}</span>
+                </button>
+              </div>
+
+              <!-- Audio Narrator Widget for Synopsis -->
+              <BookAudioPlayer 
+                v-if="showAudioSynopsis" 
+                :title="`Narasi ${book?.judul}`" 
+                :textToRead="`${book?.judul}. Karya ${book?.penulis || 'STAH DNJ'}. Ringkasan: ${book?.deskripsi}`" 
+              />
+
               <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
                 {{ book?.deskripsi }}
               </p>
@@ -303,7 +341,38 @@
           <div v-else class="text-xs text-slate-400 italic">Belum ada ulasan untuk buku ini. Jadilah yang pertama memberikan ulasan!</div>
         </div>
 
+        <!-- SEKSI REKOMENDASI BUKU SERUPA -->
+        <div v-if="recommendedBooksList.length > 0" class="pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <span>📚 Buku Serupa yang Mungkin Anda Sukai</span>
+            </h3>
+            <NuxtLink to="/buku" class="text-xs font-bold text-primary hover:underline">Lihat Semua &rarr;</NuxtLink>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <NuxtLink 
+              v-for="recBook in recommendedBooksList" 
+              :key="recBook.id"
+              :to="`/buku/${slugifyTitle(recBook.judul)}-${recBook.id}`"
+              class="bg-slate-50 dark:bg-zinc-800/60 p-3 rounded-2xl border border-slate-200 dark:border-zinc-700/80 hover:shadow-md transition-all group flex flex-col justify-between"
+            >
+              <div class="aspect-[3/4] bg-slate-200 dark:bg-zinc-700 rounded-xl overflow-hidden mb-2">
+                <img :src="getBookCoverUrl(recBook)" :alt="recBook.judul" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+              </div>
+              <div>
+                <p class="font-bold text-xs text-slate-900 dark:text-white line-clamp-2 leading-tight group-hover:text-primary transition-colors">{{ recBook.judul }}</p>
+                <p class="text-[10px] text-slate-500 truncate mt-1">{{ recBook.penulis || 'STAH DNJ' }}</p>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Modals -->
+      <CitationGeneratorModal v-model="showCitationModal" :book="book" />
+      <ShelfLocationModal v-model="showShelfModal" :book="book" />
 
       <!-- Single Borrow Modal -->
       <Teleport to="body">
@@ -373,11 +442,27 @@ import { useRoute, useRouter } from 'vue-router';
 import { usePustakaApi, type Book } from '../../composables/usePustakaApi';
 import { usePustakaCart } from '../../composables/usePustakaCart';
 import { useCampusNetwork } from '../../composables/useCampusNetwork';
-import CartBorrowModal from '../../components/CartBorrowModal.vue';
+import { useBookRecommendations } from '../../composables/useBookRecommendations';
+import CitationGeneratorModal from '../../components/CitationGeneratorModal.vue';
+import ShelfLocationModal from '../../components/ShelfLocationModal.vue';
+import BookAudioPlayer from '../../components/BookAudioPlayer.vue';
 
-import GpsPermissionModal from '../../components/GpsPermissionModal.vue';
+const { getRecommendedBooks } = useBookRecommendations();
 
-import { useBookCover } from '../../composables/useBookCover';
+const showCitationModal = ref(false);
+const showShelfModal = ref(false);
+const showAudioSynopsis = ref(false);
+const allBooksCache = ref<Book[]>([]);
+
+const estimatedReadingTime = computed(() => {
+  if (!book.value) return 30;
+  const pages = Number((book.value as any).jumlah_halaman || (book.value as any).halaman || 120);
+  return Math.max(15, Math.ceil(pages * 1.2));
+});
+
+const recommendedBooksList = computed(() => {
+  return getRecommendedBooks(book.value, allBooksCache.value, 4);
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -546,9 +631,17 @@ const loadBookDetail = async () => {
     const resBook = await getBookById(bookId).catch(() => ({ success: false, data: null }));
     if (resBook?.success && resBook.data) {
       book.value = resBook.data;
+      const resAll = await getBooks().catch(() => ({ success: false, data: [] }));
+      if (resAll?.success && resAll.data?.length > 0) {
+        allBooksCache.value = resAll.data;
+        if (!book.value) {
+          book.value = resAll.data.find(b => String(b.id) === String(bookId)) || resAll.data[0];
+        }
+      }
     } else {
       const resAll = await getBooks().catch(() => ({ success: false, data: [] }));
       if (resAll?.success && resAll.data?.length > 0) {
+        allBooksCache.value = resAll.data;
         book.value = resAll.data.find(b => String(b.id) === String(bookId)) || resAll.data[0];
       }
     }

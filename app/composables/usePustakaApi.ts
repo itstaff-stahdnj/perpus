@@ -163,7 +163,7 @@ export interface SiteSettings {
 
 export const usePustakaApi = () => {
   const config = useRuntimeConfig();
-  const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api';
+  const baseUrl = config.public.apiBaseUrl || '/api/pustaka';
   const apiKey = config.public.pustakaApiKey || config.pustakaApiKey || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b';
   const tokenCookie = useCookie<string | null>('pustaka_token', { 
     maxAge: 60 * 60 * 24 * 7, 
@@ -233,7 +233,32 @@ export const usePustakaApi = () => {
       bodyPayload.identity = cleanInput;
     }
 
-    // 1. Try Primary Portal API Login
+    // 1. Prioritaskan Login via Cloudflare D1 Database Utama
+    try {
+      const resD1: any = await $fetch('/api/backup/auth', {
+        method: 'POST',
+        body: { login: cleanInput, password }
+      });
+
+      if (resD1?.success && resD1?.data) {
+        const token = resD1.token || `d1_token_${resD1.data.id}`;
+        tokenCookie.value = token;
+        if (process.client) {
+          localStorage.setItem('pustaka_token', token);
+          localStorage.setItem('pustaka_user', JSON.stringify(resD1.data));
+        }
+        return {
+          success: true,
+          message: resD1.message || '🟢 Login Berhasil via Cloudflare D1 Database Utama',
+          data: resD1.data,
+          token
+        };
+      }
+    } catch (errD1: any) {
+      console.warn('D1 Primary Auth attempt failed, trying fallback API backend...', errD1?.message || errD1);
+    }
+
+    // 2. Secondary Fallback: Login via Portal Backend API Eksternal
     try {
       let res: any = null;
       try {
@@ -261,41 +286,13 @@ export const usePustakaApi = () => {
         }
         return {
           success: true,
-          message: res.message || 'Login berhasil!',
+          message: res.message || 'Login berhasil via Secondary Backend!',
           data: res.data || res.user,
           token
         };
       }
     } catch (e: any) {
-      console.warn('Primary portal login failed/down, attempting Cloudflare D1 failover login...', e);
-    }
-
-    // 2. Failover to Cloudflare D1 Backup Database Login if Primary API is down or failed
-    try {
-      const resD1: any = await $fetch('/api/backup/auth', {
-        method: 'POST',
-        body: { login: cleanInput, password }
-      });
-
-      if (resD1?.success && resD1?.data) {
-        const token = resD1.token || `d1_token_${resD1.data.id}`;
-        tokenCookie.value = token;
-        if (process.client) {
-          localStorage.setItem('pustaka_token', token);
-          localStorage.setItem('pustaka_user', JSON.stringify(resD1.data));
-        }
-        return {
-          success: true,
-          message: resD1.message || '🟢 Login Berhasil via Backup D1 Database (Failover Mode)',
-          data: resD1.data,
-          token,
-          is_failover: true
-        };
-      } else if (resD1?.message) {
-        return { success: false, message: resD1.message };
-      }
-    } catch (errD1: any) {
-      console.error('D1 Failover Auth Error:', errD1);
+      console.error('Secondary portal login failed:', e);
     }
 
     return { success: false, message: 'Login gagal. Silakan periksa kembali Email/NIM dan password Anda.' };

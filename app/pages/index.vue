@@ -62,6 +62,7 @@
                 " 
                 @keyup.enter="handleSearch"
               />
+              <VoiceSearchButton @result="(txt) => { searchQuery = txt; handleSearch(); }" />
             </div>
             <button 
               class="bg-secondary text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl hover:bg-secondary/90 transition-all active:scale-95 flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 shadow-sm cursor-pointer"

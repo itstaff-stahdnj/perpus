@@ -8,7 +8,7 @@ const isDismissed = ref<boolean>(false)
 
 export const useApiStatus = () => {
   const config = useRuntimeConfig()
-  const baseUrl = config.public.apiBaseUrl || 'https://portal-perpus.stahdnj.ac.id/api'
+  const baseUrl = config.public.apiBaseUrl || '/api/pustaka'
 
   const setApiDown = (down: boolean, msg?: string) => {
     if (msg) {

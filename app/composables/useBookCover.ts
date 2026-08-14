@@ -45,7 +45,7 @@ export const useBookCover = () => {
         return cover;
       }
       const cleanPath = cover.startsWith('/') ? cover : `/${cover}`;
-      return `https://portal-perpus.stahdnj.ac.id${cleanPath}`;
+      return cleanPath;
     }
 
     return fallbackCover;

@@ -87,7 +87,7 @@ const isActivityToday = (item) => {
 
 const loadActivities = async () => {
   try {
-    const res = await fetch('https://portal-perpus.stahdnj.ac.id/api/aktivitas-terbaru')
+    const res = await fetch('/api/pustaka/aktivitas-terbaru')
     if (res.status >= 500) {
       setApiDown(true, `Server API mengembalikan status ${res.status}.`)
     }
@@ -129,11 +129,7 @@ const dismissToast = () => {
 const handleToastClick = () => {
   const actionText = String(toast.value?.action_title || '').toLowerCase()
   if (actionText.includes('reservasi') || actionText.includes('antre') || actionText.includes('pesan')) {
-    if (process.client) {
-      window.location.href = 'https://portal-perpus.stahdnj.ac.id/admin/reservations'
-    } else {
-      router.push('/reservasi')
-    }
+    router.push('/reservasi')
   } else if (toast.value?.book_id) {
     const slug = (toast.value.book_title || 'buku').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     router.push(`/buku/${slug}-${toast.value.book_id}`)

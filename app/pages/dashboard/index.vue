@@ -115,6 +115,10 @@
       </div>
     </div>
 
+    <!-- Modals -->
+    <DigitalReceiptModal v-model="showReceiptModal" :loan="selectedReceiptLoan" />
+    <ReadingNotesModal v-model="showNotesModal" />
+
     <!-- Desktop SideNavBar (Hidden on Mobile) -->
     <aside class="hidden md:flex flex-col h-screen w-72 bg-surface border-r border-outline-variant shadow-md py-6 shrink-0">
       <!-- Library Branding -->
@@ -361,6 +365,49 @@
             </div>
           </section>
 
+          <!-- Gamification Reading Badges Section -->
+          <section class="bg-gradient-to-r from-slate-900 via-primary to-slate-950 text-white rounded-2xl p-5 shadow-lg border border-amber-500/30 relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+              <div>
+                <h4 class="font-extrabold text-sm sm:text-base text-amber-300 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-xl">workspace_premium</span>
+                  <span>Lencana Prestasi Membaca Pemustaka</span>
+                </h4>
+                <p class="text-xs text-slate-300 mt-0.5">Tingkatkan aktivitas membaca Anda untuk membuka lencana keanggotaan tingkat lanjut.</p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button 
+                  @click="showNotesModal = true"
+                  class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>📝 Catatan Pustaka Saya</span>
+                </button>
+
+                <!-- Badge 1 -->
+                <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 dark:bg-white/5 border border-amber-400/40 rounded-xl backdrop-blur-xs">
+                  <span class="text-lg">🌟</span>
+                  <div class="text-left">
+                    <p class="text-[10px] font-bold text-amber-300">Pustakawan Pemula</p>
+                    <p class="text-[8px] text-slate-300">Aktif</p>
+                  </div>
+                </div>
+
+                <!-- Badge 2 -->
+                <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 dark:bg-white/5 border border-emerald-400/40 rounded-xl backdrop-blur-xs">
+                  <span class="text-lg">📚</span>
+                  <div class="text-left">
+                    <p class="text-[10px] font-bold text-emerald-300">Kolektor Pustaka</p>
+                    <p class="text-[8px] text-slate-300">{{ (activeLoans.length + historyList.length) > 0 ? 'Tercapai' : 'Proses' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Reading Goal Widget -->
+          <ReadingGoalWidget :completedBooksCount="historyList.length" />
+
           <!-- Main Layout Grid: Active Content View & Right Sidebar -->
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             
@@ -401,7 +448,14 @@
                             {{ getLoanUrgencyBadge(loan).label }}
                           </span>
                         </td>
-                        <td class="py-4 px-4 sm:px-5 text-right">
+                        <td class="py-4 px-4 sm:px-5 text-right flex items-center justify-end gap-1.5">
+                          <button 
+                            @click="openReceiptModal(loan)" 
+                            class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                            title="Lihat Struk Digital & QR Pass Pengembalian"
+                          >
+                            🧾 Struk
+                          </button>
                           <button 
                             @click="handleExtendLoan(loan)" 
                             :disabled="extendingId === loan.id"
@@ -675,7 +729,18 @@ const wishlistList = ref<any[]>([]);
 const booksList = ref<any[]>([]);
 const announcements = ref<any[]>([]);
 
-const showQrModal = ref(false);
+import ReadingGoalWidget from '~/components/ReadingGoalWidget.vue';
+import DigitalReceiptModal from '~/components/DigitalReceiptModal.vue';
+import ReadingNotesModal from '~/components/ReadingNotesModal.vue';
+
+const showNotesModal = ref(false);
+const showReceiptModal = ref(false);
+const selectedReceiptLoan = ref<any>(null);
+
+const openReceiptModal = (loan: any) => {
+  selectedReceiptLoan.value = loan;
+  showReceiptModal.value = true;
+};
 const refreshing = ref(false);
 const extendingId = ref<any>(null);
 const lastUpdatedTime = ref('');
