@@ -110,14 +110,14 @@
         >
           <span v-if="metrics.pending > 0" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-600 animate-ping"></span>
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-900">1. Perlu Ambil di Rak</span>
-            <div class="w-9 h-9 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+            <span class="text-xs font-bold text-amber-900 dark:text-amber-300">1. Perlu Ambil di Rak</span>
+            <div class="w-9 h-9 rounded-xl bg-amber-200/80 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
               <span class="material-symbols-outlined text-xl">directions_run</span>
             </div>
           </div>
           <div class="mt-4">
-            <span class="text-2xl sm:text-3xl font-black text-amber-900">{{ metrics.pending }}</span>
-            <span class="text-[11px] text-amber-700 font-semibold block mt-0.5">Perlu ditarik dari rak</span>
+            <span class="text-2xl sm:text-3xl font-black text-amber-900 dark:text-amber-300">{{ metrics.pending }}</span>
+            <span class="text-[11px] text-amber-700 dark:text-amber-400 font-semibold block mt-0.5">Perlu ditarik dari rak</span>
           </div>
         </div>
 

@@ -77,7 +77,7 @@
           </div>
         </div>
         <div class="mt-3 flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800 flex items-center gap-1">
             <span class="material-symbols-outlined text-xs">shield_person</span>
             <span>{{ userProfile?.role || 'Administrator' }}</span>
           </span>
@@ -105,9 +105,9 @@
         >
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined">menu_book</span>
-            <span class="text-xs font-semibold">Manajemen Buku</span>
+            <span class="text-xs font-semibold">Katalog Buku D1</span>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="activeTab === 'books' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="activeTab === 'books' ? 'bg-white/20 text-white' : 'bg-surface-container-high text-on-surface-variant'">
             {{ booksList.length }}
           </span>
         </button>
@@ -119,9 +119,9 @@
         >
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined">group</span>
-            <span class="text-xs font-semibold">Manajemen Anggota</span>
+            <span class="text-xs font-semibold">Anggota Perpustakaan</span>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="activeTab === 'members' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="activeTab === 'members' ? 'bg-white/20 text-white' : 'bg-surface-container-high text-on-surface-variant'">
             {{ usersList.length }}
           </span>
         </button>
@@ -135,7 +135,7 @@
             <span class="material-symbols-outlined">sync_alt</span>
             <span class="text-xs font-semibold">Sirkulasi &amp; Pinjaman</span>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="activeTab === 'circulation' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-900'">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="activeTab === 'circulation' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300'">
             {{ loansList.length }}
           </span>
         </button>
@@ -149,17 +149,17 @@
             <span class="material-symbols-outlined">cloud_sync</span>
             <span class="text-xs font-semibold">Pusat Backup &amp; Failover D1</span>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800">
             D1 Active
           </span>
         </button>
 
         <NuxtLink 
           to="/reservasi" 
-          class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all text-amber-900 bg-amber-100/90 font-bold hover:bg-amber-200 border border-amber-300/80 shadow-xs"
+          class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all text-amber-900 bg-amber-100/90 font-bold hover:bg-amber-200 border border-amber-300/80 shadow-xs dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800/80 dark:hover:bg-amber-900/60"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-amber-800">collections_bookmark</span>
+            <span class="material-symbols-outlined text-amber-800 dark:text-amber-300">collections_bookmark</span>
             <span class="text-xs">Manajemen Reservasi</span>
           </div>
           <span v-if="reservationsCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-600 text-white">
@@ -185,9 +185,9 @@
         >
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined">settings</span>
-            <span class="text-xs font-semibold">Pengaturan Website D1</span>
+            <span class="text-xs font-semibold">Pengaturan</span>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-900">
+          <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300">
             D1 DB
           </span>
         </button>
@@ -382,12 +382,12 @@
                 <div class="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 border border-outline-variant shadow-xs hover:shadow-md transition-all flex items-start justify-between">
                   <div>
                     <p class="font-body-md text-[11px] sm:text-xs text-on-surface-variant mb-1 font-semibold">Peminjaman Aktif</p>
-                    <p class="font-display-lg text-2xl sm:text-3xl font-black text-amber-700">{{ loansList.length }}</p>
-                    <span class="text-[10px] sm:text-[11px] text-amber-800 font-bold mt-1 inline-flex items-center gap-0.5">
+                    <p class="font-display-lg text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300">{{ loansList.length }}</p>
+                    <span class="text-[10px] sm:text-[11px] text-amber-800 dark:text-amber-300 font-bold mt-1 inline-flex items-center gap-0.5">
                       <span class="material-symbols-outlined text-xs">pending</span> Dipinjam
                     </span>
                   </div>
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 flex items-center justify-center font-bold shadow-xs shrink-0">
                     <span class="material-symbols-outlined text-xl sm:text-2xl">import_contacts</span>
                   </div>
                 </div>
@@ -401,7 +401,7 @@
                       <span class="material-symbols-outlined text-xs">verified</span> Mahasiswa/Dosen
                     </span>
                   </div>
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-purple-100 text-purple-900 flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-purple-100 text-purple-900 dark:bg-purple-950/80 dark:text-purple-300 flex items-center justify-center font-bold shadow-xs shrink-0">
                     <span class="material-symbols-outlined text-xl sm:text-2xl">group_add</span>
                   </div>
                 </div>
@@ -410,12 +410,12 @@
                 <div class="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 border border-outline-variant shadow-xs hover:shadow-md transition-all flex items-start justify-between">
                   <div>
                     <p class="font-body-md text-[11px] sm:text-xs text-on-surface-variant mb-1 font-semibold">Pengunjung Hari Ini</p>
-                    <p class="font-display-lg text-2xl sm:text-3xl font-black text-emerald-700">{{ todayAttendanceCount }}</p>
-                    <span class="text-[10px] sm:text-[11px] text-emerald-700 font-bold mt-1 inline-flex items-center gap-0.5">
+                    <p class="font-display-lg text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ todayAttendanceCount }}</p>
+                    <span class="text-[10px] sm:text-[11px] text-emerald-700 dark:text-emerald-300 font-bold mt-1 inline-flex items-center gap-0.5">
                       <span class="material-symbols-outlined text-xs">co_present</span> Presensi Kiosk
                     </span>
                   </div>
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300 flex items-center justify-center font-bold shadow-xs shrink-0">
                     <span class="material-symbols-outlined text-xl sm:text-2xl">badge</span>
                   </div>
                 </div>
@@ -657,13 +657,13 @@
                       </td>
                       <td class="p-4 font-mono font-bold text-on-surface">{{ user.nim || user.nidn || '-' }}</td>
                       <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase" :class="user.role === 'admin' ? 'bg-purple-100 text-purple-900 border border-purple-300' : 'bg-blue-100 text-blue-900 border border-blue-300'">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase" :class="user.role === 'admin' ? 'bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-800' : 'bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800'">
                           {{ user.role || 'Mahasiswa' }}
                         </span>
                       </td>
                       <td class="p-4 text-on-surface-variant font-medium">{{ user.prodi || 'STAH DNJ' }}</td>
                       <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold" :class="user.bebas_pustaka ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold" :class="user.bebas_pustaka ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300'">
                           {{ user.bebas_pustaka ? 'Bebas Pustaka' : 'Aktif Peminjam' }}
                         </span>
                       </td>
@@ -1814,7 +1814,7 @@ const loadAdminData = async (manual = false) => {
 
   // STEP 2: Fetch fresh data from Realtime API
   try {
-    const [profileRes, booksRes, loansRes, usersRes, attRes, catRes, actRes, resRes, staffStatusRes] = await Promise.all([
+    const [profileRes, booksRes, loansRes, usersRes, attRes, catRes, actRes, resRes, staffStatusRes, settingsRes] = await Promise.all([
       getProfile().catch(() => null),
       getBooks({ per_page: 1000, limit: 1000, all: 1 }).catch(() => null),
       getLoans().catch(() => null),
@@ -1823,8 +1823,13 @@ const loadAdminData = async (manual = false) => {
       getCategories().catch(() => null),
       getRecentActivities().catch(() => null),
       getReservations(false).catch(() => null),
-      getStaffStatus().catch(() => null)
+      getStaffStatus().catch(() => null),
+      getSettings().catch(() => null)
     ]);
+
+    if (settingsRes?.data) {
+      Object.assign(siteSettingsForm, settingsRes.data);
+    }
 
     if (staffStatusRes && typeof staffStatusRes.is_online === 'boolean') {
       isStaffOnline.value = staffStatusRes.is_online;

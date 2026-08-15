@@ -269,7 +269,7 @@
                     <span v-if="getBookCategoryName(book)" class="inline-block text-[10px] font-bold uppercase tracking-wider text-secondary bg-secondary-fixed/80 px-2 py-0.5 rounded-md">
                       {{ getBookCategoryName(book) }}
                     </span>
-                    <span v-if="getBookDdcCode(book)" class="inline-block font-mono text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded-md border border-amber-200" title="Kode DDC (3 Angka)">
+                    <span v-if="getBookDdcCode(book)" class="inline-block font-mono text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded-md border border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800" title="Kode DDC (3 Angka)">
                       DDC {{ getBookDdcCode(book) }}
                     </span>
                   </div>
@@ -397,7 +397,7 @@
                     <span class="text-[10px] font-bold uppercase text-secondary bg-secondary-fixed px-2 py-0.5 rounded inline-block">
                       {{ getBookCategoryName(book) ? `${getBookCategoryName(book)} • ` : '' }}{{ book.tahun_terbit || '2021' }}
                     </span>
-                    <span v-if="getBookDdcCode(book)" class="font-mono text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 inline-block" title="Kode DDC (3 Angka)">
+                    <span v-if="getBookDdcCode(book)" class="font-mono text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800 inline-block" title="Kode DDC (3 Angka)">
                       DDC {{ getBookDdcCode(book) }}
                     </span>
                   </div>

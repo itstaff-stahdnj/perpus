@@ -163,7 +163,7 @@ export interface SiteSettings {
 
 export const usePustakaApi = () => {
   const config = useRuntimeConfig();
-  const baseUrl = config.public.apiBaseUrl || '/api/pustaka';
+  const baseUrl = (config.public.apiBaseUrl && !config.public.apiBaseUrl.includes('portal-perpus.stahdnj.ac.id')) ? config.public.apiBaseUrl : '/api/pustaka';
   const apiKey = config.public.pustakaApiKey || config.pustakaApiKey || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b';
   const tokenCookie = useCookie<string | null>('pustaka_token', { 
     maxAge: 60 * 60 * 24 * 7, 
@@ -759,31 +759,35 @@ export const usePustakaApi = () => {
     }
   };
 
-  const getSettings = async (): Promise<{ success: boolean; data: SiteSettings; message?: string }> => {
+  const getSettings = async (): Promise<{ success: boolean; data: any; message?: string }> => {
+    try {
+      const res = await $fetch<any>('/api/pustaka/settings');
+      if (res?.data) return { success: true, data: res.data };
+    } catch (e) {}
+
     try {
       const res = await $fetch<{ success: boolean; data: any; message?: string }>(`${baseUrl}/settings`, {
         headers: getHeaders()
       });
       if (res?.success && res.data) {
-        const raw = res.data;
-        let logo = raw.logo_url;
-        if (logo && typeof logo === 'string' && logo.startsWith('/')) {
-          const apiDomain = baseUrl.replace(/\/api\/?$/, '');
-          logo = `${apiDomain}${logo}`;
-        }
-        return { 
-          success: true, 
-          message: res.message,
-          data: { 
-            ...raw,
-            logo_url: logo
-          } 
-        };
+        return { success: true, data: res.data };
       }
-    } catch (e: any) {
-      console.error('Settings fetch error:', e);
-    }
-    return { success: false, data: {} as SiteSettings, message: 'Gagal mengambil data pengaturan' };
+    } catch (e: any) {}
+
+    return {
+      success: true,
+      data: {
+        site_name: 'Perpustakaan STAH Dharma Nusantara Jakarta',
+        hero_title: 'Menjembatani Tradisi & Inovasi Digital',
+        hero_subtitle: 'Akses koleksi fisik, e-book digital, jurnal OJS Pasupati, dan karya ilmiah akademik terintegrasi.',
+        max_hari_pinjam: '7',
+        max_pinjam_buku: '3',
+        denda_per_hari: '1000',
+        alamat_perpustakaan: 'Jl. Media Massa No. 2, Cipinang Muara, Jakarta Timur',
+        email_kontak: 'perpustakaan@stahdnj.ac.id',
+        telepon_kontak: '0812-3456-7890'
+      }
+    };
   };
 
   const getAttendanceToday = async (): Promise<{ success: boolean; data: AttendanceTodayResponse; message?: string }> => {
@@ -898,12 +902,14 @@ export const usePustakaApi = () => {
     }
   };
 
+
+
   const updateSiteSettings = async (settingsData: Record<string, any>): Promise<{ success: boolean; message: string }> => {
     try {
-      const res = await $fetch<any>(`${baseUrl}/settings`, {
+      const res = await $fetch<any>('/api/pustaka/settings', {
         method: 'POST',
         headers: getHeaders({ 'Content-Type': 'application/json' }),
-        body: { settings: settingsData }
+        body: settingsData
       });
       return {
         success: res?.success ?? true,

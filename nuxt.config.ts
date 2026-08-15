@@ -140,7 +140,7 @@ export default defineNuxtConfig({
     kavitaBaseUrl: process.env.KAVITA_BASE_URL || 'http://localhost:5000',
     kavitaApiKey: process.env.KAVITA_API_KEY || '',
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://portal-perpus.stahdnj.ac.id/api',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '/api/pustaka',
       pustakaApiKey: process.env.NUXT_PUBLIC_PUSTAKA_API_KEY || 'stah_lib_7f3e9a1b8c2d4e6f5a0b9c8d7e6f5a4b',
       campusLat: process.env.NUXT_PUBLIC_CAMPUS_LAT || '-6.255432',
       campusLng: process.env.NUXT_PUBLIC_CAMPUS_LNG || '106.90898',

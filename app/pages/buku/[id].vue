@@ -379,6 +379,47 @@
               <p class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold pt-0.5">📍 Lokasi Rak: {{ book?.lokasi_rak || 'Koleksi Utama Perpustakaan STAH DNJ' }}</p>
             </div>
 
+            <!-- Indikator Status Verifikasi Geo-Lokasi GPS Area Kampus STAH DNJ -->
+            <div 
+              class="p-3.5 rounded-2xl border text-xs transition-all space-y-1.5"
+              :class="isInsideCampus 
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300' 
+                : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-300'"
+            >
+              <div class="flex items-center justify-between font-bold">
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-base" :class="isInsideCampus ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
+                    {{ isInsideCampus ? 'verified' : 'location_searching' }}
+                  </span>
+                  <span>{{ isInsideCampus ? 'Area Kampus STAH DNJ Terverifikasi' : 'Verifikasi Geo-Lokasi GPS Kampus' }}</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="isInsideCampus ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100' : 'bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-100'">
+                  {{ isInsideCampus ? '🟢 GPS Kampus Aktif' : '🟡 Perlu GPS Kampus' }}
+                </span>
+              </div>
+
+              <p class="text-[11px] leading-relaxed text-slate-600 dark:text-zinc-300">
+                <template v-if="isInsideCampus">
+                  Lokasi Anda terverifikasi di area kampus. Layanan <strong>Pinjam Mandiri Langsung</strong> aktif!
+                </template>
+                <template v-else-if="userDistanceKm !== null">
+                  Terdeteksi <strong>{{ userDistanceKm }} km</strong> dari kampus STAH DNJ. Pengambilan buku dikonfirmasi berdasarkan jadwal kedatangan yang Anda tentukan di bawah.
+                </template>
+                <template v-else>
+                  Lokasi GPS diperlukan untuk memverifikasi area kampus STAH DNJ.
+                </template>
+              </p>
+
+              <button 
+                v-if="!isInsideCampus" 
+                @click="checkGeolocation" 
+                class="w-full mt-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+              >
+                <span class="material-symbols-outlined text-sm">my_location</span>
+                <span>Cek &amp; Verifikasi Geo-Lokasi GPS Saya</span>
+              </button>
+            </div>
+
             <!-- Schedule Pickup Input -->
             <div class="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl space-y-3 text-xs">
               <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black">
@@ -724,10 +765,11 @@ const openBorrowModal = () => {
     router.push('/login');
     return;
   }
+  checkGeolocation();
   showBorrowModal.value = true;
 };
 
-// 1. Handling Peminjaman Mandiri & Schedule Ambil Buku Fisik
+// 1. Handling Peminjaman Mandiri & Schedule Ambil Buku Fisik (Terkoneksi Geo-Lokasi Kampus)
 const handleSelfBorrow = async () => {
   if (!tokenCookie.value) {
     router.push('/login');
@@ -739,7 +781,11 @@ const handleSelfBorrow = async () => {
   try {
     const res = await selfBorrow(book.value.id, borrowDuration.value);
     showBorrowModal.value = false;
-    alert(`🎉 Peminjaman Buku Fisik Berhasil!\n\n📅 Jadwal Rencana Pengambilan: ${pickupDate.value} Pukul ${pickupTime.value} WIB\n🏢 Petugas Pustaka akan menyiapkan buku fisik ini di Meja Sirkulasi perpustakaan STAH DNJ.`);
+    const isDirect = isInsideCampus.value === true;
+    const modeStatus = isDirect 
+      ? '🚀 Pinjam Mandiri Langsung (Area Kampus STAH DNJ Terverifikasi)' 
+      : '📅 Pengambilan Berjadual (Dalam Antrean Sirkulasi)';
+    alert(`🎉 Peminjaman Buku Fisik Berhasil!\n\nStatus: ${modeStatus}\n📅 Rencana Pengambilan: ${pickupDate.value} Pukul ${pickupTime.value} WIB\n🏢 Petugas Pustaka akan menyiapkan buku fisik ini di Meja Sirkulasi Perpustakaan STAH DNJ.`);
     if (res.success) {
       loadBookDetail();
     }
@@ -856,5 +902,6 @@ const handleReviewSubmit = async () => {
 onMounted(() => {
   loadCartFromStorage();
   loadBookDetail();
+  checkGeolocation();
 });
 </script>

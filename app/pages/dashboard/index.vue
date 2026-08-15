@@ -853,19 +853,19 @@ const formatDate = (dateStr: any) => {
 
 const getLoanUrgencyBadge = (loan: any) => {
   if (!loan.tanggal_kembali && !loan.due_date) {
-    return { label: 'Dipinjam Normal', class: 'bg-amber-100 text-amber-900 border border-amber-300' };
+    return { label: 'Dipinjam Normal', class: 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' };
   }
   const dueDate = new Date(loan.tanggal_kembali || loan.due_date).getTime();
   const now = Date.now();
   const diffDays = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return { label: `Terlambat ${Math.abs(diffDays)} Hari`, class: 'bg-rose-100 text-rose-900 border border-rose-300 animate-pulse' };
+    return { label: `Terlambat ${Math.abs(diffDays)} Hari`, class: 'bg-rose-100 text-rose-900 border border-rose-300 animate-pulse dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800' };
   }
   if (diffDays <= 2) {
-    return { label: `H-${diffDays} Segera Kembalikan`, class: 'bg-amber-100 text-amber-950 border border-amber-300' };
+    return { label: `H-${diffDays} Segera Kembalikan`, class: 'bg-amber-100 text-amber-950 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' };
   }
-  return { label: `Sisa ${diffDays} Hari`, class: 'bg-emerald-100 text-emerald-900 border border-emerald-300' };
+  return { label: `Sisa ${diffDays} Hari`, class: 'bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800' };
 };
 
 const getReservationBadge = (status?: string) => {

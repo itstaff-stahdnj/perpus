@@ -26,12 +26,12 @@
       <NuxtLink 
         v-if="isAdminStaff"
         to="/admin"
-        class="flex flex-col items-center justify-center gap-1 w-16 py-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95 text-amber-700 font-bold"
-        :class="isActive('/admin') ? 'text-amber-900 font-black' : 'text-amber-700 hover:text-amber-900'"
+        class="flex flex-col items-center justify-center gap-1 w-16 py-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95 text-amber-700 dark:text-amber-300 font-bold"
+        :class="isActive('/admin') ? 'text-amber-900 dark:text-amber-200 font-black' : 'text-amber-700 dark:text-amber-400 hover:text-amber-900'"
       >
         <div 
           class="flex items-center justify-center w-12 h-7 rounded-full transition-all duration-300"
-          :class="isActive('/admin') ? 'bg-amber-100 text-amber-900 scale-110 shadow-xs' : ''"
+          :class="isActive('/admin') ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 scale-110 shadow-xs' : ''"
         >
           <Icon 
             name="material-symbols:admin-panel-settings"
