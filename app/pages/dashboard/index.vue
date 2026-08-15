@@ -1,22 +1,22 @@
 <template>
-  <div class="bg-surface text-on-surface font-body-md min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row relative">
+  <div class="bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row relative transition-colors duration-300">
     
     <!-- Action Sheet Drawer / Backdrop (Desktop & Mobile) -->
     <div v-if="showMobileMenuSheet" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showMobileMenuSheet = false">
-      <div class="bg-white rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-200 animate-in slide-in-from-bottom duration-300 space-y-5 text-slate-800">
-        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden"></div>
-        <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+      <div class="bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in slide-in-from-bottom duration-300 space-y-5 text-slate-800 dark:text-zinc-100">
+        <div class="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto mb-1 sm:hidden"></div>
+        <div class="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-zinc-800">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden border border-primary/20 shrink-0">
+            <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold overflow-hidden border border-blue-400/20 shrink-0">
               <img v-if="userProfile?.avatar_url" :src="userProfile.avatar_url" alt="Avatar" class="w-full h-full object-cover"/>
               <span v-else class="material-symbols-outlined text-xl">person</span>
             </div>
             <div>
-              <h3 class="font-bold text-sm text-primary leading-tight">{{ userProfile?.name || 'Pemustaka' }}</h3>
-              <p class="text-[11px] text-slate-500 font-mono">NIM/NIDN: {{ userProfile?.nim || userProfile?.nidn || '-' }}</p>
+              <h3 class="font-bold text-sm text-slate-900 dark:text-white leading-tight">{{ userProfile?.name || 'Pemustaka' }}</h3>
+              <p class="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">NIM/NIDN: {{ userProfile?.nim || userProfile?.nidn || '-' }}</p>
             </div>
           </div>
-          <button @click="showMobileMenuSheet = false" class="p-1 text-slate-400 hover:text-slate-700">
+          <button @click="showMobileMenuSheet = false" class="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white">
             <span class="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
@@ -287,8 +287,54 @@
         <span class="text-xs font-semibold">{{ toastMessage }}</span>
       </div>
 
+      <!-- Horizontal Mobile Scroll Navigation Bar (Mobile Only) -->
+      <div class="md:hidden sticky top-16 z-40 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800 px-3 py-2.5 overflow-x-auto no-scrollbar flex items-center gap-2 shadow-xs">
+        <button 
+          @click="activeSection = 'loans'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeSection === 'loans' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'"
+        >
+          <span class="material-symbols-outlined text-sm">pending_actions</span>
+          <span>Pinjaman ({{ activeLoans.length }})</span>
+        </button>
+
+        <button 
+          @click="activeSection = 'reservations'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeSection === 'reservations' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'"
+        >
+          <span class="material-symbols-outlined text-sm">collections_bookmark</span>
+          <span>Reservasi ({{ myReservations.length }})</span>
+        </button>
+
+        <button 
+          @click="activeSection = 'history'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeSection === 'history' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'"
+        >
+          <span class="material-symbols-outlined text-sm">history_edu</span>
+          <span>Riwayat</span>
+        </button>
+
+        <button 
+          @click="showNotesModal = true" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+        >
+          <span class="material-symbols-outlined text-sm">edit_note</span>
+          <span>Catatan Baca</span>
+        </button>
+
+        <button 
+          @click="showQrModal = true" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500 text-slate-950 shadow-xs"
+        >
+          <span class="material-symbols-outlined text-sm">qr_code_2</span>
+          <span>QR Presensi</span>
+        </button>
+      </div>
+
       <!-- Scrollable Dashboard Content Area -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-surface pb-28 md:pb-8">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-zinc-950 pb-28 md:pb-8">
         <div class="max-w-[1280px] mx-auto space-y-8">
           
           <!-- Welcome Banner Section -->
@@ -303,6 +349,10 @@
               <p class="font-body-lg text-xs text-on-surface-variant">Pantau pinjaman aktif, reservasi, riwayat baca, dan perpanjang buku secara realtime.</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+              <button @click="triggerManualBackup" :disabled="backingUp" class="px-3.5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-extrabold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg" :class="backingUp ? 'animate-spin' : ''">cloud_upload</span>
+                <span>{{ backingUp ? 'Memproses Backup...' : 'Backup ke Laravel' }}</span>
+              </button>
               <button @click="loadDashboardData(true)" :disabled="refreshing" class="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-extrabold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95">
                 <span class="material-symbols-outlined text-lg" :class="refreshing ? 'animate-spin' : ''">sync</span>
                 <span>Sinkronkan Data</span>
@@ -742,9 +792,26 @@ const openReceiptModal = (loan: any) => {
   showReceiptModal.value = true;
 };
 const refreshing = ref(false);
+const backingUp = ref(false);
 const extendingId = ref<any>(null);
 const lastUpdatedTime = ref('');
 const toastMessage = ref('');
+
+const triggerManualBackup = async () => {
+  backingUp.value = true;
+  try {
+    const res = await fetch('/api/backup/push-laravel', { method: 'POST' }).then(r => r.json());
+    if (res?.success) {
+      triggerToast(res.message || '🟢 Backup D1 ke Laravel Berhasil!');
+    } else {
+      triggerToast('⚠️ ' + (res?.message || 'Gagal backup data.'));
+    }
+  } catch (e) {
+    triggerToast('❌ Gagal menghubungi server backup.');
+  } finally {
+    backingUp.value = false;
+  }
+};
 
 let pollTimer: any = null;
 

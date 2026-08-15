@@ -1,6 +1,6 @@
 <template>
-  <header class="fixed top-0 left-0 w-full z-50 shadow-[0px_4px_16px_rgba(10,58,90,0.06)] bg-surface/90 glass-header border-b border-outline-variant/30">
-    <div class="max-w-container-max mx-auto h-16 px-4 md:px-margin-desktop flex justify-between items-center gap-4">
+  <header class="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-white/85 dark:bg-zinc-900/85 border-b border-slate-200/80 dark:border-zinc-800/80 transition-colors duration-300 shadow-xs">
+    <div class="max-w-7xl mx-auto h-16 px-4 sm:px-6 flex justify-between items-center gap-4">
       
       <!-- Brand Logo & Site Title (Left) -->
       <div class="flex items-center gap-2.5 shrink-0 min-w-0">
@@ -12,52 +12,52 @@
             class="h-8 sm:h-9 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform" 
           />
           <div class="truncate">
-            <h1 class="font-headline-md text-xs sm:text-base md:text-lg font-bold text-primary truncate leading-tight group-hover:text-secondary transition-colors">
+            <h1 class="text-xs sm:text-base md:text-lg font-black text-slate-900 dark:text-white truncate leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {{ siteName }}
             </h1>
-            <p class="text-[9px] sm:text-[10px] text-on-surface-variant block truncate leading-tight mt-0.5">STAH Dharma Nusantara Jakarta</p>
+            <p class="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-400 block truncate leading-tight mt-0.5">STAH Dharma Nusantara Jakarta</p>
           </div>
         </NuxtLink>
       </div>
 
       <!-- Desktop Navigation Links (Center) -->
-      <nav class="hidden md:flex items-center gap-1 lg:gap-2 xl:gap-4 shrink">
+      <nav class="hidden md:flex items-center gap-1 lg:gap-2 shrink">
         <NuxtLink 
           to="/" 
-          class="font-label-md text-xs lg:text-sm font-semibold hover:bg-surface-container-high transition-colors px-2.5 lg:px-3.5 py-2 rounded-xl whitespace-nowrap"
-          :class="route.path === '/' ? 'text-secondary font-extrabold bg-secondary-fixed/50' : 'text-on-surface-variant hover:text-primary'"
+          class="text-xs lg:text-sm font-bold transition-all px-3 py-2 rounded-xl whitespace-nowrap"
+          :class="route.path === '/' ? 'text-blue-700 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 font-extrabold' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800'"
         >
           Beranda
         </NuxtLink>
         
         <NuxtLink 
           to="/buku" 
-          class="font-label-md text-xs lg:text-sm font-semibold hover:bg-surface-container-high transition-colors px-2.5 lg:px-3.5 py-2 rounded-xl whitespace-nowrap"
-          :class="route.path.startsWith('/buku') ? 'text-secondary font-extrabold bg-secondary-fixed/50' : 'text-on-surface-variant hover:text-primary'"
+          class="text-xs lg:text-sm font-bold transition-all px-3 py-2 rounded-xl whitespace-nowrap"
+          :class="route.path.startsWith('/buku') ? 'text-blue-700 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 font-extrabold' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800'"
         >
           Katalog Buku
         </NuxtLink>
         
         <NuxtLink 
           to="/layanan" 
-          class="font-label-md text-xs lg:text-sm font-semibold hover:bg-surface-container-high transition-colors px-2.5 lg:px-3.5 py-2 rounded-xl whitespace-nowrap"
-          :class="route.path.startsWith('/layanan') ? 'text-secondary font-extrabold bg-secondary-fixed/50' : 'text-on-surface-variant hover:text-primary'"
+          class="text-xs lg:text-sm font-bold transition-all px-3 py-2 rounded-xl whitespace-nowrap"
+          :class="route.path.startsWith('/layanan') ? 'text-blue-700 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 font-extrabold' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800'"
         >
           Layanan
         </NuxtLink>
 
         <NuxtLink 
           to="/berita" 
-          class="font-label-md text-xs lg:text-sm font-semibold hover:bg-surface-container-high transition-colors px-2.5 lg:px-3.5 py-2 rounded-xl whitespace-nowrap"
-          :class="route.path.startsWith('/berita') ? 'text-secondary font-extrabold bg-secondary-fixed/50' : 'text-on-surface-variant hover:text-primary'"
+          class="text-xs lg:text-sm font-bold transition-all px-3 py-2 rounded-xl whitespace-nowrap"
+          :class="route.path.startsWith('/berita') ? 'text-blue-700 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 font-extrabold' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800'"
         >
           Berita
         </NuxtLink>
         
         <NuxtLink 
           to="/tentang" 
-          class="font-label-md text-xs lg:text-sm font-semibold hover:bg-surface-container-high transition-colors px-2.5 lg:px-3.5 py-2 rounded-xl whitespace-nowrap"
-          :class="route.path.startsWith('/tentang') ? 'text-secondary font-extrabold bg-secondary-fixed/50' : 'text-on-surface-variant hover:text-primary'"
+          class="text-xs lg:text-sm font-bold transition-all px-3 py-2 rounded-xl whitespace-nowrap"
+          :class="route.path.startsWith('/tentang') ? 'text-blue-700 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400 font-extrabold' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800'"
         >
           Tentang Kami
         </NuxtLink>

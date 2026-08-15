@@ -455,69 +455,29 @@ export const usePustakaApi = () => {
     } catch (e) {}
   };
 
-  // Get Staff Online Status (30-Minute Inactivity Timeout)
+  // Get Staff Online Status (Berdasarkan Absensi Kehadiran Petugas/Admin Hari Ini di D1)
   const getStaffStatus = async (): Promise<{ success: boolean; is_online: boolean; online_count: number; message: string; online_staff: any[]; last_active_minutes?: number }> => {
-    // Inactivity Threshold: 30 Minutes (1,800,000 ms)
-    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
-
-    let localLastActive = 0;
-    if (process.client) {
-      const stored = localStorage.getItem('pustaka_staff_last_active');
-      if (stored) localLastActive = parseInt(stored, 10) || 0;
-    }
-
     try {
-      const res = await apiFetch<any>(`${baseUrl}/staff-status`, {
-        headers: getHeaders()
-      });
-
-      let backendOnline = res?.is_online ?? true;
-      let lastActiveTime = res?.last_active_at ? new Date(res.last_active_at).getTime() : localLastActive;
-      
-      if (!lastActiveTime && localLastActive) {
-        lastActiveTime = localLastActive;
+      const res = await $fetch<any>('/api/pustaka/staff-status');
+      if (res && typeof res.is_online === 'boolean') {
+        return {
+          success: true,
+          is_online: res.is_online,
+          online_count: res.online_count || 0,
+          message: res.message || (res.is_online ? '🟢 Petugas Pustaka Online (Absensi Hadir)' : '🔴 Petugas Pustaka Offline (Belum Absensi Hari Ini)'),
+          online_staff: res.online_staff || []
+        };
       }
+    } catch (e) {}
 
-      let isOnline = backendOnline;
-
-      // If last activity is older than 30 minutes, automatically mark OFFLINE
-      if (lastActiveTime > 0) {
-        const timeDiff = Date.now() - lastActiveTime;
-        if (timeDiff > INACTIVITY_TIMEOUT_MS) {
-          isOnline = false;
-        }
-      }
-
-      const minutesAgo = lastActiveTime > 0 ? Math.floor((Date.now() - lastActiveTime) / 60000) : 0;
-
-      return {
-        success: res?.success ?? true,
-        is_online: isOnline,
-        online_count: isOnline ? (res?.online_count || 1) : 0,
-        message: isOnline ? 'Petugas Pustaka Online (Siap Olah Reservasi)' : 'Petugas Pustaka Offline (Tidak aktif > 30 menit)',
-        online_staff: res?.online_staff || [],
-        last_active_minutes: minutesAgo
-      };
-    } catch (e) {
-      // Fallback check using local activity timestamp
-      let isOnline = true;
-      let minutesAgo = 0;
-      if (localLastActive > 0) {
-        const diff = Date.now() - localLastActive;
-        if (diff > INACTIVITY_TIMEOUT_MS) {
-          isOnline = false;
-        }
-        minutesAgo = Math.floor(diff / 60000);
-      }
-      return { 
-        success: true, 
-        is_online: isOnline, 
-        online_count: isOnline ? 1 : 0, 
-        message: isOnline ? 'Petugas Pustaka Online' : 'Petugas Pustaka Offline', 
-        online_staff: [],
-        last_active_minutes: minutesAgo
-      };
-    }
+    // Fallback default: OFFLINE if no attendance is logged today
+    return {
+      success: true,
+      is_online: false,
+      online_count: 0,
+      message: '🔴 Petugas Pustaka Offline (Belum Ada Absensi Petugas Hari Ini)',
+      online_staff: []
+    };
   };
 
   // Self Borrow (Peminjaman Mandiri)
@@ -827,16 +787,26 @@ export const usePustakaApi = () => {
   };
 
   const getAttendanceToday = async (): Promise<{ success: boolean; data: AttendanceTodayResponse; message?: string }> => {
+    try {
+      const res = await $fetch<any>('/api/pustaka/attendances/today');
+      if (res?.data) return { success: true, data: res.data };
+    } catch {}
     return await $fetch(`${baseUrl}/attendances/today`, {
       headers: getHeaders()
-    });
+    }).catch(() => ({ success: true, data: { total_hadir: 0, daftar_hadir: [], tanggal: new Date().toISOString().split('T')[0] } }));
   };
 
   const getAttendances = async (params?: Record<string, any>): Promise<{ success: boolean; data: AttendanceRecord[]; meta?: any; message?: string }> => {
+    try {
+      const res = await $fetch<any>('/api/pustaka/attendances');
+      if (res?.data?.daftar_hadir) {
+        return { success: true, data: res.data.daftar_hadir };
+      }
+    } catch {}
     return await $fetch(`${baseUrl}/attendances`, {
       headers: getHeaders(),
       params: { per_page: 1000, limit: 1000, ...params }
-    });
+    }).catch(() => ({ success: true, data: [] }));
   };
 
   const getUsers = async (params?: Record<string, any>): Promise<{ success: boolean; data: any[]; meta?: any; message?: string }> => {
@@ -858,7 +828,8 @@ export const usePustakaApi = () => {
 
   const submitAttendance = async (
     identifier: string, 
-    type?: 'NIM' | 'NIDN' | 'QR'
+    type?: 'NIM' | 'NIDN' | 'QR',
+    statusPresensi: 'masuk' | 'keluar' = 'masuk'
   ): Promise<{ success: boolean; message: string; data?: AttendanceRecord }> => {
     try {
       const cleanId = identifier.trim();
@@ -866,21 +837,23 @@ export const usePustakaApi = () => {
         qr_token: cleanId,
         nim: cleanId,
         nidn: cleanId,
-        type: type || 'NIM'
+        identifier: cleanId,
+        type: type || 'NIM',
+        status_presensi: statusPresensi
       };
 
-      const res = await $fetch<{ success: boolean; message: string; data?: any }>(`${baseUrl}/attendances`, {
+      // 1. Presensi via Cloudflare D1 Database (Sangat Cepat & Responsif)
+      const res = await $fetch<{ success: boolean; message: string; data?: any }>('/api/pustaka/attendances', {
         method: 'POST',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
         body
       });
       return {
-        success: res?.success ?? false,
-        message: res?.message || 'Presensi kedatangan berhasil dicatat.',
+        success: res?.success ?? true,
+        message: res?.message || '🎉 Presensi kedatangan berhasil dicatat di Database D1!',
         data: res?.data
       };
     } catch (e: any) {
-      const errorMsg = e?.data?.message || e?.message || 'Gagal mencatat presensi. NIM/NIDN/QR Token tidak ditemukan.';
+      const errorMsg = e?.data?.message || e?.message || 'Gagal mencatat presensi.';
       return {
         success: false,
         message: errorMsg
@@ -920,9 +893,27 @@ export const usePustakaApi = () => {
         method: 'DELETE',
         headers: getHeaders()
       });
-      return { success: res?.success ?? true, message: res?.message || 'Buku berhasil dihapus!' };
     } catch (e: any) {
       return { success: false, message: e?.data?.message || e?.message || 'Gagal menghapus buku' };
+    }
+  };
+
+  const updateSiteSettings = async (settingsData: Record<string, any>): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await $fetch<any>(`${baseUrl}/settings`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: { settings: settingsData }
+      });
+      return {
+        success: res?.success ?? true,
+        message: res?.message || '🎉 Pengaturan website berhasil disimpan ke Database D1!'
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        message: e?.data?.message || e?.message || 'Gagal menyimpan pengaturan ke database D1'
+      };
     }
   };
 
@@ -963,6 +954,7 @@ export const usePustakaApi = () => {
     getTestimonials,
     createTestimonial,
     getSettings,
+    updateSiteSettings,
     getAttendanceToday,
     getAttendances,
     getUsers,

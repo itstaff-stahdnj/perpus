@@ -2,59 +2,66 @@
   <div class="min-h-screen bg-surface text-on-surface flex flex-col font-sans">
     <!-- Main Content -->
     <main class="flex-1">
-      <!-- Hero Section -->
-      <section id="beranda" class="relative min-h-[460px] sm:min-h-[520px] md:min-h-[580px] w-full flex flex-col justify-center items-center overflow-hidden py-12 sm:py-16 md:py-20">
-        <div class="absolute inset-0 bg-gradient-to-b from-primary/75 via-primary/55 to-primary/85 z-10"></div>
-        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] hover:scale-105" 
-             :style="{ backgroundImage: `url('${siteSettings?.hero_bg_image || heroDefaultBg}')` }"></div>
+      <!-- Hero Section (Premium Vibrant Navy & Gold Accent) -->
+      <section id="beranda" class="relative min-h-[500px] sm:min-h-[560px] md:min-h-[620px] w-full flex flex-col justify-center items-center overflow-hidden py-14 sm:py-20">
+        <!-- Deep Navy Radial Glow Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-br from-[#001428] via-[#00243c] to-[#08131e] z-10 opacity-95"></div>
+        <div class="absolute inset-0 opacity-15 z-10 pointer-events-none" style="background-image: radial-gradient(#fbbf24 1px, transparent 1px); background-size: 28px 28px;"></div>
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl z-10"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl z-10"></div>
         
-        <div class="relative z-20 text-center px-4 max-w-4xl w-full mx-auto">
-          <h2 class="text-2xl sm:text-3xl md:text-5xl text-white mb-3 sm:mb-4 drop-shadow-lg font-extrabold tracking-tight leading-tight">
-            {{ siteSettings?.hero_title || 'Menjembatani Tradisi dan Inovasi' }}
+        <div class="relative z-20 text-center px-4 max-w-4xl w-full mx-auto space-y-6">
+          <!-- Top Glowing Pill Badge -->
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-extrabold tracking-wider uppercase backdrop-blur-md shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            <span>📖 Perpustakaan STAH Dharma Nusantara Jakarta</span>
+          </div>
+
+          <h2 class="text-3xl sm:text-4xl md:text-6xl text-white font-black tracking-tight leading-tight drop-shadow-md">
+            {{ siteSettings?.hero_title || 'Menjembatani Tradisi & Inovasi Digital' }}
           </h2>
-          <p class="text-xs sm:text-base md:text-lg text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed font-normal">
-            {{ siteSettings?.hero_subtitle || 'Akses koleksi fisik dan digital terlengkap untuk mendukung riset dan pembelajaran di lingkungan STAH Dharma Nusantara Jakarta.' }}
+          <p class="text-xs sm:text-base md:text-lg text-slate-200/90 max-w-2xl mx-auto leading-relaxed font-medium">
+            {{ siteSettings?.hero_subtitle || 'Akses koleksi fisik, e-book digital, jurnal OJS Pasupati, dan karya ilmiah akademik terintegrasi.' }}
           </p>
 
           <!-- Search Source Toggle -->
-          <!-- Search Category Switcher -->
-          <div class="flex flex-wrap justify-center items-center gap-2 mb-4">
+          <div class="flex flex-wrap justify-center items-center gap-2 pt-2">
             <button 
-              class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
-              :class="searchSource === 'katalog' ? 'bg-secondary text-white shadow-md' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-xs'"
+              class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+              :class="searchSource === 'katalog' ? 'bg-amber-400 text-slate-950 shadow-lg font-black scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10'"
               @click="searchSource = 'katalog'"
             >
-              <span class="material-symbols-outlined text-sm">menu_book</span>
+              <span class="material-symbols-outlined text-base">menu_book</span>
               <span>Katalog Buku</span>
             </button>
             <button 
-              class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
-              :class="searchSource === 'pasupati' ? 'bg-amber-500 text-white shadow-md' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-xs'"
+              class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+              :class="searchSource === 'pasupati' ? 'bg-amber-400 text-slate-950 shadow-lg font-black scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10'"
               @click="searchSource = 'pasupati'"
             >
-              <span class="material-symbols-outlined text-sm">article</span>
+              <span class="material-symbols-outlined text-base">article</span>
               <span>📜 OJS Jurnal Pasupati</span>
             </button>
             <button 
-              class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
-              :class="searchSource === 'repository' ? 'bg-secondary text-white shadow-md' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-xs'"
+              class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+              :class="searchSource === 'repository' ? 'bg-amber-400 text-slate-950 shadow-lg font-black scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10'"
               @click="searchSource = 'repository'"
             >
-              <span class="material-symbols-outlined text-sm">database</span>
+              <span class="material-symbols-outlined text-base">database</span>
               <span>Repository STAH</span>
             </button>
           </div>
 
-          <!-- Search Box Input -->
-          <div class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center gap-2 max-w-2xl mx-auto border border-white/20 transition-all focus-within:ring-2 focus-within:ring-secondary">
-            <div class="flex-1 flex items-center gap-2.5 px-3 sm:px-4 w-full">
-              <span class="material-symbols-outlined text-slate-400 shrink-0 text-xl">
+          <!-- Search Box Input (Modern Glassmorphism) -->
+          <div class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl p-2 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center gap-2 max-w-2xl mx-auto border border-white/30 dark:border-zinc-700 transition-all focus-within:ring-4 focus-within:ring-amber-400/40">
+            <div class="flex-1 flex items-center gap-3 px-3 sm:px-4 w-full">
+              <span class="material-symbols-outlined text-amber-500 shrink-0 text-2xl">
                 {{ searchSource === 'katalog' ? 'search' : 'travel_explore' }}
               </span>
               <input 
                 v-model="searchQuery" 
                 type="text" 
-                class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium py-2 text-xs sm:text-sm outline-none placeholder:text-slate-400" 
+                class="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white font-bold py-2.5 text-xs sm:text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-zinc-500" 
                 :placeholder="
                   searchSource === 'pasupati' ? 'Cari artikel di OJS Jurnal Pasupati STAH DNJ...' :
                   searchSource === 'repository' ? 'Cari karya ilmiah di repository.stahdnj.ac.id...' :
@@ -65,15 +72,15 @@
               <VoiceSearchButton @result="(txt) => { searchQuery = txt; handleSearch(); }" />
             </div>
             <button 
-              class="bg-secondary text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl hover:bg-secondary/90 transition-all active:scale-95 flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 shadow-sm cursor-pointer"
+              class="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm px-6 py-3 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto shrink-0 shadow-lg cursor-pointer"
               @click="handleSearch"
             >
-              <span class="material-symbols-outlined text-base sm:text-lg">
+              <span class="material-symbols-outlined text-lg">
                 {{ searchSource === 'katalog' ? 'search' : 'open_in_new' }}
               </span>
               <span>
                 {{ 
-                  searchSource === 'pasupati' ? 'Cari di OJS Pasupati' :
+                  searchSource === 'pasupati' ? 'Cari di Pasupati' :
                   searchSource === 'repository' ? 'Cari di Repository' :
                   'Cari Koleksi' 
                 }}
@@ -84,38 +91,38 @@
       </section>
 
       <!-- Quick Access Cards -->
-      <section class="max-w-container-max mx-auto mt-6 sm:-mt-10 md:-mt-16 relative z-30 px-4 md:px-margin-desktop">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-gutter">
-          <NuxtLink to="/buku" class="bg-white p-3.5 sm:p-5 md:p-6 rounded-2xl shadow-[0px_4px_16px_rgba(10,58,90,0.06)] border border-outline-variant/60 hover:shadow-xl transition-all group cursor-pointer block">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-primary-container text-primary-fixed rounded-xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+      <section class="max-w-7xl mx-auto mt-6 sm:-mt-10 md:-mt-16 relative z-30 px-4 sm:px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          <NuxtLink to="/buku" class="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-200/80 dark:border-zinc-800 group cursor-pointer block">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-2xl sm:text-3xl">menu_book</span>
             </div>
-            <h3 class="font-bold text-xs sm:text-sm md:text-base text-primary mb-0.5">Katalog Buku</h3>
-            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">{{ books?.length || 0 }} Buku Terdaftar</p>
+            <h3 class="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-white mb-0.5">Katalog Buku</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-1">{{ books?.length || 0 }} Buku Terdaftar</p>
           </NuxtLink>
 
-          <NuxtLink to="/buku" class="bg-white p-3.5 sm:p-5 md:p-6 rounded-2xl shadow-[0px_4px_16px_rgba(10,58,90,0.06)] border border-outline-variant/60 hover:shadow-xl transition-all group cursor-pointer block">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-secondary-container text-on-secondary-container rounded-xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <NuxtLink to="/buku" class="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-200/80 dark:border-zinc-800 group cursor-pointer block">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-2xl sm:text-3xl">category</span>
             </div>
-            <h3 class="font-bold text-xs sm:text-sm md:text-base text-primary mb-0.5">Kategori Pustaka</h3>
-            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">{{ categories?.length || 0 }} Kategori Aktif</p>
+            <h3 class="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-white mb-0.5">Kategori Pustaka</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-1">{{ categories?.length || 0 }} Kategori Aktif</p>
           </NuxtLink>
 
-          <NuxtLink to="/layanan" class="bg-white p-3.5 sm:p-5 md:p-6 rounded-2xl shadow-[0px_4px_16px_rgba(10,58,90,0.06)] border border-outline-variant/60 hover:shadow-xl transition-all group cursor-pointer block">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-surface-container-high text-primary rounded-xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <NuxtLink to="/layanan" class="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-200/80 dark:border-zinc-800 group cursor-pointer block">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-2xl sm:text-3xl">meeting_room</span>
             </div>
-            <h3 class="font-bold text-xs sm:text-sm md:text-base text-primary mb-0.5">Ruangan Digital</h3>
-            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">Reservasi area kolaborasi</p>
+            <h3 class="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-white mb-0.5">Ruangan Digital</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-1">Reservasi area kolaborasi</p>
           </NuxtLink>
 
-          <NuxtLink to="/layanan" class="bg-white p-3.5 sm:p-5 md:p-6 rounded-2xl shadow-[0px_4px_16px_rgba(10,58,90,0.06)] border border-outline-variant/60 hover:shadow-xl transition-all group cursor-pointer block">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-error-container text-on-error-container rounded-xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <NuxtLink to="/layanan" class="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-200/80 dark:border-zinc-800 group cursor-pointer block">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-2xl sm:text-3xl">description</span>
             </div>
-            <h3 class="font-bold text-xs sm:text-sm md:text-base text-primary mb-0.5">Bebas Pustaka</h3>
-            <p class="text-[11px] sm:text-xs text-on-surface-variant line-clamp-1">Layanan administrasi akhir</p>
+            <h3 class="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-white mb-0.5">Bebas Pustaka</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-1">Layanan administrasi akhir</p>
           </NuxtLink>
         </div>
       </section>

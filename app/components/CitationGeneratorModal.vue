@@ -138,20 +138,41 @@ const generateBibtex = () => {
   return `@book{${citeKey.toLowerCase()},\n  author = {${bookAuthor.value}},\n  title = {${bookTitle.value}},\n  publisher = {${bookPublisher.value}},\n  year = {${bookYear.value}},\n  isbn = {${bookIsbn.value}}\n}`;
 };
 
-const copyCitation = () => {
-  if (process.client) {
-    navigator.clipboard.writeText(generatedCitation.value);
-    copied.value = true;
-    setTimeout(() => copied.value = false, 2000);
+const copyToClipboardFallback = (text: string) => {
+  if (!process.client) return;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      copied.value = true;
+      setTimeout(() => copied.value = false, 2000);
+    }).catch(() => fallbackExecCopy(text));
+  } else {
+    fallbackExecCopy(text);
   }
 };
 
-const copyBibtex = () => {
-  if (process.client) {
-    navigator.clipboard.writeText(generateBibtex());
+const fallbackExecCopy = (text: string) => {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-999999px';
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand('copy');
     copied.value = true;
     setTimeout(() => copied.value = false, 2000);
+  } catch (err) {
+    console.error('Copy fallback failed:', err);
   }
+  document.body.removeChild(textArea);
+};
+
+const copyCitation = () => {
+  copyToClipboardFallback(generatedCitation.value);
+};
+
+const copyBibtex = () => {
+  copyToClipboardFallback(generateBibtex());
 };
 
 const close = () => {

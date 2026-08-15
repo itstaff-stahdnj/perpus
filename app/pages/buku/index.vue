@@ -1,22 +1,22 @@
 <template>
-  <div class="min-h-screen bg-surface text-on-surface flex flex-col font-sans">
+  <div class="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col font-sans transition-colors duration-300">
     <!-- Main Content -->
-    <main class="flex-1 max-w-container-max w-full mx-auto px-4 md:px-margin-desktop py-8 md:py-12">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 md:py-12">
       <!-- Breadcrumb -->
-      <nav class="flex items-center gap-2 text-on-surface-variant font-label-md text-xs sm:text-sm mb-6">
-        <NuxtLink to="/" class="hover:text-primary transition-colors">Beranda</NuxtLink>
+      <nav class="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-xs sm:text-sm mb-6">
+        <NuxtLink to="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Beranda</NuxtLink>
         <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-        <span class="text-primary font-bold">Katalog Pustaka</span>
+        <span class="text-slate-900 dark:text-white font-bold">Katalog Pustaka</span>
       </nav>
 
       <!-- Main Layout: Filters & Content -->
-      <div class="flex flex-col lg:flex-row gap-gutter">
+      <div class="flex flex-col lg:flex-row gap-6">
         <!-- Sidebar Filter (Desktop) -->
         <aside class="w-full lg:w-72 shrink-0 space-y-6 hidden lg:block">
-          <div class="bg-white p-5 rounded-2xl border border-outline-variant/60 shadow-xs space-y-5">
-            <div class="flex items-center justify-between border-b border-outline-variant pb-3">
-              <h3 class="font-bold text-primary text-sm flex items-center gap-2">
-                <span class="material-symbols-outlined text-base">filter_alt</span>
+          <div class="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-sm space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+              <h3 class="font-black text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                <span class="material-symbols-outlined text-base text-blue-600 dark:text-blue-400">filter_alt</span>
                 <span>Filter Katalog</span>
               </h3>
               <button 
@@ -107,7 +107,7 @@
         <!-- Right Content Section -->
         <section class="flex-1 min-w-0">
           <!-- Top Control Bar -->
-          <div class="bg-white p-4 rounded-2xl border border-outline-variant/60 shadow-xs mb-6 space-y-4">
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-sm mb-6 space-y-4">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
               <!-- Search Box -->
               <div class="relative w-full sm:w-80 md:w-96">
@@ -116,7 +116,7 @@
                   v-model="searchQuery" 
                   type="text" 
                   placeholder="Cari judul buku, penulis, atau ISBN..."
-                  class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs sm:text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
+                  class="w-full pl-10 pr-10 py-2 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-blue-600 transition-colors"
                 />
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button v-if="searchQuery" @click="searchQuery = ''" class="text-slate-400 hover:text-slate-600 p-1">
@@ -129,7 +129,7 @@
               <!-- Controls: View Mode & Sorting & Mobile Filter Toggle -->
               <div class="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
                 <button 
-                  class="lg:hidden px-3.5 py-2 bg-surface-container-high text-primary rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                  class="lg:hidden px-3.5 py-2 bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                   @click="showMobileFilterModal = true"
                 >
                   <span class="material-symbols-outlined text-base">filter_alt</span>
@@ -137,11 +137,11 @@
                 </button>
 
                 <!-- Sorting Select -->
-                <div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <span class="hidden sm:inline">Urutkan:</span>
+                <div class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
+                  <span class="hidden sm:inline font-bold">Urutkan:</span>
                   <select 
                     v-model="sortBy" 
-                    class="bg-surface-container-low border border-outline-variant rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary cursor-pointer font-medium"
+                    class="bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-blue-600 cursor-pointer font-bold"
                   >
                     <option value="default">Default</option>
                     <option value="judul-asc">Judul (A - Z)</option>

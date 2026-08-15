@@ -20,13 +20,20 @@
           </div>
 
           <!-- Flip Card Container (Perspective 3D) -->
-          <div class="perspective-1000 w-full aspect-[1.586/1] relative cursor-pointer group" @click="isFlipped = !isFlipped">
+          <div class="w-full aspect-[1.586/1] relative cursor-pointer group" style="perspective: 1000px;" @click="isFlipped = !isFlipped">
             <div 
-              class="w-full h-full duration-700 preserve-3d transition-transform relative rounded-2xl shadow-xl border border-white/20"
-              :class="isFlipped ? 'rotate-y-180' : ''"
+              class="w-full h-full duration-700 transition-transform relative rounded-2xl shadow-xl border border-white/20"
+              :style="{
+                transformStyle: 'preserve-3d',
+                WebkitTransformStyle: 'preserve-3d',
+                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+              }"
             >
               <!-- FRONT SIDE OF CARD -->
-              <div class="absolute inset-0 backface-hidden rounded-2xl p-5 bg-gradient-to-br from-slate-900 via-primary to-slate-950 text-white flex flex-col justify-between overflow-hidden shadow-2xl border border-secondary/30">
+              <div 
+                class="absolute inset-0 rounded-2xl p-5 bg-gradient-to-br from-slate-900 via-primary to-slate-950 text-white flex flex-col justify-between overflow-hidden shadow-2xl border border-secondary/30"
+                style="backface-visibility: hidden; -webkit-backface-visibility: hidden;"
+              >
                 <!-- Background Pattern -->
                 <div class="absolute inset-0 opacity-15 pointer-events-none" style="background-image: radial-gradient(#d97706 1px, transparent 1px); background-size: 16px 16px;"></div>
                 <div class="absolute -top-12 -right-12 w-40 h-40 bg-secondary/20 rounded-full blur-2xl"></div>
@@ -73,7 +80,10 @@
               </div>
 
               <!-- BACK SIDE OF CARD -->
-              <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-5 bg-gradient-to-br from-zinc-950 via-slate-900 to-zinc-900 text-white flex flex-col justify-between border border-zinc-700 shadow-2xl">
+              <div 
+                class="absolute inset-0 rounded-2xl p-5 bg-gradient-to-br from-zinc-950 via-slate-900 to-zinc-900 text-white flex flex-col justify-between border border-zinc-700 shadow-2xl"
+                style="backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: rotateY(180deg);"
+              >
                 <div>
                   <h4 class="font-extrabold text-xs text-amber-300 uppercase tracking-wider mb-2">SYARAT & KETENTUAN KARTU</h4>
                   <ul class="text-[10px] text-zinc-300 space-y-1 leading-relaxed list-disc list-inside">

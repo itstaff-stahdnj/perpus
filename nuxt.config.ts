@@ -41,7 +41,7 @@ export default defineNuxtConfig({
           id: 'tailwind-config',
           innerHTML: `
             tailwind.config = {
-                darkMode: "false",
+                darkMode: "class",
                 theme: {
                     extend: {
                         "colors": {

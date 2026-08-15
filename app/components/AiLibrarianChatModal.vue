@@ -1,16 +1,22 @@
 <template>
   <div>
-    <!-- Floating Trigger Button -->
+    <!-- Floating Trigger Button (Prominent Pill Badge) -->
     <button 
       @click="isOpen = !isOpen" 
-      class="fixed bottom-6 right-6 z-[99990] w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 via-primary to-indigo-700 hover:scale-110 active:scale-95 text-white shadow-2xl flex items-center justify-center transition-all cursor-pointer border-2 border-white/40"
-      title="Tanya Wayan AI - Pustakawan Digital"
+      class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[99990] h-12 sm:h-14 px-4 sm:px-5 rounded-full bg-gradient-to-r from-blue-600 via-primary to-indigo-800 hover:scale-105 active:scale-95 text-white shadow-2xl flex items-center gap-2.5 transition-all cursor-pointer border-2 border-white/50 group"
+      title="Tanya Wayan AI - Pustakawan Digital 24/7"
     >
-      <span class="material-symbols-outlined text-2xl animate-pulse" v-if="!isOpen">smart_toy</span>
-      <span class="material-symbols-outlined text-2xl" v-else>close</span>
+      <div class="relative flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl sm:text-3xl text-amber-300 animate-pulse" v-if="!isOpen">smart_toy</span>
+        <span class="material-symbols-outlined text-2xl sm:text-3xl" v-else>close</span>
+        <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900 animate-ping"></span>
+      </div>
 
-      <!-- Active Indicator Dot -->
-      <span class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-ping"></span>
+      <div v-if="!isOpen" class="flex flex-col items-start leading-tight text-left pr-1">
+        <span class="font-black text-xs sm:text-sm text-white tracking-wide">Tanya Wayan AI</span>
+        <span class="text-[9px] text-amber-300 font-bold uppercase tracking-wider hidden sm:block">Pustakawan Digital</span>
+      </div>
+      <span v-else class="font-extrabold text-xs sm:text-sm">Tutup</span>
     </button>
 
     <!-- Chat Modal Window -->

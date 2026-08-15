@@ -1,5 +1,5 @@
 <template>
-  <nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 shadow-[0_-4px_20px_rgba(10,37,64,0.08)]" style="padding-bottom: env(safe-area-inset-bottom);">
+  <nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-zinc-800 shadow-lg" style="padding-bottom: env(safe-area-inset-bottom);">
     <div class="flex items-center justify-around px-2 h-16 max-w-md mx-auto">
       <NuxtLink 
         v-for="item in navItems" 
@@ -7,12 +7,12 @@
         :to="item.to"
         class="flex flex-col items-center justify-center gap-1 w-16 py-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95"
         :class="isActive(item.to) 
-          ? 'text-primary font-black' 
-          : 'text-slate-500 hover:text-primary font-medium'"
+          ? 'text-blue-600 dark:text-blue-400 font-black' 
+          : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white font-medium'"
       >
         <div 
           class="flex items-center justify-center w-12 h-7 rounded-full transition-all duration-300"
-          :class="isActive(item.to) ? 'bg-primary/10 text-primary scale-110 shadow-xs' : ''"
+          :class="isActive(item.to) ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 scale-105 shadow-xs' : ''"
         >
           <Icon 
             :name="isActive(item.to) ? item.activeIcon : item.icon"

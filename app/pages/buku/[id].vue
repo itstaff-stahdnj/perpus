@@ -107,15 +107,15 @@
                 <span>Akses Digital / E-Book Online</span>
               </span>
 
-              <!-- Status Pustakawan / Kepala Pustaka Online (Facebook-Style) -->
+              <!-- Status Petugas Pustaka Online (Berdasarkan Absensi Kehadiran) -->
               <span 
                 v-if="!isEbook"
                 class="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 shadow-2xs transition-colors"
                 :class="isStaffOnline ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' : 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'"
-                :title="isStaffOnline ? 'Pustakawan / Kepala Pustaka sedang Online & siap memproses reservasi' : 'Pustakawan sedang Offline / Logout. Gunakan Pinjam Mandiri.'"
+                :title="isStaffOnline ? 'Petugas Perpustakaan telah hadir dalam absensi hari ini & siap memproses reservasi' : 'Petugas Perpustakaan belum tercatat absensi hari ini.'"
               >
                 <span class="w-2 h-2 rounded-full" :class="isStaffOnline ? 'bg-emerald-500 animate-ping' : 'bg-rose-500'"></span>
-                <span>{{ isStaffOnline ? '🟢 Petugas Pustaka Online (Siap Olah Reservasi)' : '🔴 Petugas Pustaka Offline (Gunakan Pinjam Mandiri)' }}</span>
+                <span>{{ isStaffOnline ? '🟢 Petugas Pustaka Online (Absensi Hadir)' : '🔴 Petugas Pustaka Offline (Belum Absensi Hari Ini)' }}</span>
               </span>
             </div>
 
@@ -221,43 +221,31 @@
               </NuxtLink>
             </div>
 
-            <!-- TOMBOL AKSI BUKU FISIK: PINJAM MANDIRI, RESERVASI, & TAMPUNG MULTI-BUKU (JIKA USER LOGIN) -->
+            <!-- TOMBOL AKSI BUKU FISIK: PINJAM BUKU FISIK & RESERVASI (JIKA USER LOGIN) -->
             <div v-else-if="tokenCookie" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
               
-              <!-- Tombol Pinjam Mandiri (Kondisional: Aktif hanya jika user berada DI DALAM KAMPUS via GPS / Wi-Fi) -->
+              <!-- Tombol Pinjam Buku Fisik (Aktif untuk semua koleksi buku fisik) -->
               <button 
-                v-if="isInsideCampus"
                 @click="openBorrowModal"
                 :disabled="availableCopiesCount === 0"
-                class="py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                title="Peminjaman Mandiri fisik langsung di rak perpustakaan STAH DNJ"
+                class="py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                title="Proses Peminjaman Buku Fisik STAH DNJ"
               >
                 <span>📖</span>
-                <span>Pinjam Mandiri (Di Kampus)</span>
+                <span>{{ availableCopiesCount === 0 ? 'Stok Habis / Dipinjam' : 'Pinjam Buku Fisik' }}</span>
               </button>
 
-              <!-- JIKA DI LUAR KAMPUS: PINJAM MANDIRI DISABLED (Klik untuk buka Pop-up GPS) -->
-              <button 
-                v-else
-                @click="openGpsModal"
-                class="py-3 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 font-extrabold text-[11px] border border-slate-300 dark:border-zinc-700 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
-                :title="`Anda berada ${userDistanceKm ? userDistanceKm + ' km ' : ''}di luar area kampus STAH DNJ. Klik untuk perbarui lokasi GPS.`"
-              >
-                <span class="material-symbols-outlined text-sm text-rose-500 shrink-0">location_off</span>
-                <span class="transition-all duration-300 truncate">🚫 Di Luar Kampus (Cek GPS)</span>
-              </button>
-
-              <!-- Tombol Reservasi Buku (Tersedia dari luar kampus / dalam kampus) -->
+              <!-- Tombol Reservasi Buku -->
               <button 
                 @click="handleReservation"
                 :disabled="submittingReservation || !isStaffOnline"
                 class="py-3 px-4 rounded-2xl font-extrabold text-xs shadow-lg active:scale-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 :class="isStaffOnline ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-amber-500/20' : 'bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed shadow-none'"
-                :title="isStaffOnline ? (isOutsideCampus ? 'Ajukan reservasi dari rumah/luar kampus agar ditarikkan petugas' : 'Ajukan reservasi ke Petugas Pustaka') : 'Petugas offline. Reservasi ditiadakan sementara.'"
+                :title="isStaffOnline ? 'Ajukan reservasi ke Petugas Pustaka' : 'Petugas offline. Reservasi ditiadakan sementara.'"
               >
                 <span>{{ isStaffOnline ? '⏳' : '🚫' }}</span>
                 <span>
-                  {{ submittingReservation ? 'Memproses...' : (isStaffOnline ? (isOutsideCampus ? 'Ajukan Reservasi (Luar Kampus)' : 'Ajukan Reservasi') : 'Reservasi Ditiadakan') }}
+                  {{ submittingReservation ? 'Memproses...' : (isStaffOnline ? 'Ajukan Reservasi' : 'Reservasi Ditiadakan') }}
                 </span>
               </button>
 
@@ -270,7 +258,6 @@
                 <span>🛒</span>
                 <span>{{ inCart ? 'Batal Tampung' : '📌 Tampung (Multi)' }}</span>
               </button>
-
             </div>
 
             <!-- JIKA USER BELUM LOGIN (BUKU FISIK): TAMPILKAN TOMBOL LOGIN SSO -->
@@ -374,39 +361,88 @@
       <CitationGeneratorModal v-model="showCitationModal" :book="book" />
       <ShelfLocationModal v-model="showShelfModal" :book="book" />
 
-      <!-- Single Borrow Modal -->
+      <!-- Single Borrow & Pickup Schedule Modal for Physical Books -->
       <Teleport to="body">
         <div v-if="showBorrowModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4" @click.self="showBorrowModal = false">
           <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-left border border-slate-200 dark:border-zinc-800 space-y-4">
-            <h3 class="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
-              <span>📖 Konfirmasi Pinjam Mandiri</span>
-            </h3>
+            <div class="flex items-center justify-between">
+              <h3 class="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                <span>📖 Pinjam Buku Fisik Perpustakaan</span>
+              </h3>
+              <button @click="showBorrowModal = false" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+            </div>
             
-            <div class="p-3 bg-slate-50 dark:bg-zinc-800 rounded-xl text-xs space-y-1">
-              <p class="font-bold text-slate-900 dark:text-white">{{ book?.judul }}</p>
-              <p class="text-slate-500 dark:text-zinc-400">{{ book?.penulis }}</p>
+            <div class="p-3 bg-slate-50 dark:bg-zinc-800/80 rounded-2xl border border-slate-200 dark:border-zinc-700/60 text-xs space-y-1">
+              <span class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-extrabold text-[10px] uppercase">Buku Fisik</span>
+              <p class="font-bold text-slate-900 dark:text-white pt-1">{{ book?.judul }}</p>
+              <p class="text-slate-500 dark:text-zinc-400">Penulis: {{ book?.penulis || 'STAH DNJ' }}</p>
+              <p class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold pt-0.5">📍 Lokasi Rak: {{ book?.lokasi_rak || 'Koleksi Utama Perpustakaan STAH DNJ' }}</p>
             </div>
 
-            <div class="space-y-2 text-xs">
-              <label class="block font-bold">Pilih Durasi Peminjaman:</label>
+            <!-- Schedule Pickup Input -->
+            <div class="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl space-y-3 text-xs">
+              <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black">
+                <span class="material-symbols-outlined text-base">event_available</span>
+                <span>Jadwal Pengambilan Buku Fisik</span>
+              </div>
+              <p class="text-slate-600 dark:text-zinc-300 text-[11px]">
+                Tentukan rencana tanggal & jam kedatangan Anda. Petugas Pustaka akan menyiapkan buku fisik ini di meja sirkulasi.
+              </p>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">Tanggal Ambil:</label>
+                  <input 
+                    v-model="pickupDate" 
+                    type="date" 
+                    class="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">Jam Ambil:</label>
+                  <select 
+                    v-model="pickupTime" 
+                    class="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                  >
+                    <option value="09:00">09.00 WIB (Pagi)</option>
+                    <option value="10:30">10.30 WIB (Pagi)</option>
+                    <option value="13:00">13.00 WIB (Siang)</option>
+                    <option value="15:00">15.00 WIB (Sore)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Duration Select -->
+            <div class="space-y-1.5 text-xs">
+              <label class="block font-bold text-slate-800 dark:text-zinc-200">Durasi Peminjaman Fisik:</label>
               <div class="grid grid-cols-3 gap-2">
                 <button 
                   v-for="d in [3, 5, 7]" 
                   :key="d"
                   @click="borrowDuration = d"
-                  class="py-2 rounded-xl font-bold border transition-colors cursor-pointer"
-                  :class="borrowDuration === d ? 'bg-primary text-white border-primary' : 'bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700'"
+                  class="py-2 rounded-xl font-bold border transition-colors cursor-pointer text-xs"
+                  :class="borrowDuration === d ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700'"
                 >
                   {{ d }} Hari
                 </button>
               </div>
             </div>
 
-            <div class="flex justify-end gap-2 pt-2">
-              <button @click="showBorrowModal = false" class="px-4 py-2 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold cursor-pointer">Batal</button>
-              <button @click="handleSelfBorrow" :disabled="submittingBorrow" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold cursor-pointer">
-                {{ submittingBorrow ? 'Memproses...' : 'Konfirmasi Pinjam' }}
+            <div class="flex items-center justify-between pt-2">
+              <button 
+                @click="showShelfModal = true" 
+                class="text-xs text-amber-600 dark:text-amber-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                title="Buka Denah Rak untuk Baca Langsung di Tempat"
+              >
+                <span>📍 Lihat Denah Rak (Baca di Tempat)</span>
               </button>
+              <div class="flex items-center gap-2">
+                <button @click="showBorrowModal = false" class="px-3.5 py-2 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold cursor-pointer">Batal</button>
+                <button @click="handleSelfBorrow" :disabled="submittingBorrow" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold cursor-pointer shadow-md">
+                  {{ submittingBorrow ? 'Memproses...' : 'Konfirmasi Pinjam' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -522,6 +558,8 @@ const bookClassification = computed(() => {
 const showBorrowModal = ref(false);
 const showPdfModal = ref(false);
 const borrowDuration = ref(7);
+const pickupDate = ref(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+const pickupTime = ref('10:00');
 const submittingBorrow = ref(false);
 const submittingReservation = ref(false);
 const showCartModal = ref(false);
@@ -689,7 +727,7 @@ const openBorrowModal = () => {
   showBorrowModal.value = true;
 };
 
-// 1. Handling Peminjaman Mandiri
+// 1. Handling Peminjaman Mandiri & Schedule Ambil Buku Fisik
 const handleSelfBorrow = async () => {
   if (!tokenCookie.value) {
     router.push('/login');
@@ -701,7 +739,7 @@ const handleSelfBorrow = async () => {
   try {
     const res = await selfBorrow(book.value.id, borrowDuration.value);
     showBorrowModal.value = false;
-    alert(res.message || '🎉 Peminjaman mandiri berhasil! Silakan periksa di menu Profil.');
+    alert(`🎉 Peminjaman Buku Fisik Berhasil!\n\n📅 Jadwal Rencana Pengambilan: ${pickupDate.value} Pukul ${pickupTime.value} WIB\n🏢 Petugas Pustaka akan menyiapkan buku fisik ini di Meja Sirkulasi perpustakaan STAH DNJ.`);
     if (res.success) {
       loadBookDetail();
     }

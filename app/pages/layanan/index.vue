@@ -18,32 +18,32 @@
       <section class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop -mt-10 sm:-mt-16 relative z-20 pb-16 sm:pb-24">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
           <!-- Peminjaman Buku -->
-          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-2xl flex flex-col justify-between h-full bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-sm">
             <div>
               <div class="flex justify-between items-start mb-6">
-                <div class="w-14 h-14 rounded-lg bg-secondary-container flex items-center justify-center">
-                  <span class="material-symbols-outlined text-on-secondary-container text-3xl">auto_stories</span>
+                <div class="w-14 h-14 rounded-xl bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-3xl">auto_stories</span>
                 </div>
-                <span class="bg-secondary-fixed text-on-secondary-fixed-variant px-3 py-1 rounded-full font-label-md text-caption font-bold">Populer</span>
+                <span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full text-xs font-bold">Populer</span>
               </div>
-              <h3 class="font-headline-md text-headline-md text-primary mb-3 font-bold">Peminjaman Buku</h3>
-              <p class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed">
+              <h3 class="text-xl text-slate-900 dark:text-white mb-3 font-black">Peminjaman Buku</h3>
+              <p class="text-sm text-slate-600 dark:text-zinc-400 mb-8 leading-relaxed">
                 Akses koleksi fisik yang mencakup naskah suci, literatur filsafat, hingga buku teks akademik terbaru dengan sistem sirkulasi yang mudah.
               </p>
             </div>
-            <NuxtLink to="/buku" class="w-full py-3 border-2 border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2 font-semibold">
+            <NuxtLink to="/buku" class="w-full py-3 border-2 border-slate-900 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl hover:bg-slate-900 hover:text-white dark:hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 font-bold cursor-pointer">
               Lihat Detail <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
             </NuxtLink>
           </div>
 
           <!-- Akses E-Resources -->
-          <div class="academic-card p-6 sm:p-8 rounded-xl flex flex-col justify-between h-full bg-white border border-outline-variant/60 shadow-sm">
+          <div class="academic-card p-6 sm:p-8 rounded-2xl flex flex-col justify-between h-full bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-sm">
             <div>
-              <div class="w-14 h-14 rounded-lg bg-primary-fixed flex items-center justify-center mb-6">
-                <span class="material-symbols-outlined text-on-primary-fixed-variant text-3xl">terminal</span>
+              <div class="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center mb-6">
+                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-3xl">terminal</span>
               </div>
-              <h3 class="font-headline-md text-headline-md text-primary mb-3 font-bold">Akses E-Resources</h3>
-              <p class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed">
+              <h3 class="text-xl text-slate-900 dark:text-white mb-3 font-black">Akses E-Resources</h3>
+              <p class="text-sm text-slate-600 dark:text-zinc-400 mb-8 leading-relaxed">
                 Gerbang digital menuju ribuan jurnal internasional, e-book, dan basis data riset global yang dapat diakses kapan saja dan di mana saja.
               </p>
             </div>

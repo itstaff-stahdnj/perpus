@@ -22,11 +22,15 @@ const applyTheme = (dark: boolean) => {
 
   if (dark) {
     document.documentElement.classList.add('dark');
+    document.documentElement.style.colorScheme = 'dark';
     localStorage.setItem('pustaka_theme', 'dark');
   } else {
     document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
     localStorage.setItem('pustaka_theme', 'light');
   }
+
+  window.dispatchEvent(new CustomEvent('pustaka-theme-change', { detail: { dark } }));
 };
 
 const toggleTheme = () => {

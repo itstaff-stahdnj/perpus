@@ -149,7 +149,21 @@ const defaultActions = [
   { id: 'nav-absensi', title: 'Absensi Kedatangan', subtitle: 'Presensi Pengunjung Pustaka', icon: 'qr_code_scanner', action: () => router.push('/absensi') },
   { id: 'nav-reservasi', title: 'Reservasi & Peminjaman', subtitle: 'Status Peminjaman Mandiri', icon: 'event_seat', action: () => router.push('/reservasi') },
   { id: 'nav-profile', title: 'Profil & Kartu Anggota', subtitle: 'Buka Kartu Keanggotaan Digital', icon: 'badge', action: () => emit('trigger-member-card') },
-  { id: 'nav-voice', title: 'Pencarian Perintah Suara', subtitle: 'Cari Buku via Mikrofon Suara', icon: 'mic', action: () => emit('trigger-voice') }
+  { id: 'nav-voice', title: 'Pencarian Perintah Suara', subtitle: 'Cari Buku via Mikrofon Suara', icon: 'mic', action: () => emit('trigger-voice') },
+  { 
+    id: 'act-backup', 
+    title: 'Backup Manual D1 ke Server Laravel', 
+    subtitle: 'Cadangkan data D1 ke Server API Laravel', 
+    icon: 'cloud_upload', 
+    action: async () => {
+      try {
+        const res = await fetch('/api/backup/push-laravel', { method: 'POST' }).then(r => r.json());
+        alert(res.message || 'Backup manual selesai diproses.');
+      } catch (e) {
+        alert('Gagal mengirimkan backup ke Laravel.');
+      }
+    }
+  }
 ];
 
 const filteredActions = computed(() => {

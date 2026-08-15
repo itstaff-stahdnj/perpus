@@ -217,6 +217,46 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // 6.5. Fetch & Sync Attendances (Migrasi Data Absensi Lama ke D1)
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS attendances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        name TEXT,
+        role TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run().catch(() => {});
+
+    let syncedAttendancesCount = 0;
+    const attRes = await fetch(`${targetBase}/attendances?per_page=2000&limit=2000`, {
+      headers: { 'accept': 'application/json', 'x-api-key': apiKey }
+    }).then(r => r.json()).catch(() => null);
+
+    const rawAttendances = attRes?.data?.daftar_hadir || attRes?.data || (Array.isArray(attRes) ? attRes : []);
+    if (Array.isArray(rawAttendances)) {
+      for (const a of rawAttendances) {
+        const attId = a.id || null;
+        const userId = a.user_id || a.user?.id || 1;
+        const name = a.name || a.user_name || a.user?.name || a.nama || 'Pemustaka';
+        const role = a.role || a.user_role || a.user?.role || 'pemustaka';
+        const createdAt = a.created_at || a.tanggal || a.date || new Date().toISOString();
+
+        if (attId) {
+          await db.prepare(`
+            INSERT INTO attendances (id, user_id, name, role, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              user_id=excluded.user_id,
+              name=excluded.name,
+              role=excluded.role,
+              created_at=excluded.created_at
+          `).bind(attId, userId, name, role, createdAt).run().catch(() => {});
+        }
+        syncedAttendancesCount++;
+      }
+    }
+
     // Record Sync History Log
     await db.prepare(`
       INSERT INTO sync_history (status, books_count, users_count, loans_count, details)

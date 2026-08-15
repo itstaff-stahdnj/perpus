@@ -136,6 +136,14 @@ const play = () => {
   utterance.lang = 'id-ID';
   utterance.rate = playbackRate.value;
 
+  const voices = window.speechSynthesis.getVoices();
+  if (voices && voices.length > 0) {
+    const idVoice = voices.find(v => (v.lang && v.lang.toLowerCase().includes('id')) || (v.name && v.name.toLowerCase().includes('indonesia')));
+    if (idVoice) {
+      utterance.voice = idVoice;
+    }
+  }
+
   utterance.onstart = () => {
     isPlaying.value = true;
     isPaused.value = false;

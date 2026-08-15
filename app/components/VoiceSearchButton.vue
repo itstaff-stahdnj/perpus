@@ -57,7 +57,10 @@ const startListening = () => {
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
-    alert('Maaf, peramban (browser) Anda belum mendukung fitur Speech Recognition. Gunakan Chrome atau Edge terbaru.');
+    const inputVal = window.prompt('Pencarian Kata Kunci (Peramban Anda belum mengaktifkan Mikrofon Speech API):');
+    if (inputVal && inputVal.trim()) {
+      emit('result', inputVal.trim());
+    }
     return;
   }
 

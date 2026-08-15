@@ -7,33 +7,32 @@ export const useBookCover = () => {
     if (!b) return '';
     const rawPdf = b.pdf_file_url || b.pdf_file || b.file_pdf || b.pdf_url || b.ebook_url || b.link_baca || b.file || b.pdf || b.filepath || b.file_path || b.digital_file || b.url_pdf;
     
-    if (rawPdf && typeof rawPdf === 'string' && rawPdf.includes('/api/pdf-stream')) {
+    if (!rawPdf || typeof rawPdf !== 'string' || rawPdf.trim() === '' || rawPdf.trim() === '-' || rawPdf.trim() === 'null') {
+      return '';
+    }
+
+    if (rawPdf.includes('/api/pdf-stream')) {
       return rawPdf;
     }
-
-    if (b.id && (!rawPdf || typeof rawPdf !== 'string' || rawPdf.trim() === '')) {
-      return `/api/pdf-stream?id=${b.id}&quality=low`;
-    }
-
-    if (!rawPdf || typeof rawPdf !== 'string' || rawPdf.trim() === '') return '';
 
     return `/api/pdf-stream?url=${encodeURIComponent(rawPdf)}&quality=low`;
   };
 
   const isEbookBook = (b: Book | any): boolean => {
     if (!b) return false;
-    if (b.is_ebook || b.is_digital || b.kavita_book_id || b.kavita_series_id || b.kavita_custom_url || b.tipe_koleksi === 'digital' || extractPdfUrl(b)) return true;
 
-    const catObj = b.category || b.kategori;
-    let catName = '';
-    if (catObj && typeof catObj === 'object') {
-      catName = catObj.nama_kategori || catObj.name || catObj.title || '';
-    } else if (typeof catObj === 'string') {
-      catName = catObj;
+    // Buku HANYA dikategorikan e-book digital jika MEMILIKI BERKAS PDF AKTIF atau Integrasi Kavita
+    const pdfUrl = extractPdfUrl(b);
+    if (pdfUrl && pdfUrl.trim() !== '') return true;
+
+    if (b.kavita_book_id || b.kavita_series_id || b.kavita_custom_url) return true;
+
+    const rawPdf = b.pdf_file_url || b.pdf_file || b.file_pdf || b.pdf_url || b.ebook_url || b.link_baca;
+    if ((b.is_ebook === 1 || b.is_ebook === true || b.is_digital === 1 || b.tipe_koleksi === 'digital') && rawPdf && String(rawPdf).trim() !== '') {
+      return true;
     }
-    if (/e-?book|digital|elektronik|pdf|jurnal/i.test(catName)) return true;
-    const klas = (b.no_panggil || b.klasifikasi || '') + '';
-    return /e-?book|digital|elektronik/i.test(klas);
+
+    return false;
   };
 
   const getBookCoverUrl = (b: Book | any): string => {

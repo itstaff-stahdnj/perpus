@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-surface text-on-surface font-body-md min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row relative">
+  <div class="bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row relative transition-colors duration-300">
 
     <!-- Admin Action Sheet Drawer / Backdrop -->
     <div v-if="showMobileAdminSheet" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showMobileAdminSheet = false">
@@ -177,6 +177,20 @@
             <span class="text-xs font-semibold">Laporan Eksekutif</span>
           </div>
         </button>
+
+        <button 
+          @click="activeTab = 'settings'"
+          class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all cursor-pointer"
+          :class="activeTab === 'settings' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest'"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-xs font-semibold">Pengaturan Website D1</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-900">
+            D1 DB
+          </span>
+        </button>
       </nav>
 
       <div class="px-4 mt-4">
@@ -246,8 +260,64 @@
         <span class="text-xs font-semibold">{{ toastMessage }}</span>
       </div>
 
+      <!-- Admin Horizontal Mobile Scroll Navigation Bar (Mobile Only) -->
+      <div class="md:hidden sticky top-16 z-40 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800 px-3 py-2.5 overflow-x-auto no-scrollbar flex items-center gap-2 shadow-lg">
+        <button 
+          @click="activeTab = 'statistics'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeTab === 'statistics' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'"
+        >
+          <span class="material-symbols-outlined text-sm">monitoring</span>
+          <span>Statistik</span>
+        </button>
+
+        <button 
+          @click="activeTab = 'books'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeTab === 'books' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'"
+        >
+          <span class="material-symbols-outlined text-sm">menu_book</span>
+          <span>Buku ({{ booksList.length }})</span>
+        </button>
+
+        <button 
+          @click="activeTab = 'members'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeTab === 'members' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'"
+        >
+          <span class="material-symbols-outlined text-sm">group</span>
+          <span>Anggota ({{ usersList.length }})</span>
+        </button>
+
+        <button 
+          @click="activeTab = 'circulation'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeTab === 'circulation' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'"
+        >
+          <span class="material-symbols-outlined text-sm">sync_alt</span>
+          <span>Sirkulasi ({{ loansList.length }})</span>
+        </button>
+
+        <button 
+          @click="activeTab = 'settings'" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5"
+          :class="activeTab === 'settings' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'"
+        >
+          <span class="material-symbols-outlined text-sm">settings</span>
+          <span>Pengaturan D1</span>
+        </button>
+
+        <button 
+          @click="openAddBookModal()" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5 bg-blue-600 text-white shadow-xs"
+        >
+          <span class="material-symbols-outlined text-sm">add_circle</span>
+          <span>+ Tambah Buku</span>
+        </button>
+      </div>
+
       <!-- Main Scrollable Content Area -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-surface pb-28 md:pb-8">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-zinc-950 pb-28 md:pb-8">
         <div class="max-w-[1340px] mx-auto space-y-8">
 
           <!-- TAB 1: STATISTICS & OVERVIEW -->
@@ -260,6 +330,28 @@
                   <p class="text-xs text-on-surface-variant mt-0.5">Pemantauan data koleksi, anggota, sirkulasi, dan kunjungan hari ini secara live.</p>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
+                  <!-- Tombol Bergantian 1 Tombol Berdasarkan Status Absensi Petugas -->
+                  <button 
+                    v-if="!isStaffOnline"
+                    @click="handleStaffCheckIn('masuk')" 
+                    :disabled="checkingIn" 
+                    class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95"
+                    title="Klik untuk mencatat Absensi Masuk (Status Petugas Online)"
+                  >
+                    <span class="material-symbols-outlined text-base">login</span>
+                    <span>📌 Absensi Masuk (Online)</span>
+                  </button>
+
+                  <button 
+                    v-else
+                    @click="handleStaffCheckIn('keluar')" 
+                    :disabled="checkingIn" 
+                    class="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl font-extrabold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95"
+                    title="Klik untuk mencatat Absensi Keluar (Status Petugas Offline)"
+                  >
+                    <span class="material-symbols-outlined text-base">logout</span>
+                    <span>🚪 Absensi Keluar (Offline)</span>
+                  </button>
                   <button @click="loadAdminData(true)" :disabled="refreshing" class="px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest text-primary rounded-xl font-bold text-xs flex items-center gap-1.5 border border-outline-variant cursor-pointer transition-colors shadow-2xs">
                     <span class="material-symbols-outlined text-base" :class="refreshing ? 'animate-spin' : ''">sync</span>
                     <span>Sinkronkan API</span>
@@ -756,6 +848,17 @@
                   </div>
 
                   <div class="flex items-center gap-2 shrink-0">
+                    <button 
+                      @click="handleImportAttendances" 
+                      :disabled="migratingAttendances"
+                      class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <span class="material-symbols-outlined text-base" :class="{ 'animate-spin': migratingAttendances }">
+                        {{ migratingAttendances ? 'sync' : 'how_to_reg' }}
+                      </span>
+                      <span>{{ migratingAttendances ? 'Memindahkan Data...' : '📥 Migrasi Absensi Lama' }}</span>
+                    </button>
+
                     <label 
                       class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-2"
                       :class="{ 'opacity-50 pointer-events-none': restoringUsers }"
@@ -784,6 +887,149 @@
                 </div>
               </div>
             </section>
+          </div>
+
+          <!-- TAB 6: WEBSITE SETTINGS AUTOMATIC D1 -->
+          <div v-if="activeTab === 'settings'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-xs">
+              <div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-900 uppercase tracking-wider">
+                  Database Cloudflare D1
+                </span>
+                <h2 class="font-headline-md text-xl font-black text-primary mt-2">Pengaturan Website &amp; Portal Perpustakaan</h2>
+                <p class="text-xs text-on-surface-variant mt-0.5">Semua perubahan otomatis tersimpan langsung di tabel `site_settings` Database D1 secara realtime.</p>
+              </div>
+              <button 
+                @click="saveWebsiteSettings" 
+                :disabled="savingSettings"
+                class="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-95 shrink-0"
+              >
+                <span class="material-symbols-outlined text-base" :class="savingSettings ? 'animate-spin' : ''">
+                  {{ savingSettings ? 'sync' : 'save' }}
+                </span>
+                <span>{{ savingSettings ? 'Memproses Simpan...' : '💾 Simpan Pengaturan D1' }}</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Section A: Identitas Portal -->
+              <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-xs space-y-4">
+                <h3 class="font-extrabold text-sm text-primary flex items-center gap-2 border-b pb-3 border-outline-variant">
+                  <span class="material-symbols-outlined text-amber-500">domain</span>
+                  <span>Identitas &amp; Informasi Kontak Portal</span>
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Nama Portal Perpustakaan:</label>
+                    <input 
+                      v-model="siteSettingsForm.site_name" 
+                      type="text" 
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-semibold text-slate-900 dark:text-white"
+                      placeholder="Perpustakaan STAH Dharma Nusantara Jakarta"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Alamat Fisik Perpustakaan:</label>
+                    <input 
+                      v-model="siteSettingsForm.alamat_perpustakaan" 
+                      type="text" 
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-semibold text-slate-900 dark:text-white"
+                      placeholder="Jl. Media Massa No. 2, Cipinang Muara, Jakarta Timur"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Email Resmi Perpustakaan:</label>
+                      <input 
+                        v-model="siteSettingsForm.email_kontak" 
+                        type="email" 
+                        class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-semibold text-slate-900 dark:text-white"
+                        placeholder="perpustakaan@stahdnj.ac.id"
+                      />
+                    </div>
+                    <div>
+                      <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Telepon / WhatsApp Helpdesk:</label>
+                      <input 
+                        v-model="siteSettingsForm.telepon_kontak" 
+                        type="text" 
+                        class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-semibold text-slate-900 dark:text-white"
+                        placeholder="0812-3456-7890"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section B: Tampilan Hero Beranda Utama -->
+              <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-xs space-y-4">
+                <h3 class="font-extrabold text-sm text-primary flex items-center gap-2 border-b pb-3 border-outline-variant">
+                  <span class="material-symbols-outlined text-blue-500">wallpaper</span>
+                  <span>Tampilan Hero Banner Beranda Utama</span>
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Judul Utama Hero (Hero Title):</label>
+                    <input 
+                      v-model="siteSettingsForm.hero_title" 
+                      type="text" 
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-bold text-slate-900 dark:text-white"
+                      placeholder="Menjembatani Tradisi & Inovasi Digital"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Sub-judul Hero (Hero Subtitle):</label>
+                    <textarea 
+                      v-model="siteSettingsForm.hero_subtitle" 
+                      rows="3"
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-medium text-slate-900 dark:text-white"
+                      placeholder="Deskripsi singkat layanan portal perpustakaan..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section C: Aturan Sirkulasi & Denda -->
+              <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-xs space-y-4 lg:col-span-2">
+                <h3 class="font-extrabold text-sm text-primary flex items-center gap-2 border-b pb-3 border-outline-variant">
+                  <span class="material-symbols-outlined text-emerald-500">gavel</span>
+                  <span>Aturan Sirkulasi &amp; Denda Keterlambatan</span>
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Batas Maksimal Durasi Pinjam (Hari):</label>
+                    <input 
+                      v-model="siteSettingsForm.max_hari_pinjam" 
+                      type="number" 
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-extrabold text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Batas Maksimal Pinjam Buku (Eksemplar):</label>
+                    <input 
+                      v-model="siteSettingsForm.max_pinjam_buku" 
+                      type="number" 
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-extrabold text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-slate-700 dark:text-zinc-300 mb-1">Tarif Denda Per Hari (Rp):</label>
+                    <input 
+                      v-model="siteSettingsForm.denda_per_hari" 
+                      type="number" 
+                      class="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-xl font-extrabold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -1077,7 +1323,7 @@ definePageMeta({
   layout: false
 });
 
-const { getBooks, createBook, updateBook, deleteBook, getLoans, getUsers, getAttendanceToday, getCategories, getRecentActivities, getReservations, returnLoan, getProfile, logout, tokenCookie } = usePustakaApi();
+const { getBooks, createBook, updateBook, deleteBook, getLoans, getUsers, getAttendanceToday, getCategories, getRecentActivities, getReservations, returnLoan, getProfile, logout, tokenCookie, getSettings, updateSiteSettings } = usePustakaApi();
 const { saveCatalogCache, getCatalogCache } = useIndexedDB();
 const { triggerSync } = useSyncData();
 const router = useRouter();
@@ -1101,6 +1347,20 @@ const todayAttendanceCount = ref(0);
 const refreshing = ref(false);
 const lastUpdatedTime = ref('');
 const toastMessage = ref('');
+const savingSettings = ref(false);
+
+const siteSettingsForm = reactive({
+  site_name: 'Perpustakaan STAH Dharma Nusantara Jakarta',
+  hero_title: 'Menjembatani Tradisi & Inovasi Digital',
+  hero_subtitle: 'Akses koleksi fisik, e-book digital, jurnal OJS Pasupati, dan karya ilmiah akademik terintegrasi.',
+  hero_bg_image: '',
+  max_hari_pinjam: '7',
+  max_pinjam_buku: '3',
+  denda_per_hari: '1000',
+  alamat_perpustakaan: 'Jl. Media Massa No. 2, Cipinang Muara, Jakarta Timur',
+  email_kontak: 'perpustakaan@stahdnj.ac.id',
+  telepon_kontak: '0812-3456-7890'
+});
 
 // Pagination
 const currentPage = ref(1);
@@ -1317,6 +1577,47 @@ const filteredBooks = computed(() => {
   return list;
 });
 
+const isStaffOnline = ref(false);
+const checkingIn = ref(false);
+const handleStaffCheckIn = async (statusPresensi: 'masuk' | 'keluar' = 'masuk') => {
+  checkingIn.value = true;
+  try {
+    const res = await $fetch<any>('/api/pustaka/attendances', {
+      method: 'POST',
+      body: {
+        user_id: userProfile.value?.id || 1,
+        name: userProfile.value?.name || 'Petugas Perpustakaan',
+        role: userProfile.value?.role || 'admin',
+        status_presensi: statusPresensi
+      }
+    });
+    triggerToast(res?.message || `🎉 Absensi ${statusPresensi} petugas berhasil dicatat!`);
+    isStaffOnline.value = statusPresensi === 'masuk';
+    await loadAdminData(true);
+  } catch (err: any) {
+    triggerToast('Gagal mencatat absensi petugas.');
+  } finally {
+    checkingIn.value = false;
+  }
+};
+
+const migratingAttendances = ref(false);
+const handleImportAttendances = async () => {
+  migratingAttendances.value = true;
+  triggerToast('⏳ Memindahkan data absensi lama dari API Laravel ke Database Cloudflare D1...');
+  try {
+    const res = await $fetch<any>('/api/backup/import-attendances', {
+      method: 'POST'
+    });
+    triggerToast(res?.message || '🎉 Data absensi lama berhasil dipindahkan ke Database D1!');
+    await loadAdminData(true);
+  } catch (err: any) {
+    triggerToast('❌ Gagal memindahkan data absensi lama: ' + (err?.message || 'Error server'));
+  } finally {
+    migratingAttendances.value = false;
+  }
+};
+
 const effectiveItemsPerPage = computed(() => {
   if (itemsPerPage.value === 'all') return Math.max(filteredBooks.value.length, 1);
   return Number(itemsPerPage.value) || 10;
@@ -1465,6 +1766,29 @@ const handleLogout = async () => {
   router.push('/login');
 };
 
+const loadWebsiteSettings = async () => {
+  try {
+    const res = await getSettings();
+    if (res?.data) {
+      Object.assign(siteSettingsForm, res.data);
+    }
+  } catch (e) {
+    console.error('Gagal memuat pengaturan website:', e);
+  }
+};
+
+const saveWebsiteSettings = async () => {
+  savingSettings.value = true;
+  try {
+    const res = await updateSiteSettings({ ...siteSettingsForm });
+    triggerToast(res?.message || '🎉 Pengaturan website berhasil disimpan otomatis ke Database D1!');
+  } catch (err: any) {
+    triggerToast('❌ Gagal menyimpan pengaturan website.');
+  } finally {
+    savingSettings.value = false;
+  }
+};
+
 const loadAdminData = async (manual = false) => {
   refreshing.value = true;
   
@@ -1490,7 +1814,7 @@ const loadAdminData = async (manual = false) => {
 
   // STEP 2: Fetch fresh data from Realtime API
   try {
-    const [profileRes, booksRes, loansRes, usersRes, attRes, catRes, actRes, resRes] = await Promise.all([
+    const [profileRes, booksRes, loansRes, usersRes, attRes, catRes, actRes, resRes, staffStatusRes] = await Promise.all([
       getProfile().catch(() => null),
       getBooks({ per_page: 1000, limit: 1000, all: 1 }).catch(() => null),
       getLoans().catch(() => null),
@@ -1498,8 +1822,13 @@ const loadAdminData = async (manual = false) => {
       getAttendanceToday().catch(() => null),
       getCategories().catch(() => null),
       getRecentActivities().catch(() => null),
-      getReservations(false).catch(() => null)
+      getReservations(false).catch(() => null),
+      getStaffStatus().catch(() => null)
     ]);
+
+    if (staffStatusRes && typeof staffStatusRes.is_online === 'boolean') {
+      isStaffOnline.value = staffStatusRes.is_online;
+    }
 
     if (profileRes?.data || profileRes?.user) {
       userProfile.value = profileRes.data || profileRes.user;
@@ -1534,6 +1863,8 @@ const loadAdminData = async (manual = false) => {
     if (actRes?.success && actRes.data) {
       recentActivities.value = actRes.data;
     }
+
+    loadWebsiteSettings();
 
     if (resRes?.data && Array.isArray(resRes.data)) {
       reservationsCount.value = resRes.data.filter((r: any) => r.status === 'pending' || r.status === 'proses_pengambilan').length;
